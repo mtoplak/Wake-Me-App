@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { createAlarm } from '@/services/database';
 import { colors } from '@/theme';
 
 const DAYS: { key: string; label: string }[] = [
@@ -62,7 +63,9 @@ export default function CreateAlarm() {
   const [activeDays, setActiveDays] = useState<string[]>(['mon', 'tue', 'wed', 'thu', 'fri']);
   const [challenges, setChallenges] = useState<ChallengeKey[]>(['qr']);
   const [vibration, setVibration] = useState(true);
+  const [sound] = useState('Sunrise');
   const [label, setLabel] = useState('Morning routine');
+  const [saving, setSaving] = useState(false);
 
   const toggleDay = (key: string) => {
     setActiveDays(prev => (prev.includes(key) ? prev.filter(d => d !== key) : [...prev, key]));
@@ -75,6 +78,31 @@ export default function CreateAlarm() {
   const adjustHour = (delta: number) => setHour(prev => (prev + delta + 24) % 24);
   const adjustMinute = (delta: number) => setMinute(prev => (prev + delta + 60) % 60);
 
+  const onSave = async () => {
+    if (challenges.length === 0) {
+      Alert.alert('Pick a challenge', 'Choose at least one wake-up challenge.');
+      return;
+    }
+    try {
+      setSaving(true);
+      await createAlarm({
+        hour,
+        minute,
+        label,
+        repeatDays: activeDays,
+        enabled: true,
+        sound,
+        vibration,
+        challenges,
+      });
+      router.back();
+    } catch (err) {
+      Alert.alert('Could not save', String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
@@ -82,8 +110,8 @@ export default function CreateAlarm() {
           <AntDesign name="close" size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={styles.headerTitle}>New Alarm</Text>
-        <Pressable hitSlop={12} style={styles.headerBtn}>
-          <Text style={styles.headerSave}>Save</Text>
+        <Pressable hitSlop={12} style={styles.headerBtn} onPress={onSave} disabled={saving}>
+          <Text style={styles.headerSave}>{saving ? 'Saving…' : 'Save'}</Text>
         </Pressable>
       </View>
 
@@ -166,8 +194,8 @@ export default function CreateAlarm() {
           </View>
         </View>
 
-        <Pressable style={styles.primaryBtn}>
-          <Text style={styles.primaryBtnText}>Save Alarm</Text>
+        <Pressable style={styles.primaryBtn} onPress={onSave} disabled={saving}>
+          <Text style={styles.primaryBtnText}>{saving ? 'Saving…' : 'Save Alarm'}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

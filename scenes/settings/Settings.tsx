@@ -1,8 +1,26 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Switch,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import {
+  getAllSettings,
+  getProfile,
+  setSetting,
+  upsertProfile,
+  UserProfile,
+} from '@/services/database';
 import { colors } from '@/theme';
+
+type Bool = '1' | '0';
+type Lang = 'EN' | 'SL';
 
 type RowProps = {
   icon: React.ReactNode;
@@ -14,11 +32,80 @@ type RowProps = {
   last?: boolean;
 };
 
+const KEYS = {
+  cloudSync: 'pref.cloudSync',
+  vibration: 'pref.vibration',
+  voicePhrase: 'pref.voicePhraseEnabled',
+  appearance: 'pref.appearance',
+  defaultSound: 'pref.defaultSound',
+  voicePhraseText: 'pref.voicePhraseText',
+  stepGoal: 'pref.stepGoal',
+};
+
 export default function Settings() {
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [cloudSync, setCloudSync] = useState(true);
   const [vibration, setVibration] = useState(true);
   const [voice, setVoice] = useState(false);
-  const [language, setLanguage] = useState<'EN' | 'SL'>('EN');
+  const [appearance, setAppearance] = useState('Light');
+  const [defaultSound, setDefaultSound] = useState('Sunrise');
+  const [phrase, setPhrase] = useState('“Today will be great!”');
+  const [stepGoal, setStepGoal] = useState('30 steps');
+  const [language, setLanguage] = useState<Lang>('EN');
+
+  const load = useCallback(async () => {
+    const [p, all] = await Promise.all([getProfile(), getAllSettings()]);
+    setProfile(p);
+    if (p) setLanguage(p.language);
+    setCloudSync((all[KEYS.cloudSync] ?? '1') === '1');
+    setVibration((all[KEYS.vibration] ?? '1') === '1');
+    setVoice((all[KEYS.voicePhrase] ?? '0') === '1');
+    setAppearance(all[KEYS.appearance] ?? 'Light');
+    setDefaultSound(all[KEYS.defaultSound] ?? 'Sunrise');
+    setPhrase(all[KEYS.voicePhraseText] ?? '“Today will be great!”');
+    setStepGoal(all[KEYS.stepGoal] ?? '30 steps');
+  }, []);
+
+  useEffect(() => {
+    load().finally(() => setLoading(false));
+  }, [load]);
+
+  const persistBool = async (key: string, value: boolean) => {
+    await setSetting(key, value ? '1' : ('0' as Bool));
+  };
+
+  const onToggleCloud = async (v: boolean) => {
+    setCloudSync(v);
+    await persistBool(KEYS.cloudSync, v);
+  };
+  const onToggleVibration = async (v: boolean) => {
+    setVibration(v);
+    await persistBool(KEYS.vibration, v);
+  };
+  const onToggleVoice = async (v: boolean) => {
+    setVoice(v);
+    await persistBool(KEYS.voicePhrase, v);
+  };
+  const onSelectLanguage = async (lang: Lang) => {
+    setLanguage(lang);
+    if (profile) {
+      await upsertProfile({ name: profile.name, email: profile.email, language: lang });
+      setProfile({ ...profile, language: lang });
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator color={colors.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const initial = profile?.name?.charAt(0).toUpperCase() ?? '?';
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -27,11 +114,11 @@ export default function Settings() {
 
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarInitial}>I</Text>
+            <Text style={styles.avatarInitial}>{initial}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.profileName}>Ime Priimek</Text>
-            <Text style={styles.profileEmail}>ime.priimek@gmail.com</Text>
+            <Text style={styles.profileName}>{profile?.name ?? 'Guest'}</Text>
+            <Text style={styles.profileEmail}>{profile?.email ?? '—'}</Text>
           </View>
           <Pressable style={styles.editBtn}>
             <Feather name="edit-2" size={14} color={colors.accent} />
@@ -50,7 +137,7 @@ export default function Settings() {
             trailing={
               <Switch
                 value={cloudSync}
-                onValueChange={setCloudSync}
+                onValueChange={onToggleCloud}
                 trackColor={{ true: colors.accent, false: colors.border }}
                 thumbColor={colors.white}
               />
@@ -78,14 +165,14 @@ export default function Settings() {
             trailing={
               <View style={styles.segment}>
                 <Pressable
-                  onPress={() => setLanguage('EN')}
+                  onPress={() => onSelectLanguage('EN')}
                   style={[styles.segmentBtn, language === 'EN' && styles.segmentBtnActive]}>
                   <Text style={[styles.segmentText, language === 'EN' && styles.segmentTextActive]}>
                     EN
                   </Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => setLanguage('SL')}
+                  onPress={() => onSelectLanguage('SL')}
                   style={[styles.segmentBtn, language === 'SL' && styles.segmentBtnActive]}>
                   <Text style={[styles.segmentText, language === 'SL' && styles.segmentTextActive]}>
                     SL
@@ -98,13 +185,13 @@ export default function Settings() {
             icon={<Ionicons name="moon-outline" size={18} color={colors.accent} />}
             iconBg={colors.accentSoft}
             label="Appearance"
-            value="Light"
+            value={appearance}
           />
           <Row
             icon={<Ionicons name="musical-notes-outline" size={18} color={colors.flame} />}
             iconBg={colors.flameSoft}
             label="Default sound"
-            value="Sunrise"
+            value={defaultSound}
           />
           <Row
             icon={<MaterialCommunityIcons name="vibrate" size={18} color={colors.success} />}
@@ -113,7 +200,7 @@ export default function Settings() {
             trailing={
               <Switch
                 value={vibration}
-                onValueChange={setVibration}
+                onValueChange={onToggleVibration}
                 trackColor={{ true: colors.accent, false: colors.border }}
                 thumbColor={colors.white}
               />
@@ -128,11 +215,11 @@ export default function Settings() {
             icon={<Ionicons name="mic-outline" size={18} color={colors.accent} />}
             iconBg={colors.accentSoft}
             label="Voice phrase"
-            value="“Today will be great!”"
+            value={phrase}
             trailing={
               <Switch
                 value={voice}
-                onValueChange={setVoice}
+                onValueChange={onToggleVoice}
                 trackColor={{ true: colors.accent, false: colors.border }}
                 thumbColor={colors.white}
               />
@@ -142,7 +229,7 @@ export default function Settings() {
             icon={<Ionicons name="walk-outline" size={18} color={colors.success} />}
             iconBg={colors.successSoft}
             label="Step goal"
-            value="30 steps"
+            value={stepGoal}
           />
           <Row
             icon={
@@ -196,7 +283,11 @@ function Row({ icon, iconBg, label, value, trailing, onPress, last }: RowProps) 
     <Wrapper style={[styles.row, last && styles.rowLast]} onPress={onPress as never}>
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>{icon}</View>
       <Text style={styles.rowLabel}>{label}</Text>
-      {value && <Text style={styles.rowValue}>{value}</Text>}
+      {value && (
+        <Text style={styles.rowValue} numberOfLines={1}>
+          {value}
+        </Text>
+      )}
       {trailing ?? <AntDesign name="right" size={14} color={colors.textMuted} />}
     </Wrapper>
   );
@@ -204,6 +295,7 @@ function Row({ icon, iconBg, label, value, trailing, onPress, last }: RowProps) 
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 20, paddingBottom: 60 },
   title: {
     fontSize: 28,
@@ -279,7 +371,12 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '500',
   },
-  rowValue: { fontSize: 13, color: colors.textSecondary, marginRight: 4 },
+  rowValue: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginRight: 4,
+    maxWidth: 140,
+  },
   segment: {
     flexDirection: 'row',
     backgroundColor: colors.surfaceMuted,

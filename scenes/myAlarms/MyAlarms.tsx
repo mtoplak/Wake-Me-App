@@ -1,62 +1,32 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
+import { useCallback, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Switch,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Alarm, ChallengeType, listAlarms, setAlarmEnabled } from '@/services/database';
 import { colors } from '@/theme';
 
-type Challenge = 'qr' | 'object' | 'color' | 'steps' | 'voice';
-
-type Alarm = {
-  id: string;
-  time: string;
-  meridiem: 'AM' | 'PM';
-  label: string;
-  days: string;
-  enabled: boolean;
-  challenges: Challenge[];
+const DAY_LABELS: Record<string, string> = {
+  mon: 'Mon',
+  tue: 'Tue',
+  wed: 'Wed',
+  thu: 'Thu',
+  fri: 'Fri',
+  sat: 'Sat',
+  sun: 'Sun',
 };
+const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
+const WEEKEND = ['sat', 'sun'];
 
-const INITIAL: Alarm[] = [
-  {
-    id: '1',
-    time: '06:30',
-    meridiem: 'AM',
-    label: 'Workout',
-    days: 'Mon – Fri',
-    enabled: true,
-    challenges: ['steps', 'qr'],
-  },
-  {
-    id: '2',
-    time: '07:45',
-    meridiem: 'AM',
-    label: 'University',
-    days: 'Mon, Wed, Fri',
-    enabled: true,
-    challenges: ['object'],
-  },
-  {
-    id: '3',
-    time: '09:15',
-    meridiem: 'AM',
-    label: 'Weekend chill',
-    days: 'Sat, Sun',
-    enabled: false,
-    challenges: ['color', 'voice'],
-  },
-  {
-    id: '4',
-    time: '13:30',
-    meridiem: 'PM',
-    label: 'Power nap',
-    days: 'Once',
-    enabled: false,
-    challenges: ['voice'],
-  },
-];
-
-const challengeMeta: Record<Challenge, { label: string; icon: React.ReactNode }> = {
+const challengeMeta: Record<ChallengeType, { label: string; icon: React.ReactNode }> = {
   qr: {
     label: 'QR',
     icon: <Ionicons name="qr-code-outline" size={12} color={colors.accent} />,
@@ -79,21 +49,74 @@ const challengeMeta: Record<Challenge, { label: string; icon: React.ReactNode }>
   },
 };
 
+function formatDays(repeat: string[]): string {
+  if (repeat.length === 0) return 'Once';
+  const set = new Set(repeat);
+  if (WEEKDAYS.every(d => set.has(d)) && set.size === 5) return 'Mon – Fri';
+  if (WEEKEND.every(d => set.has(d)) && set.size === 2) return 'Sat, Sun';
+  if (set.size === 7) return 'Every day';
+  return repeat.map(d => DAY_LABELS[d] ?? d).join(', ');
+}
+
+function formatTime(hour: number, minute: number) {
+  const meridiem: 'AM' | 'PM' = hour < 12 ? 'AM' : 'PM';
+  const h = hour % 12 === 0 ? 12 : hour % 12;
+  return {
+    time: `${String(h).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+    meridiem,
+  };
+}
+
+function minutesUntil(hour: number, minute: number) {
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(hour, minute, 0, 0);
+  if (target.getTime() <= now.getTime()) target.setDate(target.getDate() + 1);
+  const diffMin = Math.round((target.getTime() - now.getTime()) / 60000);
+  const h = Math.floor(diffMin / 60);
+  const m = diffMin % 60;
+  return `in ${h}h ${m}m`;
+}
+
 export default function MyAlarms() {
   const router = useRouter();
-  const [alarms, setAlarms] = useState<Alarm[]>(INITIAL);
+  const [alarms, setAlarms] = useState<Alarm[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggle = (id: string) => {
-    setAlarms(prev => prev.map(a => (a.id === id ? { ...a, enabled: !a.enabled } : a)));
+  const refresh = useCallback(async () => {
+    const list = await listAlarms();
+    setAlarms(list);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      refresh().finally(() => setLoading(false));
+    }, [refresh]),
+  );
+
+  const toggle = async (id: number, enabled: boolean) => {
+    setAlarms(prev => prev.map(a => (a.id === id ? { ...a, enabled } : a)));
+    await setAlarmEnabled(id, enabled);
   };
 
   const next = alarms.find(a => a.enabled);
+  const greeting = greet();
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator color={colors.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Good evening, Masa</Text>
+          <Text style={styles.greeting}>{greeting}</Text>
           <Text style={styles.title}>My Alarms</Text>
         </View>
         <Pressable onPress={() => router.push('/(main)/(tabs)/createAlarm')} style={styles.addBtn}>
@@ -110,51 +133,64 @@ export default function MyAlarms() {
             <View style={{ flex: 1 }}>
               <Text style={styles.nextLabel}>Next alarm</Text>
               <Text style={styles.nextTime}>
-                {next.time} {next.meridiem} · {next.label}
+                {formatTime(next.hour, next.minute).time}{' '}
+                {formatTime(next.hour, next.minute).meridiem} · {next.label}
               </Text>
-              <Text style={styles.nextSub}>in 9 hours 12 minutes</Text>
+              <Text style={styles.nextSub}>{minutesUntil(next.hour, next.minute)}</Text>
             </View>
           </View>
         )}
 
         <Text style={styles.sectionTitle}>All alarms</Text>
 
-        {alarms.map(a => (
-          <View key={a.id} style={[styles.alarmCard, !a.enabled && styles.alarmCardOff]}>
-            <View style={styles.alarmTop}>
-              <View>
-                <View style={styles.timeWrap}>
-                  <Text style={[styles.alarmTime, !a.enabled && styles.dimText]}>{a.time}</Text>
-                  <Text style={[styles.alarmMeridiem, !a.enabled && styles.dimText]}>
-                    {a.meridiem}
+        {alarms.length === 0 && (
+          <View style={styles.emptyCard}>
+            <Ionicons name="alarm-outline" size={28} color={colors.textMuted} />
+            <Text style={styles.emptyText}>No alarms yet — tap + to create one</Text>
+          </View>
+        )}
+
+        {alarms.map(a => {
+          const t = formatTime(a.hour, a.minute);
+          return (
+            <View key={a.id} style={[styles.alarmCard, !a.enabled && styles.alarmCardOff]}>
+              <View style={styles.alarmTop}>
+                <View>
+                  <View style={styles.timeWrap}>
+                    <Text style={[styles.alarmTime, !a.enabled && styles.dimText]}>{t.time}</Text>
+                    <Text style={[styles.alarmMeridiem, !a.enabled && styles.dimText]}>
+                      {t.meridiem}
+                    </Text>
+                  </View>
+                  <Text style={[styles.alarmLabel, !a.enabled && styles.dimText]}>
+                    {a.label || 'Alarm'}
                   </Text>
                 </View>
-                <Text style={[styles.alarmLabel, !a.enabled && styles.dimText]}>{a.label}</Text>
+                <Switch
+                  value={a.enabled}
+                  onValueChange={v => toggle(a.id, v)}
+                  trackColor={{ true: colors.accent, false: colors.border }}
+                  thumbColor={colors.white}
+                />
               </View>
-              <Switch
-                value={a.enabled}
-                onValueChange={() => toggle(a.id)}
-                trackColor={{ true: colors.accent, false: colors.border }}
-                thumbColor={colors.white}
-              />
-            </View>
 
-            <View style={styles.alarmFoot}>
-              <View style={styles.daysWrap}>
-                <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
-                <Text style={styles.daysText}>{a.days}</Text>
-              </View>
-              <View style={styles.chipsWrap}>
-                {a.challenges.map(c => (
-                  <View key={c} style={styles.chip}>
-                    {challengeMeta[c].icon}
-                    <Text style={styles.chipText}>{challengeMeta[c].label}</Text>
-                  </View>
-                ))}
+              <View style={styles.alarmFoot}>
+                <View style={styles.daysWrap}>
+                  <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
+                  <Text style={styles.daysText}>{formatDays(a.repeatDays)}</Text>
+                </View>
+                <View style={styles.chipsWrap}>
+                  {a.challenges.map(c => (
+                    <View key={c} style={styles.chip}>
+                      {challengeMeta[c].icon}
+                      <Text style={styles.chipText}>{challengeMeta[c].label}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
 
         <Pressable onPress={() => router.push('/(main)/(tabs)/createAlarm')} style={styles.addRow}>
           <AntDesign name="plus-circle" size={18} color={colors.accent} />
@@ -165,8 +201,17 @@ export default function MyAlarms() {
   );
 }
 
+function greet() {
+  const h = new Date().getHours();
+  if (h < 5) return 'Burning the midnight oil';
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -307,4 +352,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addRowText: { color: colors.accent, fontWeight: '600', fontSize: 14 },
+  emptyCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    paddingVertical: 32,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyText: { color: colors.textMuted, fontSize: 13 },
 });

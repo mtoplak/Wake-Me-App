@@ -55,6 +55,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="quotes"
+        options={{
+          title: 'Quotes',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="format-quote-close" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',

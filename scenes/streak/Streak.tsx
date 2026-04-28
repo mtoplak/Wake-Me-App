@@ -1,28 +1,118 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
+import {
+  CachedQuote,
+  ChallengeType,
+  WakeStat,
+  getStatsSummary,
+  getTodaysQuote,
+  listRecentStats,
+} from '@/services/database';
 import { colors } from '@/theme';
 
 type DayStatus = 'success' | 'fail' | 'today' | 'upcoming';
+type DayCell = { label: string; date: number; status: DayStatus; iso: string };
 
-const WEEK: { label: string; date: number; status: DayStatus }[] = [
-  { label: 'Mon', date: 22, status: 'success' },
-  { label: 'Tue', date: 23, status: 'success' },
-  { label: 'Wed', date: 24, status: 'success' },
-  { label: 'Thu', date: 25, status: 'fail' },
-  { label: 'Fri', date: 26, status: 'success' },
-  { label: 'Sat', date: 27, status: 'success' },
-  { label: 'Sun', date: 28, status: 'today' },
-];
+const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const HISTORY = [
-  { day: 'Yesterday', time: '06:32 AM', challenge: 'Walk 30 steps', success: true },
-  { day: 'Mon', time: '06:28 AM', challenge: 'Scan QR', success: true },
-  { day: 'Sun', time: '07:55 AM', challenge: 'Find object', success: true },
-  { day: 'Sat', time: '08:10 AM', challenge: 'Find color', success: false },
-];
+function isoDay(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function buildWeek(stats: WakeStat[]): DayCell[] {
+  const today = new Date();
+  const dayOfWeek = (today.getDay() + 6) % 7; // Mon=0
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - dayOfWeek);
+
+  const successByDate = new Map<string, boolean>();
+  for (const s of stats) {
+    const prev = successByDate.get(s.date);
+    successByDate.set(s.date, prev === true ? true : s.success);
+  }
+
+  const todayIso = isoDay(today);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const iso = isoDay(d);
+    let status: DayStatus = 'upcoming';
+    if (iso === todayIso) status = 'today';
+    else if (successByDate.has(iso)) status = successByDate.get(iso) ? 'success' : 'fail';
+    return { label: DAY_NAMES[i], date: d.getDate(), status, iso };
+  });
+}
+
+function challengeLabel(c: ChallengeType | null): string {
+  switch (c) {
+    case 'qr':
+      return 'Scan QR';
+    case 'object':
+      return 'Find object';
+    case 'color':
+      return 'Find color';
+    case 'steps':
+      return 'Walk steps';
+    case 'voice':
+      return 'Voice phrase';
+    default:
+      return 'Wake-up';
+  }
+}
+
+function relativeDay(iso: string): string {
+  const today = new Date();
+  const target = new Date(iso);
+  const todayIso = isoDay(today);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (iso === todayIso) return 'Today';
+  if (iso === isoDay(yesterday)) return 'Yesterday';
+  return target.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
 
 export default function Streak() {
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState({
+    total: 0,
+    successes: 0,
+    successRate: 0,
+    bestStreak: 0,
+    currentStreak: 0,
+  });
+  const [stats, setStats] = useState<WakeStat[]>([]);
+  const [quote, setQuote] = useState<CachedQuote | null>(null);
+
+  const load = useCallback(async () => {
+    const [s, recent, q] = await Promise.all([
+      getStatsSummary(),
+      listRecentStats(20),
+      getTodaysQuote(),
+    ]);
+    setSummary(s);
+    setStats(recent);
+    setQuote(q);
+  }, []);
+
+  useEffect(() => {
+    load().finally(() => setLoading(false));
+  }, [load]);
+
+  const week = useMemo(() => buildWeek(stats), [stats]);
+  const weekRatio = `${week.filter(d => d.status === 'success').length} / 7`;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator color={colors.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -33,19 +123,23 @@ export default function Streak() {
           <View style={styles.flameWrap}>
             <MaterialCommunityIcons name="fire" size={56} color={colors.flame} />
           </View>
-          <Text style={styles.streakNumber}>12</Text>
+          <Text style={styles.streakNumber}>{summary.currentStreak}</Text>
           <Text style={styles.streakLabel}>day streak</Text>
-          <Text style={styles.streakHint}>Beat your record of 18 days</Text>
+          <Text style={styles.streakHint}>
+            {summary.bestStreak > summary.currentStreak
+              ? `Beat your record of ${summary.bestStreak} days`
+              : 'New personal best — keep it going!'}
+          </Text>
         </View>
 
         <View style={styles.weekCard}>
           <View style={styles.weekHeader}>
             <Text style={styles.weekTitle}>This week</Text>
-            <Text style={styles.weekRatio}>6 / 7</Text>
+            <Text style={styles.weekRatio}>{weekRatio}</Text>
           </View>
           <View style={styles.weekRow}>
-            {WEEK.map(d => (
-              <View key={d.label} style={styles.dayWrap}>
+            {week.map(d => (
+              <View key={d.iso} style={styles.dayWrap}>
                 <Text style={styles.dayName}>{d.label}</Text>
                 <View style={[styles.dayDot, dotStyle(d.status)]}>
                   {d.status === 'success' && (
@@ -65,13 +159,13 @@ export default function Streak() {
             icon={<Ionicons name="trophy-outline" size={20} color={colors.warning} />}
             tint={colors.warningSoft}
             label="Best streak"
-            value="18"
+            value={String(summary.bestStreak)}
           />
           <StatTile
             icon={<Ionicons name="sunny-outline" size={20} color={colors.flame} />}
             tint={colors.flameSoft}
             label="Wake-ups"
-            value="143"
+            value={String(summary.total)}
           />
           <StatTile
             icon={
@@ -83,41 +177,50 @@ export default function Streak() {
             }
             tint={colors.successSoft}
             label="Success rate"
-            value="92%"
+            value={`${summary.successRate}%`}
           />
         </View>
 
-        <View style={styles.quoteCard}>
-          <Ionicons name="sparkles" size={18} color={colors.accent} />
-          <Text style={styles.quote}>“Either you run the day or the day runs you.”</Text>
-          <Text style={styles.quoteAuthor}>— Jim Rohn</Text>
-        </View>
+        {quote && (
+          <View style={styles.quoteCard}>
+            <Ionicons name="sparkles" size={18} color={colors.accent} />
+            <Text style={styles.quote}>“{quote.text}”</Text>
+            <Text style={styles.quoteAuthor}>— {quote.author}</Text>
+          </View>
+        )}
 
         <Text style={styles.sectionTitle}>Recent wake-ups</Text>
-        <View style={styles.historyCard}>
-          {HISTORY.map((h, i) => (
-            <View
-              key={`${h.day}-${i}`}
-              style={[styles.historyRow, i === HISTORY.length - 1 && styles.historyRowLast]}>
+        {stats.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Ionicons name="alarm-outline" size={26} color={colors.textMuted} />
+            <Text style={styles.emptyText}>No wake-ups recorded yet</Text>
+          </View>
+        ) : (
+          <View style={styles.historyCard}>
+            {stats.slice(0, 6).map((h, i, arr) => (
               <View
-                style={[
-                  styles.historyIcon,
-                  { backgroundColor: h.success ? colors.successSoft : colors.flameSoft },
-                ]}>
-                <Ionicons
-                  name={h.success ? 'checkmark' : 'close'}
-                  size={16}
-                  color={h.success ? colors.success : colors.flame}
-                />
+                key={h.id}
+                style={[styles.historyRow, i === arr.length - 1 && styles.historyRowLast]}>
+                <View
+                  style={[
+                    styles.historyIcon,
+                    { backgroundColor: h.success ? colors.successSoft : colors.flameSoft },
+                  ]}>
+                  <Ionicons
+                    name={h.success ? 'checkmark' : 'close'}
+                    size={16}
+                    color={h.success ? colors.success : colors.flame}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.historyTitle}>{relativeDay(h.date)}</Text>
+                  <Text style={styles.historySub}>{challengeLabel(h.challengeType)}</Text>
+                </View>
+                <Text style={styles.historyTime}>{h.wakeTime}</Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.historyTitle}>{h.day}</Text>
-                <Text style={styles.historySub}>{h.challenge}</Text>
-              </View>
-              <Text style={styles.historyTime}>{h.time}</Text>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -157,6 +260,7 @@ function dotStyle(status: DayStatus) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   content: { padding: 20, paddingBottom: 40 },
   title: { fontSize: 28, fontWeight: '700', color: colors.textPrimary },
   subtitle: { color: colors.textSecondary, marginTop: 4, marginBottom: 16 },
@@ -186,16 +290,14 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     letterSpacing: -2,
   },
-  streakLabel: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    marginTop: -4,
-  },
+  streakLabel: { fontSize: 16, color: colors.textSecondary, marginTop: -4 },
   streakHint: {
     marginTop: 10,
     fontSize: 12,
     color: colors.flame,
     fontWeight: '600',
+    paddingHorizontal: 16,
+    textAlign: 'center',
   },
   weekCard: {
     marginTop: 18,
@@ -221,12 +323,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  todayInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.accent,
-  },
+  todayInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent },
   dayDate: { fontSize: 12, color: colors.textSecondary },
   statsRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
   statTile: {
@@ -298,4 +395,12 @@ const styles = StyleSheet.create({
   historyTitle: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
   historySub: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   historyTime: { fontSize: 12, color: colors.textMuted },
+  emptyCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    paddingVertical: 32,
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyText: { color: colors.textMuted, fontSize: 13 },
 });

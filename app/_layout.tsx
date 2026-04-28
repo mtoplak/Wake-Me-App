@@ -9,6 +9,7 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSlice } from '@/slices';
 import { getUserAsync } from '@/services';
+import { getDb, seedIfEmpty } from '@/services/database';
 import Provider from '@/providers';
 import { User } from '@/types';
 
@@ -27,8 +28,8 @@ function Router() {
   useEffect(() => {
     (async () => {
       try {
-        // preload assets
-        await Promise.all([loadImages(), loadFonts()]);
+        // preload assets and initialize SQLite
+        await Promise.all([loadImages(), loadFonts(), getDb().then(() => seedIfEmpty())]);
 
         // fetch & store user data to store (fake promise function to simulate async function)
         const user = await getUserAsync();
@@ -60,7 +61,7 @@ function Router() {
   return (
     <Fragment>
       <Slot />
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <BottomSheet
         isOpen={isOpen}
         initialOpen
