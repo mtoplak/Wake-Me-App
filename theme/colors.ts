@@ -9,4 +9,22 @@ export const colors = {
   black: '#000000',
   white: '#ffffff',
   transparent: 'transparent',
+
+  // Modern light palette (WakeUp Challenge)
+  background: '#fafafe',
+  surface: '#ffffff',
+  surfaceMuted: '#f3f1fb',
+  border: '#ebe9f4',
+  textPrimary: '#181432',
+  textSecondary: '#6b6790',
+  textMuted: '#9c98b8',
+  accent: '#6c5ce7',
+  accentSoft: '#ece9ff',
+  success: '#22c55e',
+  successSoft: '#dcfce7',
+  warning: '#f59e0b',
+  warningSoft: '#fef3c7',
+  danger: '#ef4444',
+  flame: '#ff6b35',
+  flameSoft: '#ffe5da',
 };

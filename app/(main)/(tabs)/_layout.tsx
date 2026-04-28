@@ -1,39 +1,83 @@
+import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import useColorScheme from '@/hooks/useColorScheme';
-import { AntDesign } from '@expo/vector-icons';
+import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors } from '@/theme';
 
 export default function TabLayout() {
-  const { isDark } = useColorScheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarInactiveTintColor: colors.gray,
-        tabBarInactiveBackgroundColor: isDark ? colors.blackGray : colors.white,
-        tabBarActiveTintColor: colors.lightPurple,
-        tabBarActiveBackgroundColor: isDark ? colors.blackGray : colors.white,
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          marginTop: 2,
+        },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          height: 76,
+          paddingTop: 10,
+          paddingBottom: 18,
+        },
       }}>
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="home" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
+
       <Tabs.Screen
-        name="index"
+        name="myAlarms"
         options={{
-          href: null,
+          title: 'Alarms',
+          tabBarIcon: ({ color }) => <Ionicons name="alarm-outline" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="home"
+        name="streak"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <AntDesign name="home" size={24} color={color} />,
+          title: 'Streak',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="fire" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="createAlarm"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <AntDesign name="profile" size={24} color={color} />,
+          title: '',
+          tabBarIcon: () => (
+            <View style={styles.fab}>
+              <AntDesign name="plus" size={24} color={colors.white} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <Ionicons name="settings-outline" size={24} color={color} />,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  fab: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -16,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+});
