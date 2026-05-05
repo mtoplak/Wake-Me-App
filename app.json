@@ -8,14 +8,14 @@
     "newArchEnabled": true,
     "platforms": ["ios", "android", "web"],
     "orientation": "portrait",
-    "icon": "./assets/images/logo-lg.png",
+    "icon": "./assets/images/alarm-clock-icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
       "backgroundColor": "#ffffff",
       "dark": {
         "backgroundColor": "#101212"
       },
-      "image": "./assets/images/logo-lg.png",
+      "image": "./assets/images/alarm-clock-splash.png",
       "resizeMode": "contain"
     },
     "ios": {
@@ -23,12 +23,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo-sm.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/alarm-clock-adaptive.png",
+        "backgroundColor": "#ece9ff"
       }
     },
     "web": {
-      "favicon": "./assets/images/logo-sm.png"
+      "favicon": "./assets/images/alarm-clock-favicon.png"
     },
     "runtimeVersion": {
       "policy": "sdkVersion"

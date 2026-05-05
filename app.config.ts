@@ -4,8 +4,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   const expoProjectId = process.env.EXPO_PROJECT_ID ?? '18adc0d0-eb1d-11e9-8009-d524ed5cc4a7';
   const expoConfig: ExpoConfig = {
     ...config,
-    slug: process.env.EXPO_SLUG ?? 'react-native-boilerplate',
-    name: process.env.EXPO_NAME ?? 'React Native Boilerplate',
+    slug: process.env.EXPO_SLUG ?? 'wake-me-app-alarm-clock',
+    name: process.env.EXPO_NAME ?? 'Wake Me App Alarm Clock',
     ios: {
       ...config.ios,
       bundleIdentifier:
@@ -19,7 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ...config.web,
       bundler: 'metro',
       output: 'static',
-      favicon: './assets/images/logo-sm.png',
+      favicon: './assets/images/alarm-clock-favicon.png',
     },
     updates: {
       url: `https://u.expo.dev/${expoProjectId}`,
@@ -34,6 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     plugins: [
       'expo-router',
       'expo-asset',
+      'expo-audio',
       'expo-sqlite',
       [
         'expo-splash-screen',
@@ -42,7 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           dark: {
             backgroundColor: '#101212',
           },
-          image: './assets/images/logo-lg.png',
+          image: './assets/images/alarm-clock-splash.png',
           imageWidth: 200,
           resizeMode: 'contain',
         },

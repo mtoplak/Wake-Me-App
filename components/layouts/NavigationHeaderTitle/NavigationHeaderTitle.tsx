@@ -11,5 +11,5 @@ const styles = StyleSheet.create({
 });
 
 export default function NavigationHeaderTitle() {
-  return <Image source={images.logo} style={styles.logo} />;
+  return <Image source={images.alarmClock} style={styles.logo} />;
 }

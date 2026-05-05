@@ -14,15 +14,15 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: 2,
+          marginTop: 4,
         },
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          height: 76,
-          paddingTop: 10,
-          paddingBottom: 18,
+          height: 82,
+          paddingTop: 6,
+          paddingBottom: 24,
         },
       }}>
       <Tabs.Screen name="index" options={{ href: null }} />

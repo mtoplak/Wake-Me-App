@@ -153,7 +153,10 @@ export default function MyAlarms() {
         {alarms.map(a => {
           const t = formatTime(a.hour, a.minute);
           return (
-            <View key={a.id} style={[styles.alarmCard, !a.enabled && styles.alarmCardOff]}>
+            <Pressable
+              key={a.id}
+              onPress={() => router.push(`/(main)/alarmRinging?alarmId=${a.id}`)}
+              style={[styles.alarmCard, !a.enabled && styles.alarmCardOff]}>
               <View style={styles.alarmTop}>
                 <View>
                   <View style={styles.timeWrap}>
@@ -166,12 +169,14 @@ export default function MyAlarms() {
                     {a.label || 'Alarm'}
                   </Text>
                 </View>
-                <Switch
-                  value={a.enabled}
-                  onValueChange={v => toggle(a.id, v)}
-                  trackColor={{ true: colors.accent, false: colors.border }}
-                  thumbColor={colors.white}
-                />
+                <View onStartShouldSetResponder={() => true}>
+                  <Switch
+                    value={a.enabled}
+                    onValueChange={v => toggle(a.id, v)}
+                    trackColor={{ true: colors.accent, false: colors.border }}
+                    thumbColor={colors.white}
+                  />
+                </View>
               </View>
 
               <View style={styles.alarmFoot}>
@@ -188,7 +193,7 @@ export default function MyAlarms() {
                   ))}
                 </View>
               </View>
-            </View>
+            </Pressable>
           );
         })}
 

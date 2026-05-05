@@ -7,6 +7,10 @@ export default function DrawerWithTabsLayout() {
       drawerContent={DrawerContents}
       screenOptions={{ headerShown: false, drawerType: 'back' }}>
       <Drawer.Screen name="(tabs)" options={{ title: 'Tabs' }} />
+      <Drawer.Screen
+        name="alarmRinging"
+        options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }}
+      />
     </Drawer>
   );
 }
