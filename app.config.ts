@@ -1,10 +1,10 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const expoProjectId = process.env.EXPO_PROJECT_ID ?? '18adc0d0-eb1d-11e9-8009-d524ed5cc4a7';
+  const expoProjectId = process.env.EXPO_PROJECT_ID ?? '3ee39128-e821-4b64-b7c4-6c28ce347737';
   const expoConfig: ExpoConfig = {
     ...config,
-    slug: process.env.EXPO_SLUG ?? 'wake-me-app-alarm-clock',
+    slug: process.env.EXPO_SLUG ?? 'wake-me-app',
     name: process.env.EXPO_NAME ?? 'Wake Me App Alarm Clock',
     ios: {
       ...config.ios,

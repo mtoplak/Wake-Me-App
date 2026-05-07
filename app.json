@@ -1,12 +1,16 @@
 {
   "expo": {
-    "name": "react-native-boilerplate",
-    "slug": "react-native-boilerplate",
-    "scheme": "react-native-boilerplate",
+    "name": "Wake Me App Alarm Clock",
+    "slug": "wake-me-app",
+    "scheme": "wake-me-app",
     "version": "3.0.0",
-    "owner": "wataru",
+    "owner": "mtoplak",
     "newArchEnabled": true,
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "orientation": "portrait",
     "icon": "./assets/images/alarm-clock-icon.png",
     "userInterfaceStyle": "automatic",
