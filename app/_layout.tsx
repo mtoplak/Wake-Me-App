@@ -2,14 +2,15 @@ import { Fragment, useState, useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import BottomSheetContents from '@/components/layouts/BottomSheetContents';
 import BottomSheet from '@/components/elements/BottomSheet';
-import { useDataPersist, DataPersistKeys } from '@/hooks';
+import { useDataPersist, DataPersistKeys, useAlarmWatcher } from '@/hooks';
 import useColorScheme from '@/hooks/useColorScheme';
 import { loadImages, loadFonts, colors } from '@/theme';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSlice } from '@/slices';
 import { getUserAsync } from '@/services';
-import { getDb, seedIfEmpty } from '@/services/database';
+import { getDb, listAlarms, seedIfEmpty } from '@/services/database';
+import { ensureAlarmPermissions, rescheduleAllAlarms } from '@/services/alarmScheduler';
 import Provider from '@/providers';
 import { User } from '@/types';
 
@@ -22,6 +23,8 @@ function Router() {
   const { setPersistData, getPersistData } = useDataPersist();
   const [isOpen, setOpen] = useState(false);
 
+  useAlarmWatcher();
+
   /**
    * preload assets and user info
    */
@@ -30,6 +33,12 @@ function Router() {
       try {
         // preload assets and initialize SQLite
         await Promise.all([loadImages(), loadFonts(), getDb().then(() => seedIfEmpty())]);
+
+        // request notification permission and (re)schedule all enabled alarms
+        ensureAlarmPermissions()
+          .then(() => listAlarms())
+          .then(alarms => rescheduleAllAlarms(alarms))
+          .catch(() => {});
 
         // fetch & store user data to store (fake promise function to simulate async function)
         const user = await getUserAsync();

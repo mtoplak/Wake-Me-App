@@ -23,6 +23,13 @@ CREATE TABLE IF NOT EXISTS alarms (
   FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS alarm_notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  alarm_id INTEGER NOT NULL,
+  notification_id TEXT NOT NULL,
+  FOREIGN KEY (alarm_id) REFERENCES alarms (id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS alarm_challenges (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   alarm_id INTEGER NOT NULL,
@@ -56,5 +63,6 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 CREATE INDEX IF NOT EXISTS idx_alarm_challenges_alarm ON alarm_challenges (alarm_id);
+CREATE INDEX IF NOT EXISTS idx_alarm_notifications_alarm ON alarm_notifications (alarm_id);
 CREATE INDEX IF NOT EXISTS idx_wake_stats_date ON wake_stats (date);
 `;

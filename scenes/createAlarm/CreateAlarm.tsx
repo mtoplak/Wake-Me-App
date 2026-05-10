@@ -1,9 +1,23 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Alert,
+  Modal,
+  TextInput,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { createAlarm } from '@/services/database';
+import { fireTestNotification } from '@/services/alarmScheduler';
+import { alarmSounds, getAlarmSource } from '@/scenes/alarmRinging/sounds';
 import { colors } from '@/theme';
 
 const DAYS: { key: string; label: string }[] = [
@@ -17,6 +31,8 @@ const DAYS: { key: string; label: string }[] = [
 ];
 
 type ChallengeKey = 'qr' | 'object' | 'color' | 'steps' | 'voice';
+
+const MAX_CHALLENGES = 2;
 
 const CHALLENGES: {
   key: ChallengeKey;
@@ -56,27 +72,129 @@ const CHALLENGES: {
   },
 ];
 
+const SOUND_OPTIONS = Object.keys(alarmSounds);
+
 export default function CreateAlarm() {
   const router = useRouter();
-  const [hour, setHour] = useState(7);
-  const [minute, setMinute] = useState(30);
-  const [activeDays, setActiveDays] = useState<string[]>(['mon', 'tue', 'wed', 'thu', 'fri']);
+  const initialNow = (() => {
+    const d = new Date();
+    return { hour: d.getHours(), minute: d.getMinutes() };
+  })();
+  const [hour, setHour] = useState(initialNow.hour);
+  const [minute, setMinute] = useState(initialNow.minute);
+  const [activeDays, setActiveDays] = useState<string[]>([]);
   const [challenges, setChallenges] = useState<ChallengeKey[]>(['qr']);
-  const [vibration, setVibration] = useState(true);
-  const [sound] = useState('Sunrise');
+  const [sound, setSound] = useState(SOUND_OPTIONS[0] ?? 'Sunrise');
   const [label, setLabel] = useState('Morning routine');
   const [saving, setSaving] = useState(false);
+
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showLabelModal, setShowLabelModal] = useState(false);
+  const [labelDraft, setLabelDraft] = useState(label);
+  const [showSoundModal, setShowSoundModal] = useState(false);
+
+  const previewPlayer = useAudioPlayer(getAlarmSource(sound) ?? null);
+  const [previewing, setPreviewing] = useState<string | null>(null);
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+      try {
+        previewPlayer.pause();
+      } catch {}
+    };
+  }, [previewPlayer]);
 
   const toggleDay = (key: string) => {
     setActiveDays(prev => (prev.includes(key) ? prev.filter(d => d !== key) : [...prev, key]));
   };
 
   const toggleChallenge = (key: ChallengeKey) => {
-    setChallenges(prev => (prev.includes(key) ? prev.filter(c => c !== key) : [...prev, key]));
+    setChallenges(prev => {
+      if (prev.includes(key)) return prev.filter(c => c !== key);
+      if (prev.length >= MAX_CHALLENGES) {
+        Alert.alert(
+          'Limit reached',
+          `You can pick up to ${MAX_CHALLENGES} challenges per alarm.`,
+        );
+        return prev;
+      }
+      return [...prev, key];
+    });
   };
 
-  const adjustHour = (delta: number) => setHour(prev => (prev + delta + 24) % 24);
-  const adjustMinute = (delta: number) => setMinute(prev => (prev + delta + 60) % 60);
+  const onTimeChange = (event: DateTimePickerEvent, selected?: Date) => {
+    if (Platform.OS === 'android') setShowTimePicker(false);
+    if (event.type === 'dismissed' || !selected) return;
+    setHour(selected.getHours());
+    setMinute(selected.getMinutes());
+  };
+
+  const openLabelModal = () => {
+    setLabelDraft(label);
+    setShowLabelModal(true);
+  };
+  const saveLabel = () => {
+    setLabel(labelDraft.trim() || 'Alarm');
+    setShowLabelModal(false);
+  };
+
+  const stopPreview = () => {
+    if (previewTimerRef.current) {
+      clearTimeout(previewTimerRef.current);
+      previewTimerRef.current = null;
+    }
+    setPreviewing(null);
+    try {
+      previewPlayer.pause();
+    } catch {}
+  };
+
+  const previewSound = (name: string) => {
+    if (previewing === name) {
+      stopPreview();
+      return;
+    }
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current);
+    try {
+      const source = getAlarmSource(name);
+      if (!source) return;
+      previewPlayer.replace(source);
+      previewPlayer.volume = 0.7;
+      previewPlayer.seekTo(0).catch(() => {});
+      previewPlayer.play();
+      setPreviewing(name);
+      previewTimerRef.current = setTimeout(() => {
+        try {
+          previewPlayer.pause();
+        } catch {}
+        setPreviewing(curr => (curr === name ? null : curr));
+        previewTimerRef.current = null;
+      }, 5000);
+    } catch {}
+  };
+
+  const closeSoundModal = () => {
+    stopPreview();
+    setShowSoundModal(false);
+  };
+
+  const testNotificationSound = async (name: string) => {
+    const id = await fireTestNotification(name, 5);
+    if (!id) {
+      Alert.alert('Notifications disabled', 'Grant notification permission in iOS settings.');
+      return;
+    }
+    Alert.alert(
+      'Test scheduled',
+      'Lock your phone NOW. The notification will fire in ~5 seconds. (Custom iOS sounds only play when the app is in the background.)',
+    );
+  };
 
   const onSave = async () => {
     if (challenges.length === 0) {
@@ -92,7 +210,7 @@ export default function CreateAlarm() {
         repeatDays: activeDays,
         enabled: true,
         sound,
-        vibration,
+        vibration: true,
         challenges,
       });
       router.back();
@@ -102,6 +220,12 @@ export default function CreateAlarm() {
       setSaving(false);
     }
   };
+
+  const timeDate = (() => {
+    const d = new Date();
+    d.setHours(hour, minute, 0, 0);
+    return d;
+  })();
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -116,18 +240,38 @@ export default function CreateAlarm() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.timeCard}>
-          <View style={styles.timeRow}>
-            <TimeColumn value={hour} onUp={() => adjustHour(1)} onDown={() => adjustHour(-1)} />
+        <Pressable style={styles.timeCard} onPress={() => setShowTimePicker(true)}>
+          <Text style={styles.timeValue}>
+            {String(hour).padStart(2, '0')}
             <Text style={styles.timeColon}>:</Text>
-            <TimeColumn
-              value={minute}
-              onUp={() => adjustMinute(1)}
-              onDown={() => adjustMinute(-1)}
+            {String(minute).padStart(2, '0')}
+          </Text>
+          <Text style={styles.timeHint}>Tap to change time</Text>
+        </Pressable>
+
+        {showTimePicker && Platform.OS === 'ios' && (
+          <View style={styles.iosPickerCard}>
+            <DateTimePicker
+              value={timeDate}
+              mode="time"
+              display="spinner"
+              onChange={onTimeChange}
+              textColor={colors.textPrimary}
             />
+            <Pressable style={styles.iosPickerDone} onPress={() => setShowTimePicker(false)}>
+              <Text style={styles.iosPickerDoneText}>Done</Text>
+            </Pressable>
           </View>
-          <Text style={styles.timeHint}>Wakes you {label.toLowerCase()}</Text>
-        </View>
+        )}
+        {showTimePicker && Platform.OS === 'android' && (
+          <DateTimePicker
+            value={timeDate}
+            mode="time"
+            is24Hour
+            display="clock"
+            onChange={onTimeChange}
+          />
+        )}
 
         <SectionTitle>Repeat</SectionTitle>
         <View style={styles.daysRow}>
@@ -144,15 +288,20 @@ export default function CreateAlarm() {
           })}
         </View>
 
-        <SectionTitle>Wake-up Challenge</SectionTitle>
+        <SectionTitle>Wake-up Challenge ({challenges.length}/{MAX_CHALLENGES})</SectionTitle>
         <View style={styles.challengeList}>
           {CHALLENGES.map(c => {
             const active = challenges.includes(c.key);
+            const disabled = !active && challenges.length >= MAX_CHALLENGES;
             return (
               <Pressable
                 key={c.key}
                 onPress={() => toggleChallenge(c.key)}
-                style={[styles.challengeRow, active && styles.challengeRowActive]}>
+                style={[
+                  styles.challengeRow,
+                  active && styles.challengeRowActive,
+                  disabled && styles.challengeRowDisabled,
+                ]}>
                 <View style={styles.challengeIcon}>{c.icon}</View>
                 <View style={styles.challengeText}>
                   <Text style={styles.challengeTitle}>{c.title}</Text>
@@ -168,64 +317,114 @@ export default function CreateAlarm() {
 
         <SectionTitle>Options</SectionTitle>
         <View style={styles.optionCard}>
-          <Pressable style={styles.optionRow} onPress={() => setLabel('Morning routine')}>
+          <Pressable style={styles.optionRow} onPress={openLabelModal}>
             <Ionicons name="bookmark-outline" size={20} color={colors.textSecondary} />
             <Text style={styles.optionLabel}>Label</Text>
-            <Text style={styles.optionValue}>{label}</Text>
+            <Text style={styles.optionValue} numberOfLines={1}>
+              {label}
+            </Text>
             <AntDesign name="right" size={14} color={colors.textMuted} />
           </Pressable>
           <View style={styles.divider} />
-          <Pressable style={styles.optionRow}>
+          <Pressable style={styles.optionRow} onPress={() => setShowSoundModal(true)}>
             <Ionicons name="musical-notes-outline" size={20} color={colors.textSecondary} />
             <Text style={styles.optionLabel}>Sound</Text>
-            <Text style={styles.optionValue}>Sunrise</Text>
+            <Text style={styles.optionValue}>{sound}</Text>
             <AntDesign name="right" size={14} color={colors.textMuted} />
           </Pressable>
-          <View style={styles.divider} />
-          <View style={styles.optionRow}>
-            <MaterialCommunityIcons name="vibrate" size={20} color={colors.textSecondary} />
-            <Text style={styles.optionLabel}>Vibration</Text>
-            <Switch
-              value={vibration}
-              onValueChange={setVibration}
-              trackColor={{ true: colors.accent, false: colors.border }}
-              thumbColor={colors.white}
-            />
-          </View>
         </View>
 
         <Pressable style={styles.primaryBtn} onPress={onSave} disabled={saving}>
           <Text style={styles.primaryBtnText}>{saving ? 'Saving…' : 'Save Alarm'}</Text>
         </Pressable>
       </ScrollView>
+
+      <Modal visible={showLabelModal} transparent animationType="fade" onRequestClose={() => setShowLabelModal(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setShowLabelModal(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Alarm label</Text>
+            <TextInput
+              value={labelDraft}
+              onChangeText={setLabelDraft}
+              placeholder="e.g. Morning run"
+              placeholderTextColor={colors.textMuted}
+              style={styles.modalInput}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={saveLabel}
+              maxLength={40}
+            />
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalSecondary} onPress={() => setShowLabelModal(false)}>
+                <Text style={styles.modalSecondaryText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.modalPrimary} onPress={saveLabel}>
+                <Text style={styles.modalPrimaryText}>Save</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showSoundModal} transparent animationType="fade" onRequestClose={closeSoundModal}>
+        <Pressable style={styles.modalBackdrop} onPress={closeSoundModal}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Alarm sound</Text>
+            <View style={styles.soundList}>
+              {SOUND_OPTIONS.map(name => {
+                const active = sound === name;
+                const isPlaying = previewing === name;
+                return (
+                  <Pressable
+                    key={name}
+                    onPress={() => setSound(name)}
+                    style={[styles.soundRow, active && styles.soundRowActive]}>
+                    <Pressable
+                      hitSlop={8}
+                      onPress={() => previewSound(name)}
+                      style={[styles.previewBtn, isPlaying && styles.previewBtnActive]}>
+                      <Ionicons
+                        name={isPlaying ? 'stop' : 'notifications'}
+                        size={16}
+                        color={isPlaying ? colors.white : colors.accent}
+                      />
+                    </Pressable>
+                    <Text style={[styles.soundName, active && styles.soundNameActive]}>
+                      {name}
+                      {isPlaying ? '  • playing' : ''}
+                    </Text>
+                    {active && <AntDesign name="check" size={16} color={colors.accent} />}
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={styles.modalHint}>Tap the bell to preview (5s)</Text>
+            <Pressable
+              style={styles.testNotifBtn}
+              onPress={() => testNotificationSound(sound)}>
+              <Ionicons name="notifications-outline" size={16} color={colors.accent} />
+              <Text style={styles.testNotifText}>Test custom sound (5s)</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.testNotifBtn, styles.testNotifBtnAlt]}
+              onPress={() => testNotificationSound('__default__')}>
+              <Ionicons name="notifications-outline" size={16} color={colors.textSecondary} />
+              <Text style={styles.testNotifTextAlt}>Test iOS default sound (5s)</Text>
+            </Pressable>
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalPrimary} onPress={closeSoundModal}>
+                <Text style={styles.modalPrimaryText}>Done</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <Text style={styles.sectionTitle}>{children}</Text>;
-}
-
-function TimeColumn({
-  value,
-  onUp,
-  onDown,
-}: {
-  value: number;
-  onUp: () => void;
-  onDown: () => void;
-}) {
-  return (
-    <View style={styles.timeCol}>
-      <Pressable hitSlop={8} onPress={onUp} style={styles.timeArrow}>
-        <AntDesign name="up" size={16} color={colors.textMuted} />
-      </Pressable>
-      <Text style={styles.timeValue}>{String(value).padStart(2, '0')}</Text>
-      <Pressable hitSlop={8} onPress={onDown} style={styles.timeArrow}>
-        <AntDesign name="down" size={16} color={colors.textMuted} />
-      </Pressable>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -262,11 +461,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
-  timeRow: { flexDirection: 'row', alignItems: 'center' },
-  timeCol: { alignItems: 'center', minWidth: 84 },
-  timeArrow: { padding: 6 },
   timeValue: {
-    fontSize: 64,
+    fontSize: 72,
     fontWeight: '300',
     color: colors.textPrimary,
     letterSpacing: -2,
@@ -275,13 +471,30 @@ const styles = StyleSheet.create({
     fontSize: 56,
     fontWeight: '200',
     color: colors.textPrimary,
-    marginHorizontal: 4,
-    marginTop: -8,
   },
   timeHint: {
     marginTop: 8,
     color: colors.textSecondary,
     fontSize: 13,
+  },
+  iosPickerCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    marginTop: 12,
+    paddingTop: 6,
+    paddingBottom: 4,
+    alignItems: 'stretch',
+  },
+  iosPickerDone: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  iosPickerDoneText: {
+    color: colors.accent,
+    fontWeight: '600',
+    fontSize: 15,
   },
   sectionTitle: {
     fontSize: 13,
@@ -323,6 +536,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   challengeRowActive: { backgroundColor: colors.accentSoft },
+  challengeRowDisabled: { opacity: 0.45 },
   challengeIcon: {
     width: 40,
     height: 40,
@@ -368,12 +582,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionLabel: {
-    flex: 1,
     fontSize: 15,
     color: colors.textPrimary,
     fontWeight: '500',
   },
-  optionValue: { fontSize: 14, color: colors.textSecondary },
+  optionValue: { flex: 1, fontSize: 14, color: colors.textSecondary, textAlign: 'right' },
   divider: { height: 1, backgroundColor: colors.border },
   primaryBtn: {
     marginTop: 32,
@@ -392,4 +605,97 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 14,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.textPrimary,
+    backgroundColor: colors.background,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 18,
+  },
+  modalSecondary: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  modalSecondaryText: { color: colors.textSecondary, fontWeight: '600' },
+  modalPrimary: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: colors.accent,
+  },
+  modalPrimaryText: { color: colors.white, fontWeight: '700' },
+  soundList: { gap: 4 },
+  soundRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+  },
+  soundRowActive: { backgroundColor: colors.accentSoft },
+  soundName: { flex: 1, color: colors.textPrimary, fontSize: 15, fontWeight: '500' },
+  soundNameActive: { color: colors.accent, fontWeight: '700' },
+  previewBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accentSoft,
+  },
+  previewBtnActive: {
+    backgroundColor: colors.accent,
+  },
+  modalHint: {
+    marginTop: 10,
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  testNotifBtn: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  testNotifText: { color: colors.accent, fontWeight: '600', fontSize: 13 },
+  testNotifBtnAlt: {
+    marginTop: 6,
+    borderColor: colors.border,
+  },
+  testNotifTextAlt: { color: colors.textSecondary, fontWeight: '600', fontSize: 13 },
 });

@@ -23,6 +23,7 @@ export async function resetDb(): Promise<void> {
   const db = await getDb();
   await db.execAsync(`
     DROP TABLE IF EXISTS alarm_challenges;
+    DROP TABLE IF EXISTS alarm_notifications;
     DROP TABLE IF EXISTS wake_stats;
     DROP TABLE IF EXISTS alarms;
     DROP TABLE IF EXISTS cached_quotes;

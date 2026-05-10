@@ -37,6 +37,18 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-audio',
       'expo-sqlite',
       [
+        'expo-notifications',
+        {
+          icon: './assets/images/alarm-clock-favicon.png',
+          color: '#ffffff',
+          sounds: [
+            './assets/notification-sounds/sunrise.caf',
+            './assets/notification-sounds/chimes.caf',
+            './assets/notification-sounds/birds.caf',
+          ],
+        },
+      ],
+      [
         'expo-splash-screen',
         {
           backgroundColor: '#ffffff',

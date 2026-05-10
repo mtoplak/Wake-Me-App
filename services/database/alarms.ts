@@ -1,5 +1,6 @@
 import { getDb } from './db';
 import { Alarm, AlarmChallengeRecord, AlarmInput, AlarmRecord, ChallengeType } from './types';
+import { cancelAlarm, scheduleAlarm } from '../alarmScheduler';
 
 function mapAlarm(row: AlarmRecord, challenges: ChallengeType[]): Alarm {
   return {
@@ -58,16 +59,48 @@ export async function createAlarm(input: AlarmInput): Promise<number> {
       [alarmId, c, 'normal'],
     );
   }
+  await scheduleAlarm({
+    id: alarmId,
+    hour: input.hour,
+    minute: input.minute,
+    label: input.label,
+    repeatDays: input.repeatDays,
+    enabled: input.enabled !== false,
+    sound: input.sound ?? 'Sunrise',
+    vibration: input.vibration !== false,
+    challenges: input.challenges,
+  });
   return alarmId;
+}
+
+async function loadAlarmById(id: number): Promise<Alarm | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<AlarmRecord>('SELECT * FROM alarms WHERE id = ?', [id]);
+  if (!row) return null;
+  const challengeRows = await db.getAllAsync<AlarmChallengeRecord>(
+    'SELECT * FROM alarm_challenges WHERE alarm_id = ?',
+    [id],
+  );
+  return mapAlarm(
+    row,
+    challengeRows.map(c => c.challenge_type),
+  );
 }
 
 export async function setAlarmEnabled(id: number, enabled: boolean): Promise<void> {
   const db = await getDb();
   await db.runAsync('UPDATE alarms SET enabled = ? WHERE id = ?', [enabled ? 1 : 0, id]);
+  if (enabled) {
+    const alarm = await loadAlarmById(id);
+    if (alarm) await scheduleAlarm(alarm);
+  } else {
+    await cancelAlarm(id);
+  }
 }
 
 export async function deleteAlarm(id: number): Promise<void> {
   const db = await getDb();
+  await cancelAlarm(id);
   await db.runAsync('DELETE FROM alarms WHERE id = ?', [id]);
 }
 
