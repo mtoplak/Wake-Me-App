@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus, Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import { useRouter, useSegments } from 'expo-router';
 import { listAlarms } from '@/services/database';
 import { Alarm } from '@/services/database/types';
+import { getNotificationsModule } from '@/services/alarmScheduler';
 
 const POLL_INTERVAL_MS = 15_000;
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -74,6 +74,8 @@ export function useAlarmWatcher() {
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
+    const Notifications = getNotificationsModule();
+    if (!Notifications) return;
     const sub = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data as { alarmId?: number } | undefined;
       const alarmId = data?.alarmId;

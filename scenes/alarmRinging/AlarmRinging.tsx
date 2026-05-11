@@ -16,6 +16,7 @@ import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync, AudioSource } from 'expo-audio';
 import { listAlarms, getTodaysQuote, CachedQuote, Alarm } from '@/services/database';
+import { acknowledgeAlarm } from '@/services/alarmScheduler';
 import { colors } from '@/theme';
 import { getAlarmSource } from './sounds';
 
@@ -47,7 +48,13 @@ export default function AlarmRinging() {
       const list = await listAlarms();
       const id = params.alarmId ? Number(params.alarmId) : NaN;
       const found = list.find(a => a.id === id) ?? list.find(a => a.enabled) ?? list[0];
-      if (found) setAlarm(found);
+      if (found) {
+        setAlarm(found);
+        // Silence the remaining notifications in the burst now that we're
+        // playing audio in-app. If the alarm repeats, this also schedules the
+        // next occurrence.
+        acknowledgeAlarm(found.id, found).catch(() => {});
+      }
     })();
   }, [params.alarmId]);
 
