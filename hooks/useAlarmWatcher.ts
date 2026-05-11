@@ -3,9 +3,9 @@ import { AppState, AppStateStatus, Platform } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { listAlarms } from '@/services/database';
 import { Alarm } from '@/services/database/types';
-import { getNotificationsModule } from '@/services/alarmScheduler';
+import { getNotificationsModule, setAlarmActiveForeground } from '@/services/alarmScheduler';
 
-const POLL_INTERVAL_MS = 15_000;
+const POLL_INTERVAL_MS = 3_000;
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 function shouldFire(alarm: Alarm, now: Date, lastFired: Map<number, number>): boolean {
@@ -76,13 +76,33 @@ export function useAlarmWatcher() {
     if (Platform.OS === 'web') return;
     const Notifications = getNotificationsModule();
     if (!Notifications) return;
-    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+
+    // Fires when the user taps a notification — open the ringing screen.
+    const tapSub = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data as { alarmId?: number } | undefined;
       const alarmId = data?.alarmId;
       if (typeof alarmId === 'number') {
         router.push(`/(main)/alarmRinging?alarmId=${alarmId}`);
       }
     });
-    return () => sub.remove();
+
+    // Fires the moment a notification is delivered (incl. foreground). Flip the
+    // suppression flag *immediately* so the next notification in the 30s burst
+    // is silenced, and proactively navigate to the ringing screen so the in-app
+    // looped audio takes over instead of waiting for the next watcher tick.
+    const receiveSub = Notifications.addNotificationReceivedListener(notification => {
+      const data = notification.request.content.data as { alarmId?: number } | undefined;
+      const alarmId = data?.alarmId;
+      if (typeof alarmId !== 'number') return;
+      setAlarmActiveForeground(true);
+      if (!onAlarmRinging.current) {
+        router.push(`/(main)/alarmRinging?alarmId=${alarmId}`);
+      }
+    });
+
+    return () => {
+      tapSub.remove();
+      receiveSub.remove();
+    };
   }, [router]);
 }

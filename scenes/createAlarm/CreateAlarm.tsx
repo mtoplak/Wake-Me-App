@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,17 +8,24 @@ import {
   Alert,
   Modal,
   TextInput,
-  Platform,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { createAlarm } from '@/services/database';
-import { fireTestNotification } from '@/services/alarmScheduler';
 import { alarmSounds, getAlarmSource } from '@/scenes/alarmRinging/sounds';
 import { colors } from '@/theme';
+
+const WHEEL_ITEM_HEIGHT = 56;
+const WHEEL_VISIBLE_COUNT = 5;
+const WHEEL_PAD_COUNT = Math.floor(WHEEL_VISIBLE_COUNT / 2);
+const WHEEL_REPEAT = 5;
+const WHEEL_CENTER_COPY = Math.floor(WHEEL_REPEAT / 2);
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const MINUTES = Array.from({ length: 60 }, (_, i) => i);
 
 const DAYS: { key: string; label: string }[] = [
   { key: 'mon', label: 'M' },
@@ -88,7 +95,6 @@ export default function CreateAlarm() {
   const [label, setLabel] = useState('Morning routine');
   const [saving, setSaving] = useState(false);
 
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [labelDraft, setLabelDraft] = useState(label);
   const [showSoundModal, setShowSoundModal] = useState(false);
@@ -118,21 +124,11 @@ export default function CreateAlarm() {
     setChallenges(prev => {
       if (prev.includes(key)) return prev.filter(c => c !== key);
       if (prev.length >= MAX_CHALLENGES) {
-        Alert.alert(
-          'Limit reached',
-          `You can pick up to ${MAX_CHALLENGES} challenges per alarm.`,
-        );
+        Alert.alert('Limit reached', `You can pick up to ${MAX_CHALLENGES} challenges per alarm.`);
         return prev;
       }
       return [...prev, key];
     });
-  };
-
-  const onTimeChange = (event: DateTimePickerEvent, selected?: Date) => {
-    if (Platform.OS === 'android') setShowTimePicker(false);
-    if (event.type === 'dismissed' || !selected) return;
-    setHour(selected.getHours());
-    setMinute(selected.getMinutes());
   };
 
   const openLabelModal = () => {
@@ -175,25 +171,13 @@ export default function CreateAlarm() {
         } catch {}
         setPreviewing(curr => (curr === name ? null : curr));
         previewTimerRef.current = null;
-      }, 5000);
+      }, 15000);
     } catch {}
   };
 
   const closeSoundModal = () => {
     stopPreview();
     setShowSoundModal(false);
-  };
-
-  const testNotificationSound = async (name: string) => {
-    const id = await fireTestNotification(name, 5);
-    if (!id) {
-      Alert.alert('Notifications disabled', 'Grant notification permission in iOS settings.');
-      return;
-    }
-    Alert.alert(
-      'Test scheduled',
-      'Lock your phone NOW. The notification will fire in ~5 seconds. (Custom iOS sounds only play when the app is in the background.)',
-    );
   };
 
   const onSave = async () => {
@@ -221,11 +205,7 @@ export default function CreateAlarm() {
     }
   };
 
-  const timeDate = (() => {
-    const d = new Date();
-    d.setHours(hour, minute, 0, 0);
-    return d;
-  })();
+  const ringLabel = useMemo(() => formatRingIn(hour, minute), [hour, minute]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -240,38 +220,18 @@ export default function CreateAlarm() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Pressable style={styles.timeCard} onPress={() => setShowTimePicker(true)}>
-          <Text style={styles.timeValue}>
-            {String(hour).padStart(2, '0')}
-            <Text style={styles.timeColon}>:</Text>
-            {String(minute).padStart(2, '0')}
-          </Text>
-          <Text style={styles.timeHint}>Tap to change time</Text>
-        </Pressable>
-
-        {showTimePicker && Platform.OS === 'ios' && (
-          <View style={styles.iosPickerCard}>
-            <DateTimePicker
-              value={timeDate}
-              mode="time"
-              display="spinner"
-              onChange={onTimeChange}
-              textColor={colors.textPrimary}
-            />
-            <Pressable style={styles.iosPickerDone} onPress={() => setShowTimePicker(false)}>
-              <Text style={styles.iosPickerDoneText}>Done</Text>
-            </Pressable>
+        <View style={styles.timeCard}>
+          <Text style={styles.ringInText}>{ringLabel}</Text>
+          <View style={styles.wheelContainer}>
+            <View style={styles.wheelSelectionBand} pointerEvents="none" />
+            <View style={styles.wheelRow}>
+              <WheelColumn values={HOURS} selectedIndex={hour} onChange={setHour} />
+              <WheelColumn values={MINUTES} selectedIndex={minute} onChange={setMinute} />
+            </View>
+            <View style={styles.wheelFadeTop} pointerEvents="none" />
+            <View style={styles.wheelFadeBottom} pointerEvents="none" />
           </View>
-        )}
-        {showTimePicker && Platform.OS === 'android' && (
-          <DateTimePicker
-            value={timeDate}
-            mode="time"
-            is24Hour
-            display="clock"
-            onChange={onTimeChange}
-          />
-        )}
+        </View>
 
         <SectionTitle>Repeat</SectionTitle>
         <View style={styles.daysRow}>
@@ -288,7 +248,9 @@ export default function CreateAlarm() {
           })}
         </View>
 
-        <SectionTitle>Wake-up Challenge ({challenges.length}/{MAX_CHALLENGES})</SectionTitle>
+        <SectionTitle>
+          Wake-up Challenge ({challenges.length}/{MAX_CHALLENGES})
+        </SectionTitle>
         <View style={styles.challengeList}>
           {CHALLENGES.map(c => {
             const active = challenges.includes(c.key);
@@ -339,7 +301,11 @@ export default function CreateAlarm() {
         </Pressable>
       </ScrollView>
 
-      <Modal visible={showLabelModal} transparent animationType="fade" onRequestClose={() => setShowLabelModal(false)}>
+      <Modal
+        visible={showLabelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLabelModal(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setShowLabelModal(false)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
             <Text style={styles.modalTitle}>Alarm label</Text>
@@ -366,7 +332,11 @@ export default function CreateAlarm() {
         </Pressable>
       </Modal>
 
-      <Modal visible={showSoundModal} transparent animationType="fade" onRequestClose={closeSoundModal}>
+      <Modal
+        visible={showSoundModal}
+        transparent
+        animationType="fade"
+        onRequestClose={closeSoundModal}>
         <Pressable style={styles.modalBackdrop} onPress={closeSoundModal}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
             <Text style={styles.modalTitle}>Alarm sound</Text>
@@ -384,7 +354,7 @@ export default function CreateAlarm() {
                       onPress={() => previewSound(name)}
                       style={[styles.previewBtn, isPlaying && styles.previewBtnActive]}>
                       <Ionicons
-                        name={isPlaying ? 'stop' : 'notifications'}
+                        name={isPlaying ? 'stop' : 'volume-high'}
                         size={16}
                         color={isPlaying ? colors.white : colors.accent}
                       />
@@ -398,19 +368,7 @@ export default function CreateAlarm() {
                 );
               })}
             </View>
-            <Text style={styles.modalHint}>Tap the bell to preview (5s)</Text>
-            <Pressable
-              style={styles.testNotifBtn}
-              onPress={() => testNotificationSound(sound)}>
-              <Ionicons name="notifications-outline" size={16} color={colors.accent} />
-              <Text style={styles.testNotifText}>Test custom sound (5s)</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.testNotifBtn, styles.testNotifBtnAlt]}
-              onPress={() => testNotificationSound('__default__')}>
-              <Ionicons name="notifications-outline" size={16} color={colors.textSecondary} />
-              <Text style={styles.testNotifTextAlt}>Test iOS default sound (5s)</Text>
-            </Pressable>
+            <Text style={styles.modalHint}>Tap the speaker to preview (15s)</Text>
             <View style={styles.modalActions}>
               <Pressable style={styles.modalPrimary} onPress={closeSoundModal}>
                 <Text style={styles.modalPrimaryText}>Done</Text>
@@ -425,6 +383,132 @@ export default function CreateAlarm() {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <Text style={styles.sectionTitle}>{children}</Text>;
+}
+
+function WheelColumn({
+  values,
+  selectedIndex,
+  onChange,
+}: {
+  values: number[];
+  selectedIndex: number;
+  onChange: (idx: number) => void;
+}) {
+  const length = values.length;
+  const totalCount = length * WHEEL_REPEAT;
+  const extendedValues = useMemo(
+    () => Array.from({ length: totalCount }, (_, i) => values[i % length]),
+    [values, length, totalCount],
+  );
+
+  const initialExtIdx = WHEEL_CENTER_COPY * length + selectedIndex;
+  const scrollRef = useRef<ScrollView>(null);
+  const userScrollingRef = useRef(false);
+  const isMountedRef = useRef(false);
+  const animateNextScrollRef = useRef(false);
+  const centerExtIdxRef = useRef(initialExtIdx);
+  const [centerExtIdx, setCenterExtIdx] = useState(initialExtIdx);
+
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+    if (userScrollingRef.current) return;
+    // Pick the copy of `selectedIndex` closest to the current scroll position
+    // so external changes don't trigger long scrolls across copies.
+    const current = centerExtIdxRef.current;
+    const currentCopy = Math.floor(current / length);
+    const candidates = [-1, 0, 1]
+      .map(o => (currentCopy + o) * length + selectedIndex)
+      .filter(c => c >= 0 && c < totalCount);
+    const target = candidates.reduce(
+      (best, c) => (Math.abs(c - current) < Math.abs(best - current) ? c : best),
+      candidates[0] ?? WHEEL_CENTER_COPY * length + selectedIndex,
+    );
+    if (target === current) return;
+    const animated = animateNextScrollRef.current;
+    animateNextScrollRef.current = false;
+    scrollRef.current?.scrollTo({ y: target * WHEEL_ITEM_HEIGHT, animated });
+  }, [selectedIndex, length, totalCount]);
+
+  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offset = e.nativeEvent.contentOffset.y;
+    const idx = Math.round(offset / WHEEL_ITEM_HEIGHT);
+    if (idx !== centerExtIdxRef.current) {
+      centerExtIdxRef.current = idx;
+      setCenterExtIdx(idx);
+    }
+  };
+
+  const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offset = e.nativeEvent.contentOffset.y;
+    const rawIdx = Math.round(offset / WHEEL_ITEM_HEIGHT);
+    const newSelected = ((rawIdx % length) + length) % length;
+    userScrollingRef.current = false;
+
+    // If the user drifted into the outermost copy, silently snap back to the
+    // center copy so they always have room to scroll in either direction.
+    if (rawIdx < length || rawIdx >= totalCount - length) {
+      const canonical = WHEEL_CENTER_COPY * length + newSelected;
+      centerExtIdxRef.current = canonical;
+      setCenterExtIdx(canonical);
+      scrollRef.current?.scrollTo({ y: canonical * WHEEL_ITEM_HEIGHT, animated: false });
+    }
+
+    if (newSelected !== selectedIndex) onChange(newSelected);
+  };
+
+  const handleItemTap = (extIdx: number) => {
+    const newSelected = ((extIdx % length) + length) % length;
+    if (newSelected === selectedIndex) return;
+    animateNextScrollRef.current = true;
+    onChange(newSelected);
+  };
+
+  return (
+    <ScrollView
+      ref={scrollRef}
+      style={styles.wheelColumn}
+      showsVerticalScrollIndicator={false}
+      snapToInterval={WHEEL_ITEM_HEIGHT}
+      decelerationRate="fast"
+      contentOffset={{ x: 0, y: initialExtIdx * WHEEL_ITEM_HEIGHT }}
+      contentContainerStyle={{ paddingVertical: WHEEL_ITEM_HEIGHT * WHEEL_PAD_COUNT }}
+      onScrollBeginDrag={() => {
+        userScrollingRef.current = true;
+      }}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+      onMomentumScrollEnd={handleMomentumEnd}
+      nestedScrollEnabled>
+      {extendedValues.map((item, extIdx) => {
+        const active = extIdx === centerExtIdx;
+        return (
+          <Pressable key={extIdx} style={styles.wheelItem} onPress={() => handleItemTap(extIdx)}>
+            <Text style={[styles.wheelText, active && styles.wheelTextActive]}>
+              {String(item).padStart(2, '0')}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+function formatRingIn(hour: number, minute: number): string {
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(hour, minute, 0, 0);
+  if (target.getTime() <= now.getTime()) {
+    target.setDate(target.getDate() + 1);
+  }
+  const totalMin = Math.max(1, Math.round((target.getTime() - now.getTime()) / 60000));
+  const hrs = Math.floor(totalMin / 60);
+  const mins = totalMin % 60;
+  if (hrs === 0) return `Rings in ${mins}min`;
+  if (mins === 0) return `Rings in ${hrs}hr${hrs === 1 ? '' : 's'}`;
+  return `Rings in ${hrs}hr${hrs === 1 ? '' : 's'} ${mins}min`;
 }
 
 const styles = StyleSheet.create({
@@ -452,7 +536,8 @@ const styles = StyleSheet.create({
   timeCard: {
     backgroundColor: colors.surface,
     borderRadius: 24,
-    paddingVertical: 28,
+    paddingTop: 20,
+    paddingBottom: 8,
     paddingHorizontal: 20,
     alignItems: 'center',
     shadowColor: colors.accent,
@@ -461,40 +546,68 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
-  timeValue: {
-    fontSize: 72,
-    fontWeight: '300',
-    color: colors.textPrimary,
-    letterSpacing: -2,
-  },
-  timeColon: {
-    fontSize: 56,
-    fontWeight: '200',
-    color: colors.textPrimary,
-  },
-  timeHint: {
-    marginTop: 8,
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  iosPickerCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 18,
-    marginTop: 12,
-    paddingTop: 6,
-    paddingBottom: 4,
-    alignItems: 'stretch',
-  },
-  iosPickerDone: {
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  iosPickerDoneText: {
-    color: colors.accent,
-    fontWeight: '600',
+  ringInText: {
     fontSize: 15,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  wheelContainer: {
+    height: WHEEL_ITEM_HEIGHT * WHEEL_VISIBLE_COUNT,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  wheelSelectionBand: {
+    position: 'absolute',
+    top: WHEEL_ITEM_HEIGHT * WHEEL_PAD_COUNT,
+    left: 0,
+    right: 0,
+    height: WHEEL_ITEM_HEIGHT,
+    backgroundColor: colors.accentSoft,
+    borderRadius: 14,
+  },
+  wheelRow: {
+    flexDirection: 'row',
+    gap: 32,
+  },
+  wheelColumn: {
+    width: 80,
+    height: WHEEL_ITEM_HEIGHT * WHEEL_VISIBLE_COUNT,
+  },
+  wheelItem: {
+    height: WHEEL_ITEM_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wheelText: {
+    fontSize: 36,
+    fontWeight: '300',
+    color: colors.textMuted,
+    fontVariant: ['tabular-nums'],
+  },
+  wheelTextActive: {
+    color: colors.textPrimary,
+    fontWeight: '500',
+  },
+  wheelFadeTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: WHEEL_ITEM_HEIGHT * WHEEL_PAD_COUNT,
+    backgroundColor: colors.surface,
+    opacity: 0.6,
+  },
+  wheelFadeBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: WHEEL_ITEM_HEIGHT * WHEEL_PAD_COUNT,
+    backgroundColor: colors.surface,
+    opacity: 0.6,
   },
   sectionTitle: {
     fontSize: 13,
@@ -681,21 +794,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
   },
-  testNotifBtn: {
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
-  testNotifText: { color: colors.accent, fontWeight: '600', fontSize: 13 },
-  testNotifBtnAlt: {
-    marginTop: 6,
-    borderColor: colors.border,
-  },
-  testNotifTextAlt: { color: colors.textSecondary, fontWeight: '600', fontSize: 13 },
 });

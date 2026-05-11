@@ -16,7 +16,7 @@ import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync, AudioSource } from 'expo-audio';
 import { listAlarms, getTodaysQuote, CachedQuote, Alarm } from '@/services/database';
-import { acknowledgeAlarm } from '@/services/alarmScheduler';
+import { acknowledgeAlarm, setAlarmActiveForeground } from '@/services/alarmScheduler';
 import { colors } from '@/theme';
 import { getAlarmSource } from './sounds';
 
@@ -74,6 +74,15 @@ export default function AlarmRinging() {
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false }).catch(() => {});
+  }, []);
+
+  // Hold the suppression flag for the whole lifetime of this screen, not just
+  // while the audio effect below is running — otherwise it briefly flips back
+  // to false whenever `audioSource`/`player` change (e.g. when the alarm loads
+  // and its sound differs from the default).
+  useEffect(() => {
+    setAlarmActiveForeground(true);
+    return () => setAlarmActiveForeground(false);
   }, []);
 
   useEffect(() => {
@@ -202,10 +211,7 @@ export default function AlarmRinging() {
 
         <View style={styles.bellWrap}>
           <Animated.View
-            style={[
-              styles.pulse,
-              { transform: [{ scale: pulseScale }], opacity: pulseOpacity },
-            ]}
+            style={[styles.pulse, { transform: [{ scale: pulseScale }], opacity: pulseOpacity }]}
           />
           <View style={styles.bellInner}>
             <Ionicons name="alarm" size={56} color={colors.accent} />

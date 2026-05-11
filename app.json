@@ -34,8 +34,6 @@
     "web": {
       "favicon": "./assets/images/alarm-clock-favicon.png"
     },
-    "runtimeVersion": {
-      "policy": "sdkVersion"
-    }
+    "runtimeVersion": "1.0.0"
   }
 }

@@ -35,6 +35,15 @@ function getNotifs(): typeof NotificationsType | null {
 let handlerConfigured = false;
 let permissionPromise: Promise<boolean> | null = null;
 
+// True while AlarmRinging is on screen — its in-app looped audio is the source
+// of truth, so we silence the per-notification sound to avoid the burst
+// stuttering over the loop.
+let alarmActiveForeground = false;
+
+export function setAlarmActiveForeground(active: boolean): void {
+  alarmActiveForeground = active;
+}
+
 function configureHandler() {
   if (handlerConfigured) return;
   const Notifications = getNotifs();
@@ -42,9 +51,9 @@ function configureHandler() {
   handlerConfigured = true;
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
+      shouldShowBanner: !alarmActiveForeground,
+      shouldShowList: !alarmActiveForeground,
+      shouldPlaySound: !alarmActiveForeground,
       shouldSetBadge: false,
     }),
   });
@@ -212,14 +221,12 @@ export async function acknowledgeAlarm(alarmId: number, alarm?: Alarm): Promise<
   if (!Notifications) return;
 
   const ids = await takeStoredNotificationIds(alarmId);
-  for (const id of ids) {
-    try {
-      await Notifications.cancelScheduledNotificationAsync(id);
-    } catch {}
-    try {
-      await Notifications.dismissNotificationAsync(id);
-    } catch {}
-  }
+  await Promise.all(
+    ids.flatMap(id => [
+      Notifications.cancelScheduledNotificationAsync(id).catch(() => {}),
+      Notifications.dismissNotificationAsync(id).catch(() => {}),
+    ]),
+  );
 
   if (alarm && alarm.enabled && alarm.repeatDays.length > 0) {
     // Re-arm for the next matching weekday (compute strictly after now).
@@ -233,66 +240,6 @@ export async function rescheduleAllAlarms(alarms: Alarm[]): Promise<void> {
   for (const alarm of alarms) {
     await scheduleAlarm(alarm);
   }
-}
-
-// Fires a notification with the given sound `delaySeconds` from now so you can
-// verify sound works on-device. Lock the phone after pressing — custom iOS
-// sounds only play when the app is in the background.
-//
-// Pass `__default__` as soundName to test the iOS system default sound.
-// Pass `__none__` to test no sound at all.
-export async function fireTestNotification(
-  soundName: string,
-  delaySeconds = 5,
-): Promise<string | null> {
-  const Notifications = getNotifs();
-  if (!Notifications) return null;
-  const granted = await ensureAlarmPermissions();
-  if (!granted) return null;
-
-  const isDefault = soundName === '__default__';
-  const isNone = soundName === '__none__';
-
-  let sound: string | boolean | null;
-  let channelId: string;
-
-  if (isNone) {
-    sound = false;
-    await Notifications.setNotificationChannelAsync('alarms-test-silent', {
-      name: 'Alarms · test silent',
-      importance: Notifications.AndroidImportance.MAX,
-      sound: null,
-    });
-    channelId = 'alarms-test-silent';
-  } else if (isDefault) {
-    sound = 'default';
-    await Notifications.setNotificationChannelAsync('alarms-test-default', {
-      name: 'Alarms · test default',
-      importance: Notifications.AndroidImportance.MAX,
-      sound: 'default',
-    });
-    channelId = 'alarms-test-default';
-  } else {
-    await ensureAndroidChannel(soundName);
-    channelId = androidChannelId(soundName);
-    const soundFiles = resolveSound(soundName);
-    sound = Platform.OS === 'ios' ? soundFiles.ios : soundFiles.android;
-  }
-
-  return Notifications.scheduleNotificationAsync({
-    content: {
-      title: `Test: ${isDefault ? 'iOS default' : isNone ? 'silent' : soundName}`,
-      body: 'If you hear this, sound is working.',
-      sound,
-      data: { test: true },
-      ...(Platform.OS === 'android' ? { channelId } : {}),
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: Math.max(1, delaySeconds),
-      ...(Platform.OS === 'android' ? { channelId } : {}),
-    },
-  });
 }
 
 // True when running inside Expo Go — useful for showing UI hints since
