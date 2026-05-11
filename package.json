@@ -21,7 +21,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "jest --verbose --passWithNoTests",
     "test:watch": "jest --verbose --passWithNoTests --watch",
-    "prepare": "husky"
+    "prepare": "husky",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
