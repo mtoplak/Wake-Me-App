@@ -79,9 +79,10 @@ export function useAlarmWatcher() {
 
     // Fires when the user taps a notification — open the ringing screen.
     const tapSub = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data as { alarmId?: number } | undefined;
-      const alarmId = data?.alarmId;
-      if (typeof alarmId === 'number') {
+      const data = response.notification.request.content.data as { alarmId?: unknown } | undefined;
+      const raw = data?.alarmId;
+      const alarmId = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
+      if (Number.isFinite(alarmId)) {
         router.push(`/(main)/alarmRinging?alarmId=${alarmId}`);
       }
     });
@@ -91,9 +92,10 @@ export function useAlarmWatcher() {
     // is silenced, and proactively navigate to the ringing screen so the in-app
     // looped audio takes over instead of waiting for the next watcher tick.
     const receiveSub = Notifications.addNotificationReceivedListener(notification => {
-      const data = notification.request.content.data as { alarmId?: number } | undefined;
-      const alarmId = data?.alarmId;
-      if (typeof alarmId !== 'number') return;
+      const data = notification.request.content.data as { alarmId?: unknown } | undefined;
+      const raw = data?.alarmId;
+      const alarmId = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
+      if (!Number.isFinite(alarmId)) return;
       setAlarmActiveForeground(true);
       if (!onAlarmRinging.current) {
         router.push(`/(main)/alarmRinging?alarmId=${alarmId}`);

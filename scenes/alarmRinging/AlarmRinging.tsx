@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -13,16 +13,25 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync, AudioSource } from 'expo-audio';
-import { listAlarms, getTodaysQuote, CachedQuote, Alarm } from '@/services/database';
+import { listAlarms, getTodaysQuote, CachedQuote, Alarm, recordWake } from '@/services/database';
 import { acknowledgeAlarm, setAlarmActiveForeground } from '@/services/alarmScheduler';
 import { colors } from '@/theme';
 import { getAlarmSource } from './sounds';
+import { ColorChallengeFlow, type ColorChallengeCompletePayload } from './colorChallenge';
 
 const SLIDER_HEIGHT = 64;
 const THUMB_SIZE = 56;
 const THUMB_INSET = 4;
+
+function parseRouteAlarmId(raw: string | string[] | undefined): number | null {
+  if (raw === undefined) return null;
+  const first = Array.isArray(raw) ? raw[0] : raw;
+  if (first === undefined || first === '') return null;
+  const n = Number(first);
+  return Number.isFinite(n) ? n : null;
+}
 
 function formatTime(hour: number, minute: number) {
   const meridiem: 'AM' | 'PM' = hour < 12 ? 'AM' : 'PM';
@@ -37,7 +46,7 @@ export default function AlarmRinging() {
   const router = useRouter();
   const params = useLocalSearchParams<{ alarmId?: string }>();
   const [alarm, setAlarm] = useState<Alarm | null>(null);
-  const [phase, setPhase] = useState<'ringing' | 'quote'>('ringing');
+  const [phase, setPhase] = useState<'ringing' | 'colorChallenge' | 'quote'>('ringing');
   const [quote, setQuote] = useState<CachedQuote | null>(null);
 
   const now = useMemo(() => new Date(), []);
@@ -46,8 +55,11 @@ export default function AlarmRinging() {
   useEffect(() => {
     (async () => {
       const list = await listAlarms();
-      const id = params.alarmId ? Number(params.alarmId) : NaN;
-      const found = list.find(a => a.id === id) ?? list.find(a => a.enabled) ?? list[0];
+      const routeId = parseRouteAlarmId(params.alarmId);
+      const found =
+        routeId != null
+          ? list.find(a => a.id === routeId)
+          : (list.find(a => a.enabled) ?? list[0]);
       if (found) {
         setAlarm(found);
         // Silence the remaining notifications in the burst now that we're
@@ -69,6 +81,17 @@ export default function AlarmRinging() {
   const [trackWidth, setTrackWidth] = useState(0);
   const slideRange = Math.max(0, trackWidth - THUMB_SIZE - THUMB_INSET * 2);
 
+  // Drawer keeps this screen mounted after "Start the day" — without a reset,
+  // phase stays `quote` and the next alarm open shows quote with no ring UI.
+  useFocusEffect(
+    useCallback(() => {
+      setPhase('ringing');
+      setQuote(null);
+      setTrackWidth(0);
+      slide.setValue(0);
+    }, [params.alarmId, slide]),
+  );
+
   const audioSource: AudioSource | null = getAlarmSource(sound);
   const player = useAudioPlayer(audioSource ?? null);
 
@@ -86,7 +109,9 @@ export default function AlarmRinging() {
   }, []);
 
   useEffect(() => {
-    if (phase !== 'ringing' || !audioSource) return;
+    // Keep alarm audio annoying through the challenge flow; stop once we reach quote.
+    const shouldPlayAlarmAudio = phase === 'ringing' || phase === 'colorChallenge';
+    if (!shouldPlayAlarmAudio || !audioSource) return;
     player.loop = true;
     player.volume = 1;
     player.seekTo(0).catch(() => {});
@@ -129,10 +154,46 @@ export default function AlarmRinging() {
   }, [phase, pulse]);
 
   const onDismiss = async () => {
+    let current = alarm;
+    if (!current) {
+      const list = await listAlarms();
+      const routeId = parseRouteAlarmId(params.alarmId);
+      current =
+        routeId != null
+          ? list.find(a => a.id === routeId) ?? null
+          : list.find(a => a.enabled) ?? list[0] ?? null;
+    }
+    if (current?.challenges?.includes('color')) {
+      setAlarm(current);
+      setPhase('colorChallenge');
+      return;
+    }
     const q = await getTodaysQuote();
     setQuote(q);
     setPhase('quote');
   };
+
+  const handleColorChallengeComplete = useCallback(
+    async ({ durationSec }: ColorChallengeCompletePayload) => {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const wakeTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      if (alarm) {
+        await recordWake({
+          alarmId: alarm.id,
+          date,
+          wakeTime,
+          success: true,
+          challengeDuration: durationSec,
+          challengeType: 'color',
+        });
+      }
+      const q = await getTodaysQuote();
+      setQuote(q);
+      setPhase('quote');
+    },
+    [alarm],
+  );
 
   const panResponder = useMemo(
     () =>
@@ -144,6 +205,16 @@ export default function AlarmRinging() {
           slide.setValue(x);
         },
         onPanResponderRelease: (_, gesture) => {
+          // Before layout, slideRange is 0 and dx >= 0 would dismiss instantly while
+          // `alarm` may still be null — skipping challenges and jumping to quote.
+          if (slideRange < 24) {
+            Animated.spring(slide, {
+              toValue: 0,
+              useNativeDriver: false,
+              friction: 6,
+            }).start();
+            return;
+          }
           if (gesture.dx >= slideRange * 0.85) {
             Animated.timing(slide, {
               toValue: slideRange,
@@ -166,8 +237,7 @@ export default function AlarmRinging() {
           }).start();
         },
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [phase, slideRange],
+    [phase, slideRange, alarm],
   );
 
   const pulseScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] });
@@ -178,6 +248,10 @@ export default function AlarmRinging() {
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
+
+  if (phase === 'colorChallenge') {
+    return <ColorChallengeFlow onComplete={handleColorChallengeComplete} />;
+  }
 
   if (phase === 'quote') {
     return (
