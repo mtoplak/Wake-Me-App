@@ -1,4 +1,5 @@
 import { getDb } from './db';
+import { syncSettingUp } from '../cloudSyncWriters';
 
 export async function getSetting(key: string): Promise<string | null> {
   const db = await getDb();
@@ -16,6 +17,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
     [key, value],
   );
+  syncSettingUp(key, value);
 }
 
 export async function getAllSettings(): Promise<Record<string, string>> {

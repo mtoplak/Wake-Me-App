@@ -12,6 +12,8 @@ import {
   NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-worklets';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
@@ -404,8 +406,8 @@ function WheelColumn({
   const initialExtIdx = WHEEL_CENTER_COPY * length + selectedIndex;
   const scrollRef = useRef<ScrollView>(null);
   const userScrollingRef = useRef(false);
+  const programmaticScrollRef = useRef(false);
   const isMountedRef = useRef(false);
-  const animateNextScrollRef = useRef(false);
   const centerExtIdxRef = useRef(initialExtIdx);
   const [centerExtIdx, setCenterExtIdx] = useState(initialExtIdx);
 
@@ -414,9 +416,9 @@ function WheelColumn({
       isMountedRef.current = true;
       return;
     }
-    if (userScrollingRef.current) return;
-    // Pick the copy of `selectedIndex` closest to the current scroll position
-    // so external changes don't trigger long scrolls across copies.
+    if (userScrollingRef.current || programmaticScrollRef.current) return;
+    // External change: pick the closest copy of selectedIndex and snap without animation
+    // (animated taps go through scrollToIndex directly, not through this effect).
     const current = centerExtIdxRef.current;
     const currentCopy = Math.floor(current / length);
     const candidates = [-1, 0, 1]
@@ -427,9 +429,9 @@ function WheelColumn({
       candidates[0] ?? WHEEL_CENTER_COPY * length + selectedIndex,
     );
     if (target === current) return;
-    const animated = animateNextScrollRef.current;
-    animateNextScrollRef.current = false;
-    scrollRef.current?.scrollTo({ y: target * WHEEL_ITEM_HEIGHT, animated });
+    scrollRef.current?.scrollTo({ y: target * WHEEL_ITEM_HEIGHT, animated: false });
+    centerExtIdxRef.current = target;
+    setCenterExtIdx(target);
   }, [selectedIndex, length, totalCount]);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -460,10 +462,18 @@ function WheelColumn({
   };
 
   const handleItemTap = (extIdx: number) => {
+    if (extIdx === centerExtIdxRef.current) return;
+    // Scroll directly — no React roundtrip — for snappier tap-to-snap animation.
+    programmaticScrollRef.current = true;
+    scrollRef.current?.scrollTo({ y: extIdx * WHEEL_ITEM_HEIGHT, animated: true });
+    centerExtIdxRef.current = extIdx;
+    setCenterExtIdx(extIdx);
     const newSelected = ((extIdx % length) + length) % length;
-    if (newSelected === selectedIndex) return;
-    animateNextScrollRef.current = true;
-    onChange(newSelected);
+    if (newSelected !== selectedIndex) onChange(newSelected);
+    // Clear the programmatic flag after the animation has had time to settle.
+    setTimeout(() => {
+      programmaticScrollRef.current = false;
+    }, 350);
   };
 
   return (
@@ -482,17 +492,49 @@ function WheelColumn({
       scrollEventThrottle={16}
       onMomentumScrollEnd={handleMomentumEnd}
       nestedScrollEnabled>
-      {extendedValues.map((item, extIdx) => {
-        const active = extIdx === centerExtIdx;
-        return (
-          <Pressable key={extIdx} style={styles.wheelItem} onPress={() => handleItemTap(extIdx)}>
-            <Text style={[styles.wheelText, active && styles.wheelTextActive]}>
-              {String(item).padStart(2, '0')}
-            </Text>
-          </Pressable>
-        );
-      })}
+      {extendedValues.map((item, extIdx) => (
+        <WheelItem
+          key={extIdx}
+          extIdx={extIdx}
+          value={item}
+          active={extIdx === centerExtIdx}
+          onTap={handleItemTap}
+        />
+      ))}
     </ScrollView>
+  );
+}
+
+function WheelItem({
+  extIdx,
+  value,
+  active,
+  onTap,
+}: {
+  extIdx: number;
+  value: number;
+  active: boolean;
+  onTap: (extIdx: number) => void;
+}) {
+  // Gesture.Tap() works inside ScrollView on Android where Pressable.onPress doesn't —
+  // ScrollView claims the touch responder before Pressable can fire.
+  const tap = useMemo(
+    () =>
+      Gesture.Tap()
+        .maxDuration(250)
+        .onEnd((_e, success) => {
+          if (success) runOnJS(onTap)(extIdx);
+        }),
+    [extIdx, onTap],
+  );
+  return (
+    <GestureDetector gesture={tap}>
+      <View style={styles.wheelItem}>
+        <Text style={[styles.wheelText, active && styles.wheelTextActive]}>
+          {String(value).padStart(2, '0')}
+        </Text>
+      </View>
+    </GestureDetector>
   );
 }
 

@@ -1,6 +1,7 @@
 import { getDb } from './db';
 import { Alarm, AlarmChallengeRecord, AlarmInput, AlarmRecord, ChallengeType } from './types';
 import { cancelAlarm, scheduleAlarm } from '../alarmScheduler';
+import { syncAlarmUp, syncAlarmDeleteUp } from '../cloudSyncWriters';
 
 function mapAlarm(row: AlarmRecord, challenges: ChallengeType[]): Alarm {
   return {
@@ -59,7 +60,7 @@ export async function createAlarm(input: AlarmInput): Promise<number> {
       [alarmId, c, 'normal'],
     );
   }
-  await scheduleAlarm({
+  const alarm: Alarm = {
     id: alarmId,
     hour: input.hour,
     minute: input.minute,
@@ -69,7 +70,9 @@ export async function createAlarm(input: AlarmInput): Promise<number> {
     sound: input.sound ?? 'Sunrise',
     vibration: input.vibration !== false,
     challenges: input.challenges,
-  });
+  };
+  await scheduleAlarm(alarm);
+  syncAlarmUp(alarm);
   return alarmId;
 }
 
@@ -92,9 +95,14 @@ export async function setAlarmEnabled(id: number, enabled: boolean): Promise<voi
   await db.runAsync('UPDATE alarms SET enabled = ? WHERE id = ?', [enabled ? 1 : 0, id]);
   if (enabled) {
     const alarm = await loadAlarmById(id);
-    if (alarm) await scheduleAlarm(alarm);
+    if (alarm) {
+      await scheduleAlarm(alarm);
+      syncAlarmUp(alarm);
+    }
   } else {
     await cancelAlarm(id);
+    const alarm = await loadAlarmById(id);
+    if (alarm) syncAlarmUp(alarm);
   }
 }
 
@@ -102,6 +110,7 @@ export async function deleteAlarm(id: number): Promise<void> {
   const db = await getDb();
   await cancelAlarm(id);
   await db.runAsync('DELETE FROM alarms WHERE id = ?', [id]);
+  syncAlarmDeleteUp(id);
 }
 
 export async function countAlarms(): Promise<number> {

@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.watarumaeda.react_native_boilerplate'
+    namespace 'com.mtoplak.wakemeapp'
     defaultConfig {
-        applicationId 'com.watarumaeda.react_native_boilerplate'
+        applicationId 'com.mtoplak.wakemeapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -180,3 +180,5 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+apply plugin: 'com.google.gms.google-services'

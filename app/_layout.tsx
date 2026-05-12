@@ -2,17 +2,16 @@ import { Fragment, useState, useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import BottomSheetContents from '@/components/layouts/BottomSheetContents';
 import BottomSheet from '@/components/elements/BottomSheet';
-import { useDataPersist, DataPersistKeys, useAlarmWatcher } from '@/hooks';
+import { useAlarmWatcher } from '@/hooks';
 import useColorScheme from '@/hooks/useColorScheme';
 import { loadImages, loadFonts, colors } from '@/theme';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSlice } from '@/slices';
-import { getUserAsync } from '@/services';
+import { subscribeToAuth, configureGoogleSignIn } from '@/services';
 import { getDb, listAlarms, seedIfEmpty } from '@/services/database';
 import { ensureAlarmPermissions, rescheduleAllAlarms } from '@/services/alarmScheduler';
 import Provider from '@/providers';
-import { User } from '@/types';
 
 // keep the splash screen visible while complete fetching resources
 SplashScreen.preventAutoHideAsync();
@@ -20,52 +19,45 @@ SplashScreen.preventAutoHideAsync();
 function Router() {
   const { isDark } = useColorScheme();
   const { dispatch, setUser, setLoggedIn } = useAppSlice();
-  const { setPersistData, getPersistData } = useDataPersist();
   const [isOpen, setOpen] = useState(false);
 
   useAlarmWatcher();
 
   /**
-   * preload assets and user info
+   * preload assets and initialize DB
    */
   useEffect(() => {
     (async () => {
       try {
-        // preload assets and initialize SQLite
         await Promise.all([loadImages(), loadFonts(), getDb().then(() => seedIfEmpty())]);
 
-        // request notification permission and (re)schedule all enabled alarms
         ensureAlarmPermissions()
           .then(() => listAlarms())
           .then(alarms => rescheduleAllAlarms(alarms))
           .catch(() => {});
 
-        // fetch & store user data to store (fake promise function to simulate async function)
-        const user = await getUserAsync();
-        dispatch(setUser(user));
-        dispatch(setLoggedIn(!!user));
-        if (user) setPersistData<User>(DataPersistKeys.USER, user);
-
-        // hide splash screen
+        try {
+          configureGoogleSignIn();
+        } catch {
+          // missing webClientId — onboarding screen surfaces a friendly error
+        }
+      } finally {
         SplashScreen.hideAsync();
         setOpen(true);
-      } catch {
-        // if preload failed, try to get user data from persistent storage
-        getPersistData<User>(DataPersistKeys.USER)
-          .then(user => {
-            if (user) dispatch(setUser(user));
-            dispatch(setLoggedIn(!!user));
-          })
-          .finally(() => {
-            // hide splash screen
-            SplashScreen.hideAsync();
-
-            // show bottom sheet
-            setOpen(true);
-          });
       }
     })();
   }, []);
+
+  /**
+   * subscribe to Firebase auth state changes
+   */
+  useEffect(() => {
+    const unsub = subscribeToAuth(user => {
+      dispatch(setUser(user));
+      dispatch(setLoggedIn(!!user && !user.isAnonymous));
+    });
+    return () => unsub();
+  }, [dispatch, setUser, setLoggedIn]);
 
   return (
     <Fragment>

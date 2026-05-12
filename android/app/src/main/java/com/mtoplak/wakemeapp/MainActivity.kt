@@ -1,4 +1,4 @@
-package com.watarumaeda.react_native_boilerplate
+package com.mtoplak.wakemeapp
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

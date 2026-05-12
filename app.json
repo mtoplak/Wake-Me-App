@@ -23,9 +23,13 @@
       "resizeMode": "contain"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mtoplak.wakemeapp",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "package": "com.mtoplak.wakemeapp",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/alarm-clock-adaptive.png",
         "backgroundColor": "#ece9ff"

@@ -34,6 +34,10 @@ yarn-error.*
 !.env.dev.example
 !.env.prod.example
 
+# Firebase native config (downloaded from Firebase console; do not commit)
+google-services.json
+GoogleService-Info.plist
+
 # typescript
 *.tsbuildinfo
 

@@ -7,6 +7,7 @@ import {
   Pressable,
   Switch,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -17,6 +18,9 @@ import {
   upsertProfile,
   UserProfile,
 } from '@/services/database';
+import { signInWithGoogle, signOut, syncOnSignIn } from '@/services';
+import { useAppSlice } from '@/slices';
+import { useDataPersist, DataPersistKeys } from '@/hooks';
 import { colors } from '@/theme';
 
 type Bool = '1' | '0';
@@ -43,6 +47,9 @@ const KEYS = {
 };
 
 export default function Settings() {
+  const { dispatch, user, loggedIn, setUser, setLoggedIn } = useAppSlice();
+  const { setPersistData, removePersistData } = useDataPersist();
+  const [authBusy, setAuthBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [cloudSync, setCloudSync] = useState(true);
@@ -95,6 +102,63 @@ export default function Settings() {
     }
   };
 
+  const handleSignIn = async () => {
+    if (authBusy) return;
+    setAuthBusy(true);
+    try {
+      const signed = await signInWithGoogle();
+      dispatch(setUser(signed));
+      dispatch(setLoggedIn(true));
+      await setPersistData<boolean>(DataPersistKeys.ONBOARDED, true);
+      await syncOnSignIn();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Sign-in failed';
+      if (message !== 'Sign-in cancelled') Alert.alert('Sign-in failed', message);
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const handleSignOut = () => {
+    if (authBusy) return;
+    Alert.alert('Sign out?', 'Your alarms stay on this device. Cloud sync will pause.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign out',
+        style: 'destructive',
+        onPress: async () => {
+          setAuthBusy(true);
+          try {
+            await signOut();
+            dispatch(setUser(undefined));
+            dispatch(setLoggedIn(false));
+          } catch (err) {
+            Alert.alert('Sign out failed', err instanceof Error ? err.message : 'Unknown error');
+          } finally {
+            setAuthBusy(false);
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleResetOnboarding = () => {
+    Alert.alert(
+      'Show onboarding again?',
+      'This clears the onboarded flag. Reload the app to see the welcome screen.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          onPress: async () => {
+            await removePersistData(DataPersistKeys.ONBOARDED);
+            Alert.alert('Done', 'Reload the app to see onboarding.');
+          },
+        },
+      ],
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.root} edges={['top']}>
@@ -105,7 +169,9 @@ export default function Settings() {
     );
   }
 
-  const initial = profile?.name?.charAt(0).toUpperCase() ?? '?';
+  const authInitial = loggedIn
+    ? ((user?.name ?? user?.email ?? 'U').trim().charAt(0).toUpperCase() || 'U')
+    : 'G';
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -114,11 +180,15 @@ export default function Settings() {
 
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarInitial}>{initial}</Text>
+            <Text style={styles.avatarInitial}>{authInitial}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.profileName}>{profile?.name ?? 'Guest'}</Text>
-            <Text style={styles.profileEmail}>{profile?.email ?? '—'}</Text>
+            <Text style={styles.profileName}>
+              {loggedIn ? (user?.name ?? 'Signed in') : 'Guest'}
+            </Text>
+            <Text style={styles.profileEmail}>
+              {loggedIn ? (user?.email ?? '—') : 'Not signed in'}
+            </Text>
           </View>
           <Pressable style={styles.editBtn}>
             <Feather name="edit-2" size={14} color={colors.accent} />
@@ -148,12 +218,23 @@ export default function Settings() {
             iconBg={colors.successSoft}
             label="Privacy & data"
           />
-          <Row
-            icon={<Ionicons name="log-out-outline" size={18} color={colors.danger} />}
-            iconBg="#fee2e2"
-            label="Sign out"
-            last
-          />
+          {loggedIn ? (
+            <Row
+              icon={<Ionicons name="log-out-outline" size={18} color={colors.danger} />}
+              iconBg="#fee2e2"
+              label={authBusy ? 'Signing out…' : 'Sign out'}
+              onPress={authBusy ? undefined : handleSignOut}
+              last
+            />
+          ) : (
+            <Row
+              icon={<Ionicons name="logo-google" size={18} color={colors.accent} />}
+              iconBg={colors.accentSoft}
+              label={authBusy ? 'Signing in…' : 'Sign in with Google'}
+              onPress={authBusy ? undefined : handleSignIn}
+              last
+            />
+          )}
         </View>
 
         <SectionTitle>Preferences</SectionTitle>
@@ -267,7 +348,19 @@ export default function Settings() {
           />
         </View>
 
-        <Text style={styles.footer}>WakeUp Challenge · Made with care</Text>
+        {__DEV__ && (
+          <View style={[styles.card, { marginTop: 24 }]}>
+            <Row
+              icon={<Feather name="refresh-ccw" size={18} color={colors.textSecondary} />}
+              iconBg={colors.surfaceMuted}
+              label="Reset onboarding (dev)"
+              onPress={handleResetOnboarding}
+              last
+            />
+          </View>
+        )}
+
+        <Text style={styles.footer}>WakeMeApp Alarm Clock · Made for sleepyheads</Text>
       </ScrollView>
     </SafeAreaView>
   );

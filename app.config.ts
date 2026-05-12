@@ -8,12 +8,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: process.env.EXPO_NAME ?? 'Wake Me App Alarm Clock',
     ios: {
       ...config.ios,
-      bundleIdentifier:
-        process.env.EXPO_IOS_BUNDLE_IDENTIFIER ?? 'com.watarumaeda.react-native-boilerplate',
+      bundleIdentifier: process.env.EXPO_IOS_BUNDLE_IDENTIFIER ?? 'com.mtoplak.wakemeapp',
+      googleServicesFile: './GoogleService-Info.plist',
     },
     android: {
       ...config.android,
-      package: process.env.EXPO_ANDROID_PACKAGE ?? 'com.watarumaeda.react_native_boilerplate',
+      package: process.env.EXPO_ANDROID_PACKAGE ?? 'com.mtoplak.wakemeapp',
+      googleServicesFile: './google-services.json',
     },
     web: {
       ...config.web,
@@ -36,6 +37,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-asset',
       'expo-audio',
       'expo-sqlite',
+      '@react-native-firebase/app',
+      '@react-native-firebase/auth',
+      [
+        'expo-build-properties',
+        {
+          ios: { useFrameworks: 'static' },
+        },
+      ],
+      [
+        '@react-native-google-signin/google-signin',
+        {
+          iosUrlScheme:
+            'com.googleusercontent.apps.165362524264-rb9ccjvfreiv9745ilf49v74623tr7mm',
+        },
+      ],
       [
         'expo-notifications',
         {

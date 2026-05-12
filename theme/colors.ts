@@ -10,7 +10,7 @@ export const colors = {
   white: '#ffffff',
   transparent: 'transparent',
 
-  // Modern light palette (WakeUp Challenge)
+  // Modern light palette
   background: '#fafafe',
   surface: '#ffffff',
   surfaceMuted: '#f3f1fb',

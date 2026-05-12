@@ -1,4 +1,4 @@
-package com.watarumaeda.react_native_boilerplate
+package com.mtoplak.wakemeapp
 import com.facebook.react.common.assets.ReactFontManager
 
 import android.app.Application
