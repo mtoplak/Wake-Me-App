@@ -6,6 +6,7 @@ import Button from '@/components/elements/Button';
 import { useAppSlice } from '@/slices';
 import { useDataPersist, DataPersistKeys } from '@/hooks';
 import { signInWithGoogle, signOut, syncOnSignIn } from '@/services';
+import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
 
 const styles = StyleSheet.create({
@@ -102,23 +103,20 @@ export default function Profile() {
   const { isDark } = useColorScheme();
   const { dispatch, user, loggedIn, setUser, setLoggedIn } = useAppSlice();
   const { setPersistData, removePersistData } = useDataPersist();
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const handleResetOnboarding = () => {
-    Alert.alert(
-      'Show onboarding again?',
-      'This clears the onboarded flag. The app will redirect you back to the welcome screen on next reload.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          onPress: async () => {
-            await removePersistData(DataPersistKeys.ONBOARDED);
-            Alert.alert('Done', 'Reload the app to see onboarding.');
-          },
+    Alert.alert(t.profile.resetOnboardTitle, t.profile.resetOnboardBody, [
+      { text: t.common.cancel, style: 'cancel' },
+      {
+        text: t.common.reset,
+        onPress: async () => {
+          await removePersistData(DataPersistKeys.ONBOARDED);
+          Alert.alert(t.profile.doneTitle, t.profile.resetOnboardDone);
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const initial = (user?.name ?? user?.email ?? 'G').trim().charAt(0).toUpperCase();
@@ -134,8 +132,8 @@ export default function Profile() {
       await setPersistData<boolean>(DataPersistKeys.ONBOARDED, true);
       await syncOnSignIn();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Sign-in failed';
-      if (message !== 'Sign-in cancelled') Alert.alert('Sign-in failed', message);
+      const message = err instanceof Error ? err.message : t.profile.signInFailed;
+      if (message !== 'Sign-in cancelled') Alert.alert(t.profile.signInFailed, message);
     } finally {
       setBusy(false);
     }
@@ -143,10 +141,10 @@ export default function Profile() {
 
   const handleSignOut = async () => {
     if (busy) return;
-    Alert.alert('Sign out?', 'Your alarms stay on this device. Cloud sync will pause.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t.profile.signOutTitle, t.profile.signOutBody, [
+      { text: t.common.cancel, style: 'cancel' },
       {
-        text: 'Sign out',
+        text: t.profile.signOut,
         style: 'destructive',
         onPress: async () => {
           setBusy(true);
@@ -155,7 +153,10 @@ export default function Profile() {
             dispatch(setUser(undefined));
             dispatch(setLoggedIn(false));
           } catch (err) {
-            Alert.alert('Sign out failed', err instanceof Error ? err.message : 'Unknown error');
+            Alert.alert(
+              t.profile.signOutFailed,
+              err instanceof Error ? err.message : t.common.unknown,
+            );
           } finally {
             setBusy(false);
           }
@@ -170,28 +171,25 @@ export default function Profile() {
         <Text style={styles.avatarInitial}>{initial}</Text>
       </View>
       <Text style={[styles.name, isDark && { color: colors.white }]}>
-        {isGuest ? 'Guest' : user?.name || 'Signed in'}
+        {isGuest ? t.profile.guest : user?.name || t.profile.signedIn}
       </Text>
       {!isGuest && !!user?.email && <Text style={styles.email}>{user.email}</Text>}
 
       {isGuest ? (
         <>
-          <Text style={styles.guestNote}>
-            You&apos;re using the app without an account. Sign in with Google to back up your alarms
-            and settings to the cloud.
-          </Text>
+          <Text style={styles.guestNote}>{t.profile.guestNote}</Text>
           <Button
             style={styles.primaryButton}
             onPress={handleSignIn}
             disabled={busy}
-            title={busy ? '' : 'Sign in with Google'}
+            title={busy ? '' : t.profile.signIn}
             titleStyle={styles.primaryButtonText}>
             {busy && <ActivityIndicator color={colors.white} />}
           </Button>
         </>
       ) : (
         <Button
-          title="Sign out"
+          title={t.profile.signOut}
           style={styles.secondaryButton}
           titleStyle={styles.secondaryButtonText}
           onPress={handleSignOut}
@@ -200,7 +198,7 @@ export default function Profile() {
       )}
 
       <Button
-        title="Go to Details"
+        title={t.profile.goToDetails}
         titleStyle={styles.detailsButtonText}
         style={styles.detailsButton}
         onPress={() =>
@@ -210,7 +208,7 @@ export default function Profile() {
 
       {__DEV__ && (
         <Button
-          title="Reset onboarding (dev)"
+          title={t.profile.resetOnboarding}
           titleStyle={styles.devButtonText}
           style={styles.devButton}
           onPress={handleResetOnboarding}

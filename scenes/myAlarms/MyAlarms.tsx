@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,55 +7,48 @@ import {
   Pressable,
   Switch,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ReanimatedSwipeable, {
+  type SwipeableMethods,
+} from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, {
+  type SharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Alarm, ChallengeType, listAlarms, setAlarmEnabled } from '@/services/database';
+import {
+  Alarm,
+  ChallengeType,
+  deleteAlarm,
+  listAlarms,
+  setAlarmEnabled,
+} from '@/services/database';
+import { useTranslation, type Translations } from '@/i18n';
 import { colors } from '@/theme';
 
-const DAY_LABELS: Record<string, string> = {
-  mon: 'Mon',
-  tue: 'Tue',
-  wed: 'Wed',
-  thu: 'Thu',
-  fri: 'Fri',
-  sat: 'Sat',
-  sun: 'Sun',
-};
+const SWIPE_ACTION_WIDTH = 88;
+
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri'];
 const WEEKEND = ['sat', 'sun'];
 
-const challengeMeta: Record<ChallengeType, { label: string; icon: React.ReactNode }> = {
-  qr: {
-    label: 'QR',
-    icon: <Ionicons name="qr-code-outline" size={12} color={colors.accent} />,
-  },
-  object: {
-    label: 'Object',
-    icon: <MaterialCommunityIcons name="image-search-outline" size={12} color={colors.accent} />,
-  },
-  color: {
-    label: 'Color',
-    icon: <Ionicons name="color-palette-outline" size={12} color={colors.accent} />,
-  },
-  steps: {
-    label: 'Steps',
-    icon: <Ionicons name="walk-outline" size={12} color={colors.accent} />,
-  },
-  voice: {
-    label: 'Voice',
-    icon: <Ionicons name="mic-outline" size={12} color={colors.accent} />,
-  },
+const challengeIcons: Record<ChallengeType, React.ReactNode> = {
+  qr: <Ionicons name="qr-code-outline" size={12} color={colors.accent} />,
+  object: <MaterialCommunityIcons name="image-search-outline" size={12} color={colors.accent} />,
+  color: <Ionicons name="color-palette-outline" size={12} color={colors.accent} />,
+  steps: <Ionicons name="walk-outline" size={12} color={colors.accent} />,
+  voice: <Ionicons name="mic-outline" size={12} color={colors.accent} />,
 };
 
-function formatDays(repeat: string[]): string {
-  if (repeat.length === 0) return 'Once';
+function formatDays(repeat: string[], t: Translations): string {
+  if (repeat.length === 0) return t.days.once;
   const set = new Set(repeat);
-  if (WEEKDAYS.every(d => set.has(d)) && set.size === 5) return 'Mon – Fri';
-  if (WEEKEND.every(d => set.has(d)) && set.size === 2) return 'Sat, Sun';
-  if (set.size === 7) return 'Every day';
-  return repeat.map(d => DAY_LABELS[d] ?? d).join(', ');
+  if (WEEKDAYS.every(d => set.has(d)) && set.size === 5) return t.days.weekdays;
+  if (WEEKEND.every(d => set.has(d)) && set.size === 2) return t.days.weekend;
+  if (set.size === 7) return t.days.everyDay;
+  return repeat.map(d => t.days.short[d as keyof typeof t.days.short] ?? d).join(', ');
 }
 
 function formatTime(hour: number, minute: number) {
@@ -67,7 +60,7 @@ function formatTime(hour: number, minute: number) {
   };
 }
 
-function minutesUntil(hour: number, minute: number) {
+function minutesUntil(hour: number, minute: number, t: Translations) {
   const now = new Date();
   const target = new Date(now);
   target.setHours(hour, minute, 0, 0);
@@ -75,11 +68,12 @@ function minutesUntil(hour: number, minute: number) {
   const diffMin = Math.round((target.getTime() - now.getTime()) / 60000);
   const h = Math.floor(diffMin / 60);
   const m = diffMin % 60;
-  return `in ${h}h ${m}m`;
+  return t.myAlarms.in(h, m);
 }
 
 export default function MyAlarms() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -99,8 +93,25 @@ export default function MyAlarms() {
     await setAlarmEnabled(id, enabled);
   };
 
+  const handleDelete = useCallback(
+    async (id: number) => {
+      try {
+        await deleteAlarm(id);
+        setAlarms(prev => prev.filter(a => a.id !== id));
+        return true;
+      } catch (err) {
+        Alert.alert(
+          t.myAlarms.deleteFailed,
+          err instanceof Error ? err.message : t.common.unknown,
+        );
+        return false;
+      }
+    },
+    [t],
+  );
+
   const next = alarms.find(a => a.enabled);
-  const greeting = greet();
+  const greeting = greet(t);
 
   if (loading) {
     return (
@@ -117,7 +128,7 @@ export default function MyAlarms() {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>{greeting}</Text>
-          <Text style={styles.title}>My Alarms</Text>
+          <Text style={styles.title}>{t.myAlarms.title}</Text>
         </View>
         <Pressable onPress={() => router.push('/(main)/(tabs)/createAlarm')} style={styles.addBtn}>
           <AntDesign name="plus" size={20} color={colors.white} />
@@ -131,87 +142,166 @@ export default function MyAlarms() {
               <Ionicons name="alarm-outline" size={22} color={colors.accent} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.nextLabel}>Next alarm</Text>
+              <Text style={styles.nextLabel}>{t.myAlarms.nextAlarm}</Text>
               <Text style={styles.nextTime}>
                 {formatTime(next.hour, next.minute).time}{' '}
                 {formatTime(next.hour, next.minute).meridiem} · {next.label}
               </Text>
-              <Text style={styles.nextSub}>{minutesUntil(next.hour, next.minute)}</Text>
+              <Text style={styles.nextSub}>{minutesUntil(next.hour, next.minute, t)}</Text>
             </View>
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>All alarms</Text>
+        <Text style={styles.sectionTitle}>{t.myAlarms.allAlarms}</Text>
 
         {alarms.length === 0 && (
           <View style={styles.emptyCard}>
             <Ionicons name="alarm-outline" size={28} color={colors.textMuted} />
-            <Text style={styles.emptyText}>No alarms yet — tap + to create one</Text>
+            <Text style={styles.emptyText}>{t.myAlarms.empty}</Text>
           </View>
         )}
 
-        {alarms.map(a => {
-          const t = formatTime(a.hour, a.minute);
-          return (
-            <Pressable
-              key={a.id}
-              onPress={() => router.push(`/(main)/alarmRinging?alarmId=${a.id}`)}
-              style={[styles.alarmCard, !a.enabled && styles.alarmCardOff]}>
-              <View style={styles.alarmTop}>
-                <View>
-                  <View style={styles.timeWrap}>
-                    <Text style={[styles.alarmTime, !a.enabled && styles.dimText]}>{t.time}</Text>
-                    <Text style={[styles.alarmMeridiem, !a.enabled && styles.dimText]}>
-                      {t.meridiem}
-                    </Text>
-                  </View>
-                  <Text style={[styles.alarmLabel, !a.enabled && styles.dimText]}>
-                    {a.label || 'Alarm'}
-                  </Text>
-                </View>
-                <View onStartShouldSetResponder={() => true}>
-                  <Switch
-                    value={a.enabled}
-                    onValueChange={v => toggle(a.id, v)}
-                    trackColor={{ true: colors.accent, false: colors.border }}
-                    thumbColor={colors.white}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.alarmFoot}>
-                <View style={styles.daysWrap}>
-                  <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
-                  <Text style={styles.daysText}>{formatDays(a.repeatDays)}</Text>
-                </View>
-                <View style={styles.chipsWrap}>
-                  {a.challenges.map(c => (
-                    <View key={c} style={styles.chip}>
-                      {challengeMeta[c].icon}
-                      <Text style={styles.chipText}>{challengeMeta[c].label}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </Pressable>
-          );
-        })}
+        {alarms.map(a => (
+          <SwipeableAlarmCard
+            key={a.id}
+            alarm={a}
+            t={t}
+            onToggle={toggle}
+            onOpen={() => router.push(`/(main)/alarmRinging?alarmId=${a.id}`)}
+            onDelete={handleDelete}
+          />
+        ))}
 
         <Pressable onPress={() => router.push('/(main)/(tabs)/createAlarm')} style={styles.addRow}>
           <AntDesign name="plus-circle" size={18} color={colors.accent} />
-          <Text style={styles.addRowText}>Add new alarm</Text>
+          <Text style={styles.addRowText}>{t.myAlarms.addNew}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function greet() {
+function greet(t: Translations) {
   const h = new Date().getHours();
-  if (h < 5) return 'Burning the midnight oil';
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 5) return t.greeting.midnight;
+  if (h < 12) return t.greeting.morning;
+  if (h < 18) return t.greeting.afternoon;
+  return t.greeting.evening;
+}
+
+type SwipeableAlarmCardProps = {
+  alarm: Alarm;
+  t: Translations;
+  onToggle: (id: number, enabled: boolean) => void;
+  onOpen: () => void;
+  onDelete: (id: number) => Promise<boolean>;
+};
+
+function SwipeableAlarmCard({ alarm, t, onToggle, onOpen, onDelete }: SwipeableAlarmCardProps) {
+  const swipeRef = useRef<SwipeableMethods>(null);
+  const time = formatTime(alarm.hour, alarm.minute);
+
+  const askDelete = () => {
+    const label = alarm.label || t.myAlarms.alarmFallback;
+    Alert.alert(t.myAlarms.deleteTitle, t.myAlarms.deleteBody(label), [
+      {
+        text: t.common.cancel,
+        style: 'cancel',
+        onPress: () => swipeRef.current?.close(),
+      },
+      {
+        text: t.common.delete,
+        style: 'destructive',
+        onPress: async () => {
+          const ok = await onDelete(alarm.id);
+          if (!ok) swipeRef.current?.close();
+        },
+      },
+    ]);
+  };
+
+  return (
+    <ReanimatedSwipeable
+      ref={swipeRef}
+      friction={2}
+      rightThreshold={SWIPE_ACTION_WIDTH * 0.6}
+      overshootRight={false}
+      containerStyle={styles.swipeContainer}
+      renderRightActions={(progress, translation) => (
+        <DeleteAction
+          progress={progress}
+          translation={translation}
+          label={t.common.delete}
+          onPress={askDelete}
+        />
+      )}>
+      <Pressable
+        onPress={onOpen}
+        style={[styles.alarmCard, !alarm.enabled && styles.alarmCardOff]}>
+        <View style={styles.alarmTop}>
+          <View>
+            <View style={styles.timeWrap}>
+              <Text style={[styles.alarmTime, !alarm.enabled && styles.dimText]}>{time.time}</Text>
+              <Text style={[styles.alarmMeridiem, !alarm.enabled && styles.dimText]}>
+                {time.meridiem}
+              </Text>
+            </View>
+            <Text style={[styles.alarmLabel, !alarm.enabled && styles.dimText]}>
+              {alarm.label || t.myAlarms.alarmFallback}
+            </Text>
+          </View>
+          <View onStartShouldSetResponder={() => true}>
+            <Switch
+              value={alarm.enabled}
+              onValueChange={v => onToggle(alarm.id, v)}
+              trackColor={{ true: colors.accent, false: colors.border }}
+              thumbColor={colors.white}
+            />
+          </View>
+        </View>
+
+        <View style={styles.alarmFoot}>
+          <View style={styles.daysWrap}>
+            <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
+            <Text style={styles.daysText}>{formatDays(alarm.repeatDays, t)}</Text>
+          </View>
+          <View style={styles.chipsWrap}>
+            {alarm.challenges.map(c => (
+              <View key={c} style={styles.chip}>
+                {challengeIcons[c]}
+                <Text style={styles.chipText}>{t.challenges[c].short}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </Pressable>
+    </ReanimatedSwipeable>
+  );
+}
+
+function DeleteAction({
+  progress,
+  translation,
+  label,
+  onPress,
+}: {
+  progress: SharedValue<number>;
+  translation: SharedValue<number>;
+  label: string;
+  onPress: () => void;
+}) {
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translation.value + SWIPE_ACTION_WIDTH }],
+    opacity: Math.min(1, progress.value),
+  }));
+  return (
+    <Reanimated.View style={[styles.deleteActionWrap, animatedStyle]}>
+      <Pressable onPress={onPress} style={styles.deleteAction}>
+        <Ionicons name="trash-outline" size={22} color={colors.white} />
+        <Text style={styles.deleteActionText}>{label}</Text>
+      </Pressable>
+    </Reanimated.View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -286,16 +376,37 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
+  swipeContainer: {
+    borderRadius: 20,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
   alarmCard: {
     backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 18,
-    marginBottom: 12,
     shadowColor: '#1a1a3a',
     shadowOpacity: 0.04,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
+  },
+  deleteActionWrap: {
+    width: SWIPE_ACTION_WIDTH,
+    justifyContent: 'center',
+    alignItems: 'stretch',
+  },
+  deleteAction: {
+    flex: 1,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  deleteActionText: {
+    color: colors.white,
+    fontSize: 12,
+    fontWeight: '600',
   },
   alarmCardOff: { backgroundColor: colors.surfaceMuted },
   alarmTop: {

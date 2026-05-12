@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { createAlarm } from '@/services/database';
 import { alarmSounds, getAlarmSource } from '@/scenes/alarmRinging/sounds';
+import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
 
 const WHEEL_ITEM_HEIGHT = 56;
@@ -29,62 +30,26 @@ const WHEEL_CENTER_COPY = Math.floor(WHEEL_REPEAT / 2);
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = Array.from({ length: 60 }, (_, i) => i);
 
-const DAYS: { key: string; label: string }[] = [
-  { key: 'mon', label: 'M' },
-  { key: 'tue', label: 'T' },
-  { key: 'wed', label: 'W' },
-  { key: 'thu', label: 'T' },
-  { key: 'fri', label: 'F' },
-  { key: 'sat', label: 'S' },
-  { key: 'sun', label: 'S' },
-];
+const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 
 type ChallengeKey = 'qr' | 'object' | 'color' | 'steps' | 'voice';
 
 const MAX_CHALLENGES = 2;
 
-const CHALLENGES: {
-  key: ChallengeKey;
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-}[] = [
-  {
-    key: 'qr',
-    title: 'Scan QR Code',
-    subtitle: 'Find the QR you placed somewhere',
-    icon: <Ionicons name="qr-code-outline" size={22} color={colors.accent} />,
-  },
-  {
-    key: 'object',
-    title: 'Find Object',
-    subtitle: 'Snap a picture of a target item',
-    icon: <MaterialCommunityIcons name="image-search-outline" size={22} color={colors.accent} />,
-  },
-  {
-    key: 'color',
-    title: 'Find a Color',
-    subtitle: 'Point camera at a matching color',
-    icon: <Ionicons name="color-palette-outline" size={22} color={colors.accent} />,
-  },
-  {
-    key: 'steps',
-    title: 'Walk Steps',
-    subtitle: 'Reach a step goal to dismiss',
-    icon: <Ionicons name="walk-outline" size={22} color={colors.accent} />,
-  },
-  {
-    key: 'voice',
-    title: 'Voice Phrase',
-    subtitle: 'Say the daily phrase out loud',
-    icon: <Ionicons name="mic-outline" size={22} color={colors.accent} />,
-  },
-];
+const CHALLENGE_ICONS: Record<ChallengeKey, React.ReactNode> = {
+  qr: <Ionicons name="qr-code-outline" size={22} color={colors.accent} />,
+  object: <MaterialCommunityIcons name="image-search-outline" size={22} color={colors.accent} />,
+  color: <Ionicons name="color-palette-outline" size={22} color={colors.accent} />,
+  steps: <Ionicons name="walk-outline" size={22} color={colors.accent} />,
+  voice: <Ionicons name="mic-outline" size={22} color={colors.accent} />,
+};
+const CHALLENGE_KEYS: ChallengeKey[] = ['qr', 'object', 'color', 'steps', 'voice'];
 
 const SOUND_OPTIONS = Object.keys(alarmSounds);
 
 export default function CreateAlarm() {
   const router = useRouter();
+  const { t } = useTranslation();
   const initialNow = (() => {
     const d = new Date();
     return { hour: d.getHours(), minute: d.getMinutes() };
@@ -94,7 +59,7 @@ export default function CreateAlarm() {
   const [activeDays, setActiveDays] = useState<string[]>([]);
   const [challenges, setChallenges] = useState<ChallengeKey[]>(['qr']);
   const [sound, setSound] = useState(SOUND_OPTIONS[0] ?? 'Sunrise');
-  const [label, setLabel] = useState('Morning routine');
+  const [label, setLabel] = useState(t.createAlarm.defaultLabel);
   const [saving, setSaving] = useState(false);
 
   const [showLabelModal, setShowLabelModal] = useState(false);
@@ -126,7 +91,10 @@ export default function CreateAlarm() {
     setChallenges(prev => {
       if (prev.includes(key)) return prev.filter(c => c !== key);
       if (prev.length >= MAX_CHALLENGES) {
-        Alert.alert('Limit reached', `You can pick up to ${MAX_CHALLENGES} challenges per alarm.`);
+        Alert.alert(
+          t.createAlarm.limitReachedTitle,
+          t.createAlarm.limitReachedBody(MAX_CHALLENGES),
+        );
         return prev;
       }
       return [...prev, key];
@@ -138,7 +106,7 @@ export default function CreateAlarm() {
     setShowLabelModal(true);
   };
   const saveLabel = () => {
-    setLabel(labelDraft.trim() || 'Alarm');
+    setLabel(labelDraft.trim() || t.createAlarm.fallbackLabel);
     setShowLabelModal(false);
   };
 
@@ -184,7 +152,7 @@ export default function CreateAlarm() {
 
   const onSave = async () => {
     if (challenges.length === 0) {
-      Alert.alert('Pick a challenge', 'Choose at least one wake-up challenge.');
+      Alert.alert(t.createAlarm.pickChallengeTitle, t.createAlarm.pickChallengeBody);
       return;
     }
     try {
@@ -201,13 +169,13 @@ export default function CreateAlarm() {
       });
       router.back();
     } catch (err) {
-      Alert.alert('Could not save', String(err));
+      Alert.alert(t.createAlarm.couldNotSave, String(err));
     } finally {
       setSaving(false);
     }
   };
 
-  const ringLabel = useMemo(() => formatRingIn(hour, minute), [hour, minute]);
+  const ringLabel = useMemo(() => formatRingIn(hour, minute, t), [hour, minute, t]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -215,9 +183,9 @@ export default function CreateAlarm() {
         <Pressable hitSlop={12} onPress={() => router.back()} style={styles.headerBtn}>
           <AntDesign name="close" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text style={styles.headerTitle}>New Alarm</Text>
+        <Text style={styles.headerTitle}>{t.createAlarm.headerTitle}</Text>
         <Pressable hitSlop={12} style={styles.headerBtn} onPress={onSave} disabled={saving}>
-          <Text style={styles.headerSave}>{saving ? 'Saving…' : 'Save'}</Text>
+          <Text style={styles.headerSave}>{saving ? t.common.saving : t.common.save}</Text>
         </Pressable>
       </View>
 
@@ -235,41 +203,42 @@ export default function CreateAlarm() {
           </View>
         </View>
 
-        <SectionTitle>Repeat</SectionTitle>
+        <SectionTitle>{t.createAlarm.repeat}</SectionTitle>
         <View style={styles.daysRow}>
-          {DAYS.map(d => {
-            const active = activeDays.includes(d.key);
+          {DAY_KEYS.map(key => {
+            const active = activeDays.includes(key);
             return (
               <Pressable
-                key={d.key}
-                onPress={() => toggleDay(d.key)}
+                key={key}
+                onPress={() => toggleDay(key)}
                 style={[styles.dayChip, active && styles.dayChipActive]}>
-                <Text style={[styles.dayLabel, active && styles.dayLabelActive]}>{d.label}</Text>
+                <Text style={[styles.dayLabel, active && styles.dayLabelActive]}>
+                  {t.days.single[key]}
+                </Text>
               </Pressable>
             );
           })}
         </View>
 
-        <SectionTitle>
-          Wake-up Challenge ({challenges.length}/{MAX_CHALLENGES})
-        </SectionTitle>
+        <SectionTitle>{t.createAlarm.wakeChallenge(challenges.length, MAX_CHALLENGES)}</SectionTitle>
         <View style={styles.challengeList}>
-          {CHALLENGES.map(c => {
-            const active = challenges.includes(c.key);
+          {CHALLENGE_KEYS.map(key => {
+            const active = challenges.includes(key);
             const disabled = !active && challenges.length >= MAX_CHALLENGES;
+            const meta = t.challenges[key];
             return (
               <Pressable
-                key={c.key}
-                onPress={() => toggleChallenge(c.key)}
+                key={key}
+                onPress={() => toggleChallenge(key)}
                 style={[
                   styles.challengeRow,
                   active && styles.challengeRowActive,
                   disabled && styles.challengeRowDisabled,
                 ]}>
-                <View style={styles.challengeIcon}>{c.icon}</View>
+                <View style={styles.challengeIcon}>{CHALLENGE_ICONS[key]}</View>
                 <View style={styles.challengeText}>
-                  <Text style={styles.challengeTitle}>{c.title}</Text>
-                  <Text style={styles.challengeSubtitle}>{c.subtitle}</Text>
+                  <Text style={styles.challengeTitle}>{meta.title}</Text>
+                  <Text style={styles.challengeSubtitle}>{meta.subtitle}</Text>
                 </View>
                 <View style={[styles.checkbox, active && styles.checkboxActive]}>
                   {active && <AntDesign name="check" size={14} color={colors.white} />}
@@ -279,11 +248,11 @@ export default function CreateAlarm() {
           })}
         </View>
 
-        <SectionTitle>Options</SectionTitle>
+        <SectionTitle>{t.createAlarm.options}</SectionTitle>
         <View style={styles.optionCard}>
           <Pressable style={styles.optionRow} onPress={openLabelModal}>
             <Ionicons name="bookmark-outline" size={20} color={colors.textSecondary} />
-            <Text style={styles.optionLabel}>Label</Text>
+            <Text style={styles.optionLabel}>{t.createAlarm.label}</Text>
             <Text style={styles.optionValue} numberOfLines={1}>
               {label}
             </Text>
@@ -292,14 +261,16 @@ export default function CreateAlarm() {
           <View style={styles.divider} />
           <Pressable style={styles.optionRow} onPress={() => setShowSoundModal(true)}>
             <Ionicons name="musical-notes-outline" size={20} color={colors.textSecondary} />
-            <Text style={styles.optionLabel}>Sound</Text>
+            <Text style={styles.optionLabel}>{t.createAlarm.sound}</Text>
             <Text style={styles.optionValue}>{sound}</Text>
             <AntDesign name="right" size={14} color={colors.textMuted} />
           </Pressable>
         </View>
 
         <Pressable style={styles.primaryBtn} onPress={onSave} disabled={saving}>
-          <Text style={styles.primaryBtnText}>{saving ? 'Saving…' : 'Save Alarm'}</Text>
+          <Text style={styles.primaryBtnText}>
+            {saving ? t.common.saving : t.createAlarm.saveAlarm}
+          </Text>
         </Pressable>
       </ScrollView>
 
@@ -310,11 +281,11 @@ export default function CreateAlarm() {
         onRequestClose={() => setShowLabelModal(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setShowLabelModal(false)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
-            <Text style={styles.modalTitle}>Alarm label</Text>
+            <Text style={styles.modalTitle}>{t.createAlarm.alarmLabel}</Text>
             <TextInput
               value={labelDraft}
               onChangeText={setLabelDraft}
-              placeholder="e.g. Morning run"
+              placeholder={t.createAlarm.placeholderLabel}
               placeholderTextColor={colors.textMuted}
               style={styles.modalInput}
               autoFocus
@@ -324,10 +295,10 @@ export default function CreateAlarm() {
             />
             <View style={styles.modalActions}>
               <Pressable style={styles.modalSecondary} onPress={() => setShowLabelModal(false)}>
-                <Text style={styles.modalSecondaryText}>Cancel</Text>
+                <Text style={styles.modalSecondaryText}>{t.common.cancel}</Text>
               </Pressable>
               <Pressable style={styles.modalPrimary} onPress={saveLabel}>
-                <Text style={styles.modalPrimaryText}>Save</Text>
+                <Text style={styles.modalPrimaryText}>{t.common.save}</Text>
               </Pressable>
             </View>
           </Pressable>
@@ -341,7 +312,7 @@ export default function CreateAlarm() {
         onRequestClose={closeSoundModal}>
         <Pressable style={styles.modalBackdrop} onPress={closeSoundModal}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
-            <Text style={styles.modalTitle}>Alarm sound</Text>
+            <Text style={styles.modalTitle}>{t.createAlarm.alarmSound}</Text>
             <View style={styles.soundList}>
               {SOUND_OPTIONS.map(name => {
                 const active = sound === name;
@@ -363,17 +334,17 @@ export default function CreateAlarm() {
                     </Pressable>
                     <Text style={[styles.soundName, active && styles.soundNameActive]}>
                       {name}
-                      {isPlaying ? '  • playing' : ''}
+                      {isPlaying ? `  • ${t.createAlarm.playing}` : ''}
                     </Text>
                     {active && <AntDesign name="check" size={16} color={colors.accent} />}
                   </Pressable>
                 );
               })}
             </View>
-            <Text style={styles.modalHint}>Tap the speaker to preview (15s)</Text>
+            <Text style={styles.modalHint}>{t.createAlarm.previewHint}</Text>
             <View style={styles.modalActions}>
               <Pressable style={styles.modalPrimary} onPress={closeSoundModal}>
-                <Text style={styles.modalPrimaryText}>Done</Text>
+                <Text style={styles.modalPrimaryText}>{t.common.done}</Text>
               </Pressable>
             </View>
           </Pressable>
@@ -538,7 +509,11 @@ function WheelItem({
   );
 }
 
-function formatRingIn(hour: number, minute: number): string {
+function formatRingIn(
+  hour: number,
+  minute: number,
+  t: ReturnType<typeof useTranslation>['t'],
+): string {
   const now = new Date();
   const target = new Date(now);
   target.setHours(hour, minute, 0, 0);
@@ -548,9 +523,9 @@ function formatRingIn(hour: number, minute: number): string {
   const totalMin = Math.max(1, Math.round((target.getTime() - now.getTime()) / 60000));
   const hrs = Math.floor(totalMin / 60);
   const mins = totalMin % 60;
-  if (hrs === 0) return `Rings in ${mins}min`;
-  if (mins === 0) return `Rings in ${hrs}hr${hrs === 1 ? '' : 's'}`;
-  return `Rings in ${hrs}hr${hrs === 1 ? '' : 's'} ${mins}min`;
+  if (hrs === 0) return t.createAlarm.ringsIn.min(mins);
+  if (mins === 0) return t.createAlarm.ringsIn.hr(hrs);
+  return t.createAlarm.ringsIn.hrMin(hrs, mins);
 }
 
 const styles = StyleSheet.create({

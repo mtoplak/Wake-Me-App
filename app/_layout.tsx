@@ -9,7 +9,7 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSlice } from '@/slices';
 import { subscribeToAuth, configureGoogleSignIn } from '@/services';
-import { getDb, listAlarms, seedIfEmpty } from '@/services/database';
+import { getDb, getProfile, listAlarms, seedIfEmpty } from '@/services/database';
 import { ensureAlarmPermissions, rescheduleAllAlarms } from '@/services/alarmScheduler';
 import Provider from '@/providers';
 
@@ -18,7 +18,7 @@ SplashScreen.preventAutoHideAsync();
 
 function Router() {
   const { isDark } = useColorScheme();
-  const { dispatch, setUser, setLoggedIn } = useAppSlice();
+  const { dispatch, setUser, setLoggedIn, setLanguage } = useAppSlice();
   const [isOpen, setOpen] = useState(false);
 
   useAlarmWatcher();
@@ -30,6 +30,12 @@ function Router() {
     (async () => {
       try {
         await Promise.all([loadImages(), loadFonts(), getDb().then(() => seedIfEmpty())]);
+
+        getProfile()
+          .then(p => {
+            if (p?.language) dispatch(setLanguage(p.language));
+          })
+          .catch(() => {});
 
         ensureAlarmPermissions()
           .then(() => listAlarms())
@@ -46,7 +52,7 @@ function Router() {
         setOpen(true);
       }
     })();
-  }, []);
+  }, [dispatch, setLanguage]);
 
   /**
    * subscribe to Firebase auth state changes

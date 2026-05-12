@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { listQuotes, getTodaysQuote, CachedQuote } from '@/services/database';
+import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
 
 function formatDate(iso: string) {
@@ -18,6 +19,7 @@ function formatDate(iso: string) {
 }
 
 export default function Quotes() {
+  const { t } = useTranslation();
   const [today, setToday] = useState<CachedQuote | null>(null);
   const [archive, setArchive] = useState<CachedQuote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,36 +59,36 @@ export default function Quotes() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
         }>
-        <Text style={styles.title}>Daily Inspire</Text>
-        <Text style={styles.subtitle}>A fresh thought every morning</Text>
+        <Text style={styles.title}>{t.quotes.title}</Text>
+        <Text style={styles.subtitle}>{t.quotes.subtitle}</Text>
 
         {today && (
           <View style={styles.todayCard}>
             <View style={styles.sparkleRow}>
               <Ionicons name="sparkles" size={16} color={colors.accent} />
-              <Text style={styles.todayBadge}>Today · {formatDate(today.date)}</Text>
+              <Text style={styles.todayBadge}>{t.quotes.todayBadge} · {formatDate(today.date)}</Text>
             </View>
             <Text style={styles.quote}>“{today.text}”</Text>
             <Text style={styles.author}>— {today.author}</Text>
             <View style={styles.actionsRow}>
               <View style={styles.actionPill}>
                 <Ionicons name="bookmark-outline" size={14} color={colors.accent} />
-                <Text style={styles.actionText}>Save</Text>
+                <Text style={styles.actionText}>{t.quotes.save}</Text>
               </View>
               <View style={styles.actionPill}>
                 <Ionicons name="share-outline" size={14} color={colors.accent} />
-                <Text style={styles.actionText}>Share</Text>
+                <Text style={styles.actionText}>{t.quotes.share}</Text>
               </View>
             </View>
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Archive</Text>
+        <Text style={styles.sectionTitle}>{t.quotes.archive}</Text>
 
         {archive.length === 0 ? (
           <View style={styles.emptyCard}>
             <MaterialCommunityIcons name="format-quote-close" size={28} color={colors.textMuted} />
-            <Text style={styles.emptyText}>No archived quotes yet</Text>
+            <Text style={styles.emptyText}>{t.quotes.empty}</Text>
           </View>
         ) : (
           archive.map(q => (

@@ -6,6 +6,7 @@ import useColorScheme from '@/hooks/useColorScheme';
 import { useDataPersist, DataPersistKeys } from '@/hooks';
 import { useAppSlice } from '@/slices';
 import { signInWithGoogle, syncOnSignIn } from '@/services';
+import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
 
 const styles = StyleSheet.create({
@@ -78,6 +79,7 @@ export default function Onboarding() {
   const { isDark } = useColorScheme();
   const { dispatch, setUser, setLoggedIn } = useAppSlice();
   const { setPersistData } = useDataPersist();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const finish = async () => {
@@ -95,9 +97,9 @@ export default function Onboarding() {
       await syncOnSignIn();
       await finish();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Sign-in failed';
+      const message = err instanceof Error ? err.message : t.onboarding.signInFailed;
       if (message !== 'Sign-in cancelled') {
-        Alert.alert('Sign-in failed', message);
+        Alert.alert(t.onboarding.signInFailed, message);
       }
     } finally {
       setLoading(false);
@@ -114,11 +116,8 @@ export default function Onboarding() {
   return (
     <View style={[styles.root, isDark && { backgroundColor: colors.blackGray }]}>
       <Text style={styles.emoji}>⏰</Text>
-      <Text style={[styles.title, isDark && { color: colors.white }]}>Welcome to Wake Me</Text>
-      <Text style={styles.subtitle}>
-        Sign in to back up your alarms and settings to the cloud, or continue without an account and
-        keep everything on this device.
-      </Text>
+      <Text style={[styles.title, isDark && { color: colors.white }]}>{t.onboarding.title}</Text>
+      <Text style={styles.subtitle}>{t.onboarding.subtitle}</Text>
 
       <Button style={styles.googleButton} onPress={onGooglePress} disabled={loading}>
         {loading ? (
@@ -126,22 +125,20 @@ export default function Onboarding() {
         ) : (
           <>
             <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
+            <Text style={styles.googleButtonText}>{t.onboarding.continueGoogle}</Text>
           </>
         )}
       </Button>
 
       <Button
-        title="Continue without account"
+        title={t.onboarding.continueWithoutAccount}
         titleStyle={styles.skipButtonText}
         style={styles.skipButton}
         onPress={onSkipPress}
         disabled={loading}
       />
 
-      <Text style={styles.footer}>
-        You can also sign in later from the Profile tab to save your alarms and sync them across your devices.
-      </Text>
+      <Text style={styles.footer}>{t.onboarding.footer}</Text>
     </View>
   );
 }

@@ -21,10 +21,10 @@ import {
 import { signInWithGoogle, signOut, syncOnSignIn } from '@/services';
 import { useAppSlice } from '@/slices';
 import { useDataPersist, DataPersistKeys } from '@/hooks';
+import { useTranslation, type Language } from '@/i18n';
 import { colors } from '@/theme';
 
 type Bool = '1' | '0';
-type Lang = 'EN' | 'SL';
 
 type RowProps = {
   icon: React.ReactNode;
@@ -47,32 +47,32 @@ const KEYS = {
 };
 
 export default function Settings() {
-  const { dispatch, user, loggedIn, setUser, setLoggedIn } = useAppSlice();
+  const { dispatch, user, loggedIn, setUser, setLoggedIn, setLanguage } = useAppSlice();
   const { setPersistData, removePersistData } = useDataPersist();
+  const { t, language } = useTranslation();
   const [authBusy, setAuthBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [cloudSync, setCloudSync] = useState(true);
   const [vibration, setVibration] = useState(true);
   const [voice, setVoice] = useState(false);
-  const [appearance, setAppearance] = useState('Light');
+  const [appearance, setAppearance] = useState(t.settings.appearanceLight);
   const [defaultSound, setDefaultSound] = useState('Sunrise');
   const [phrase, setPhrase] = useState('“Today will be great!”');
   const [stepGoal, setStepGoal] = useState('30 steps');
-  const [language, setLanguage] = useState<Lang>('EN');
 
   const load = useCallback(async () => {
     const [p, all] = await Promise.all([getProfile(), getAllSettings()]);
     setProfile(p);
-    if (p) setLanguage(p.language);
+    if (p?.language) dispatch(setLanguage(p.language));
     setCloudSync((all[KEYS.cloudSync] ?? '1') === '1');
     setVibration((all[KEYS.vibration] ?? '1') === '1');
     setVoice((all[KEYS.voicePhrase] ?? '0') === '1');
-    setAppearance(all[KEYS.appearance] ?? 'Light');
+    setAppearance(all[KEYS.appearance] ?? t.settings.appearanceLight);
     setDefaultSound(all[KEYS.defaultSound] ?? 'Sunrise');
     setPhrase(all[KEYS.voicePhraseText] ?? '“Today will be great!”');
     setStepGoal(all[KEYS.stepGoal] ?? '30 steps');
-  }, []);
+  }, [dispatch, setLanguage, t.settings.appearanceLight]);
 
   useEffect(() => {
     load().finally(() => setLoading(false));
@@ -94,12 +94,12 @@ export default function Settings() {
     setVoice(v);
     await persistBool(KEYS.voicePhrase, v);
   };
-  const onSelectLanguage = async (lang: Lang) => {
-    setLanguage(lang);
-    if (profile) {
-      await upsertProfile({ name: profile.name, email: profile.email, language: lang });
-      setProfile({ ...profile, language: lang });
-    }
+  const onSelectLanguage = async (lang: Language) => {
+    dispatch(setLanguage(lang));
+    const name = profile?.name ?? user?.name ?? '';
+    const email = profile?.email ?? user?.email ?? '';
+    await upsertProfile({ name, email, language: lang });
+    if (profile) setProfile({ ...profile, language: lang });
   };
 
   const handleSignIn = async () => {
@@ -112,8 +112,8 @@ export default function Settings() {
       await setPersistData<boolean>(DataPersistKeys.ONBOARDED, true);
       await syncOnSignIn();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Sign-in failed';
-      if (message !== 'Sign-in cancelled') Alert.alert('Sign-in failed', message);
+      const message = err instanceof Error ? err.message : t.settings.signInFailed;
+      if (message !== 'Sign-in cancelled') Alert.alert(t.settings.signInFailed, message);
     } finally {
       setAuthBusy(false);
     }
@@ -121,10 +121,10 @@ export default function Settings() {
 
   const handleSignOut = () => {
     if (authBusy) return;
-    Alert.alert('Sign out?', 'Your alarms stay on this device. Cloud sync will pause.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t.settings.signOutTitle, t.settings.signOutBody, [
+      { text: t.common.cancel, style: 'cancel' },
       {
-        text: 'Sign out',
+        text: t.settings.signOut,
         style: 'destructive',
         onPress: async () => {
           setAuthBusy(true);
@@ -133,7 +133,10 @@ export default function Settings() {
             dispatch(setUser(undefined));
             dispatch(setLoggedIn(false));
           } catch (err) {
-            Alert.alert('Sign out failed', err instanceof Error ? err.message : 'Unknown error');
+            Alert.alert(
+              t.settings.signOutFailed,
+              err instanceof Error ? err.message : t.common.unknown,
+            );
           } finally {
             setAuthBusy(false);
           }
@@ -143,20 +146,16 @@ export default function Settings() {
   };
 
   const handleResetOnboarding = () => {
-    Alert.alert(
-      'Show onboarding again?',
-      'This clears the onboarded flag. Reload the app to see the welcome screen.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          onPress: async () => {
-            await removePersistData(DataPersistKeys.ONBOARDED);
-            Alert.alert('Done', 'Reload the app to see onboarding.');
-          },
+    Alert.alert(t.settings.resetOnboardTitle, t.settings.resetOnboardBody, [
+      { text: t.common.cancel, style: 'cancel' },
+      {
+        text: t.common.reset,
+        onPress: async () => {
+          await removePersistData(DataPersistKeys.ONBOARDED);
+          Alert.alert(t.settings.doneTitle, t.settings.resetOnboardDone);
         },
-      ],
-    );
+      },
+    ]);
   };
 
   if (loading) {
@@ -176,7 +175,7 @@ export default function Settings() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={styles.title}>{t.settings.title}</Text>
 
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
@@ -184,10 +183,10 @@ export default function Settings() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.profileName}>
-              {loggedIn ? (user?.name ?? 'Signed in') : 'Guest'}
+              {loggedIn ? (user?.name ?? t.common.signedIn) : t.common.guest}
             </Text>
             <Text style={styles.profileEmail}>
-              {loggedIn ? (user?.email ?? '—') : 'Not signed in'}
+              {loggedIn ? (user?.email ?? '—') : t.common.notSignedIn}
             </Text>
           </View>
           <Pressable style={styles.editBtn}>
@@ -195,15 +194,15 @@ export default function Settings() {
           </Pressable>
         </View>
 
-        <SectionTitle>Account</SectionTitle>
+        <SectionTitle>{t.settings.sections.account}</SectionTitle>
         <View style={styles.card}>
           <Row
             icon={
               <MaterialCommunityIcons name="cloud-sync-outline" size={18} color={colors.accent} />
             }
             iconBg={colors.accentSoft}
-            label="Cloud sync"
-            value={cloudSync ? 'On' : 'Off'}
+            label={t.settings.cloudSync}
+            value={cloudSync ? t.common.on : t.common.off}
             trailing={
               <Switch
                 value={cloudSync}
@@ -216,13 +215,13 @@ export default function Settings() {
           <Row
             icon={<Ionicons name="lock-closed-outline" size={18} color={colors.success} />}
             iconBg={colors.successSoft}
-            label="Privacy & data"
+            label={t.settings.privacy}
           />
           {loggedIn ? (
             <Row
               icon={<Ionicons name="log-out-outline" size={18} color={colors.danger} />}
               iconBg="#fee2e2"
-              label={authBusy ? 'Signing out…' : 'Sign out'}
+              label={authBusy ? t.settings.signingOut : t.settings.signOut}
               onPress={authBusy ? undefined : handleSignOut}
               last
             />
@@ -230,19 +229,19 @@ export default function Settings() {
             <Row
               icon={<Ionicons name="logo-google" size={18} color={colors.accent} />}
               iconBg={colors.accentSoft}
-              label={authBusy ? 'Signing in…' : 'Sign in with Google'}
+              label={authBusy ? t.settings.signingIn : t.settings.signIn}
               onPress={authBusy ? undefined : handleSignIn}
               last
             />
           )}
         </View>
 
-        <SectionTitle>Preferences</SectionTitle>
+        <SectionTitle>{t.settings.sections.preferences}</SectionTitle>
         <View style={styles.card}>
           <Row
             icon={<Ionicons name="language-outline" size={18} color={colors.warning} />}
             iconBg={colors.warningSoft}
-            label="Language"
+            label={t.settings.language}
             trailing={
               <View style={styles.segment}>
                 <Pressable
@@ -265,19 +264,19 @@ export default function Settings() {
           <Row
             icon={<Ionicons name="moon-outline" size={18} color={colors.accent} />}
             iconBg={colors.accentSoft}
-            label="Appearance"
+            label={t.settings.appearance}
             value={appearance}
           />
           <Row
             icon={<Ionicons name="musical-notes-outline" size={18} color={colors.flame} />}
             iconBg={colors.flameSoft}
-            label="Default sound"
+            label={t.settings.defaultSound}
             value={defaultSound}
           />
           <Row
             icon={<MaterialCommunityIcons name="vibrate" size={18} color={colors.success} />}
             iconBg={colors.successSoft}
-            label="Vibration"
+            label={t.settings.vibration}
             trailing={
               <Switch
                 value={vibration}
@@ -290,12 +289,12 @@ export default function Settings() {
           />
         </View>
 
-        <SectionTitle>Challenges</SectionTitle>
+        <SectionTitle>{t.settings.sections.challenges}</SectionTitle>
         <View style={styles.card}>
           <Row
             icon={<Ionicons name="mic-outline" size={18} color={colors.accent} />}
             iconBg={colors.accentSoft}
-            label="Voice phrase"
+            label={t.settings.voicePhrase}
             value={phrase}
             trailing={
               <Switch
@@ -309,7 +308,7 @@ export default function Settings() {
           <Row
             icon={<Ionicons name="walk-outline" size={18} color={colors.success} />}
             iconBg={colors.successSoft}
-            label="Step goal"
+            label={t.settings.stepGoal}
             value={stepGoal}
           />
           <Row
@@ -321,28 +320,28 @@ export default function Settings() {
               />
             }
             iconBg={colors.warningSoft}
-            label="Object library"
-            value="6 items"
+            label={t.settings.objectLibrary}
+            value={t.settings.objectLibraryValue}
             last
           />
         </View>
 
-        <SectionTitle>About</SectionTitle>
+        <SectionTitle>{t.settings.sections.about}</SectionTitle>
         <View style={styles.card}>
           <Row
             icon={<Feather name="help-circle" size={18} color={colors.accent} />}
             iconBg={colors.accentSoft}
-            label="Help & support"
+            label={t.settings.help}
           />
           <Row
             icon={<Feather name="star" size={18} color={colors.warning} />}
             iconBg={colors.warningSoft}
-            label="Rate the app"
+            label={t.settings.rateApp}
           />
           <Row
             icon={<Feather name="info" size={18} color={colors.textSecondary} />}
             iconBg={colors.surfaceMuted}
-            label="Version"
+            label={t.settings.version}
             value="1.0.0"
             last
           />
@@ -353,14 +352,14 @@ export default function Settings() {
             <Row
               icon={<Feather name="refresh-ccw" size={18} color={colors.textSecondary} />}
               iconBg={colors.surfaceMuted}
-              label="Reset onboarding (dev)"
+              label={t.settings.resetOnboarding}
               onPress={handleResetOnboarding}
               last
             />
           </View>
         )}
 
-        <Text style={styles.footer}>WakeMeApp Alarm Clock · Made for sleepyheads</Text>
+        <Text style={styles.footer}>{t.settings.footer}</Text>
       </ScrollView>
     </SafeAreaView>
   );

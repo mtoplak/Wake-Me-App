@@ -18,6 +18,7 @@ import { useAudioPlayer, setAudioModeAsync, AudioSource } from 'expo-audio';
 import { listAlarms, Alarm, recordWake } from '@/services/database';
 import { fetchRandomQuote, FetchedQuote } from '@/services/quoteApi';
 import { acknowledgeAlarm, setAlarmActiveForeground } from '@/services/alarmScheduler';
+import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
 import { getAlarmSource } from './sounds';
 import { ColorChallengeFlow, type ColorChallengeCompletePayload } from './colorChallenge';
@@ -45,6 +46,7 @@ function formatTime(hour: number, minute: number) {
 
 export default function AlarmRinging() {
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ alarmId?: string }>();
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [phase, setPhase] = useState<'ringing' | 'colorChallenge' | 'quote'>('ringing');
@@ -74,7 +76,7 @@ export default function AlarmRinging() {
   const time = alarm
     ? formatTime(alarm.hour, alarm.minute)
     : { time: fallback.time, meridiem: fallback.meridiem };
-  const label = alarm?.label ?? 'Wake up';
+  const label = alarm?.label ?? t.alarmRinging.wakeUp;
   const sound = alarm?.sound ?? 'Sunrise';
 
   const slide = useRef(new Animated.Value(0)).current;
@@ -265,15 +267,15 @@ export default function AlarmRinging() {
         <View style={styles.quoteWrap}>
           <View style={styles.sparkle}>
             <Ionicons name="sparkles" size={18} color={colors.accent} />
-            <Text style={styles.sparkleText}>Your morning thought</Text>
+            <Text style={styles.sparkleText}>{t.alarmRinging.morningThought}</Text>
           </View>
           <Text style={styles.quoteText}>
-            “{quote?.text ?? 'Today is a fresh start. Make the first small move.'}”
+            “{quote?.text ?? t.alarmRinging.fallbackQuote}”
           </Text>
-          <Text style={styles.quoteAuthor}>— {quote?.author ?? 'Unknown'}</Text>
+          <Text style={styles.quoteAuthor}>— {quote?.author ?? t.common.unknown}</Text>
 
           <Pressable style={styles.continueBtn} onPress={() => router.back()}>
-            <Text style={styles.continueText}>Start the day</Text>
+            <Text style={styles.continueText}>{t.alarmRinging.startTheDay}</Text>
             <AntDesign name="arrow-right" size={18} color={colors.white} />
           </Pressable>
         </View>
@@ -284,7 +286,7 @@ export default function AlarmRinging() {
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <View style={styles.ringWrap}>
-        <Text style={styles.greeting}>Alarm</Text>
+        <Text style={styles.greeting}>{t.alarmRinging.alarm}</Text>
         <Text style={styles.timeText}>{time.time}</Text>
         <Text style={styles.meridiem}>{time.meridiem}</Text>
         <Text style={styles.label}>{label}</Text>
@@ -309,7 +311,7 @@ export default function AlarmRinging() {
         onLayout={(e: LayoutChangeEvent) => setTrackWidth(e.nativeEvent.layout.width)}>
         <Animated.View style={[styles.sliderFill, { width: fillWidth }]} />
         <Animated.Text style={[styles.sliderHint, { opacity: hintOpacity }]}>
-          Slide to dismiss
+          {t.alarmRinging.slideToDismiss}
         </Animated.Text>
         <Animated.View
           {...panResponder.panHandlers}

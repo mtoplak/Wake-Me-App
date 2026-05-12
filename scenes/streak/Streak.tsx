@@ -10,18 +10,27 @@ import {
   getTodaysQuote,
   listRecentStats,
 } from '@/services/database';
+import { useTranslation, type Translations } from '@/i18n';
 import { colors } from '@/theme';
 
 type DayStatus = 'success' | 'fail' | 'today' | 'upcoming';
 type DayCell = { label: string; date: number; status: DayStatus; iso: string };
 
-const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_KEYS: (keyof Translations['days']['short'])[] = [
+  'mon',
+  'tue',
+  'wed',
+  'thu',
+  'fri',
+  'sat',
+  'sun',
+];
 
 function isoDay(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function buildWeek(stats: WakeStat[]): DayCell[] {
+function buildWeek(stats: WakeStat[], t: Translations): DayCell[] {
   const today = new Date();
   const dayOfWeek = (today.getDay() + 6) % 7; // Mon=0
   const monday = new Date(today);
@@ -41,39 +50,40 @@ function buildWeek(stats: WakeStat[]): DayCell[] {
     let status: DayStatus = 'upcoming';
     if (iso === todayIso) status = 'today';
     else if (successByDate.has(iso)) status = successByDate.get(iso) ? 'success' : 'fail';
-    return { label: DAY_NAMES[i], date: d.getDate(), status, iso };
+    return { label: t.days.short[DAY_KEYS[i]], date: d.getDate(), status, iso };
   });
 }
 
-function challengeLabel(c: ChallengeType | null): string {
+function challengeLabel(c: ChallengeType | null, t: Translations): string {
   switch (c) {
     case 'qr':
-      return 'Scan QR';
+      return t.challengeLabel.qr;
     case 'object':
-      return 'Find object';
+      return t.challengeLabel.object;
     case 'color':
-      return 'Find color';
+      return t.challengeLabel.color;
     case 'steps':
-      return 'Walk steps';
+      return t.challengeLabel.steps;
     case 'voice':
-      return 'Voice phrase';
+      return t.challengeLabel.voice;
     default:
-      return 'Wake-up';
+      return t.challengeLabel.wakeUp;
   }
 }
 
-function relativeDay(iso: string): string {
+function relativeDay(iso: string, t: Translations): string {
   const today = new Date();
   const target = new Date(iso);
   const todayIso = isoDay(today);
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
-  if (iso === todayIso) return 'Today';
-  if (iso === isoDay(yesterday)) return 'Yesterday';
+  if (iso === todayIso) return t.streak.today;
+  if (iso === isoDay(yesterday)) return t.streak.yesterday;
   return target.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 export default function Streak() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({
     total: 0,
@@ -100,7 +110,7 @@ export default function Streak() {
     load().finally(() => setLoading(false));
   }, [load]);
 
-  const week = useMemo(() => buildWeek(stats), [stats]);
+  const week = useMemo(() => buildWeek(stats, t), [stats, t]);
   const weekRatio = `${week.filter(d => d.status === 'success').length} / 7`;
 
   if (loading) {
@@ -116,25 +126,25 @@ export default function Streak() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Your Streak</Text>
-        <Text style={styles.subtitle}>Keep the fire burning every morning</Text>
+        <Text style={styles.title}>{t.streak.title}</Text>
+        <Text style={styles.subtitle}>{t.streak.subtitle}</Text>
 
         <View style={styles.streakCard}>
           <View style={styles.flameWrap}>
             <MaterialCommunityIcons name="fire" size={56} color={colors.flame} />
           </View>
           <Text style={styles.streakNumber}>{summary.currentStreak}</Text>
-          <Text style={styles.streakLabel}>day streak</Text>
+          <Text style={styles.streakLabel}>{t.streak.dayStreak}</Text>
           <Text style={styles.streakHint}>
             {summary.bestStreak > summary.currentStreak
-              ? `Beat your record of ${summary.bestStreak} days`
-              : 'New personal best — keep it going!'}
+              ? t.streak.beatRecord(summary.bestStreak)
+              : t.streak.newPersonalBest}
           </Text>
         </View>
 
         <View style={styles.weekCard}>
           <View style={styles.weekHeader}>
-            <Text style={styles.weekTitle}>This week</Text>
+            <Text style={styles.weekTitle}>{t.streak.thisWeek}</Text>
             <Text style={styles.weekRatio}>{weekRatio}</Text>
           </View>
           <View style={styles.weekRow}>
@@ -158,13 +168,13 @@ export default function Streak() {
           <StatTile
             icon={<Ionicons name="trophy-outline" size={20} color={colors.warning} />}
             tint={colors.warningSoft}
-            label="Best streak"
+            label={t.streak.bestStreak}
             value={String(summary.bestStreak)}
           />
           <StatTile
             icon={<Ionicons name="sunny-outline" size={20} color={colors.flame} />}
             tint={colors.flameSoft}
-            label="Wake-ups"
+            label={t.streak.wakeUps}
             value={String(summary.total)}
           />
           <StatTile
@@ -176,7 +186,7 @@ export default function Streak() {
               />
             }
             tint={colors.successSoft}
-            label="Success rate"
+            label={t.streak.successRate}
             value={`${summary.successRate}%`}
           />
         </View>
@@ -189,11 +199,11 @@ export default function Streak() {
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Recent wake-ups</Text>
+        <Text style={styles.sectionTitle}>{t.streak.recentWakeUps}</Text>
         {stats.length === 0 ? (
           <View style={styles.emptyCard}>
             <Ionicons name="alarm-outline" size={26} color={colors.textMuted} />
-            <Text style={styles.emptyText}>No wake-ups recorded yet</Text>
+            <Text style={styles.emptyText}>{t.streak.empty}</Text>
           </View>
         ) : (
           <View style={styles.historyCard}>
@@ -213,8 +223,8 @@ export default function Streak() {
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.historyTitle}>{relativeDay(h.date)}</Text>
-                  <Text style={styles.historySub}>{challengeLabel(h.challengeType)}</Text>
+                  <Text style={styles.historyTitle}>{relativeDay(h.date, t)}</Text>
+                  <Text style={styles.historySub}>{challengeLabel(h.challengeType, t)}</Text>
                 </View>
                 <Text style={styles.historyTime}>{h.wakeTime}</Text>
               </View>

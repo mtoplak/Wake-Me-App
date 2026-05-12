@@ -1,9 +1,11 @@
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
 
 export default function TabLayout() {
+  const { t } = useTranslation();
   return (
     <Tabs
       screenOptions={{
@@ -32,14 +34,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="myAlarms"
         options={{
-          title: 'Alarms',
+          title: t.tabs.alarms,
           tabBarIcon: ({ color }) => <Ionicons name="alarm-outline" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="streak"
         options={{
-          title: 'Streak',
+          title: t.tabs.streak,
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="fire" size={24} color={color} />,
         }}
       />
@@ -57,7 +59,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="quotes"
         options={{
-          title: 'Quotes',
+          title: t.tabs.quotes,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="format-quote-close" size={24} color={color} />
           ),
@@ -66,7 +68,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Settings',
+          title: t.tabs.settings,
           tabBarIcon: ({ color }) => <Ionicons name="settings-outline" size={24} color={color} />,
         }}
       />

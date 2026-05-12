@@ -2,17 +2,20 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { State, Dispatch } from '@/utils/store';
 import { User } from '@/types';
+import { DEFAULT_LANGUAGE, type Language } from '@/i18n';
 
 export interface AppState {
   checked: boolean;
   loggedIn: boolean;
   user?: User;
+  language: Language;
 }
 
 const initialState: AppState = {
   checked: false,
   loggedIn: false,
   user: undefined,
+  language: DEFAULT_LANGUAGE,
 };
 
 const slice = createSlice({
@@ -25,6 +28,9 @@ const slice = createSlice({
     },
     setUser: (state: AppState, { payload }: PayloadAction<User | undefined>) => {
       state.user = payload;
+    },
+    setLanguage: (state: AppState, { payload }: PayloadAction<Language>) => {
+      state.language = payload;
     },
     reset: () => initialState,
   },
