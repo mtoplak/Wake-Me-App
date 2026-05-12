@@ -1,20 +1,93 @@
 <h1 align="center">
-  <img src='https://github.com/wataru-maeda/react-native-boilerplate/blob/main/__DELELE_ME__/banner.png' width='600'>
+  <img src='assets/images/alarm-clock-lg.svg' width='200'>
+  <br/>
+  Wake Me App
 </h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="React Native is released under the MIT license." />
-  <img src="https://github.com/wataru-maeda/react-native-boilerplate/actions/workflows/preview.yml/badge.svg" alt="" />
-  <img src="https://github.com/wataru-maeda/react-native-boilerplate/actions/workflows/test.yml/badge.svg" alt="" />
-  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome!" />
+  <b>A smart alarm clock that won't let you snooze your way through the morning.</b>
 </p>
 
-<p align="center">
-  <img src='https://github.com/wataru-maeda/react-native-boilerplate/blob/main/__DELELE_ME__/demo-light-theme.gif' width='150px'>
-  <img src='https://github.com/wataru-maeda/react-native-boilerplate/blob/main/__DELELE_ME__/demo-dark-theme.gif' width='150px'>
-</p>
+Wake Me App is a mobile alarm clock that requires you to complete an interactive challenge before the alarm will turn off. Instead of tapping "snooze" half-asleep, you have to scan a QR code, find an object with your camera, hunt down a specific color, or take a set number of steps — actions designed to actually wake you up. Once you succeed, the app rewards you with a motivational quote of the day.
 
-Say goodbye to time-consuming setup tasks like restructuring files, installing libraries, and crafting reusable components. Our project boilerplate is your solution to eliminate redundant work when starting from scratch. Built with the latest Expo SDK 54, React 19.1, and modern development practices, it includes only the most commonly-used libraries, so you can hit the ground running with a fully configured setup.
+## 🌅 About the App
+
+### Domain and purpose
+
+Wake Me App sits at the intersection of **productivity** and **health/wellness**, in the sub-domain of **smart alarm clocks with gamification**. Its core purpose is to help people who struggle to get out of bed by replacing the standard "dismiss" button with a task the half-asleep brain actually has to engage with.
+
+### Who it's for
+
+The primary users are **students and working adults** who struggle with their morning routine and want motivation to get up earlier. More broadly, the app is suitable for anyone who wants to break the habit of repeated snoozing and start the day with more energy.
+
+### How it works
+
+When you set an alarm, you also pick one or more challenges that must be completed to dismiss it: scanning a QR code (e.g. one stuck to your bathroom mirror), finding an everyday object with the camera (using on-device image classification), pointing the camera at a specific color, or taking a required number of steps. The alarm keeps ringing until the challenge is solved. After a successful wake-up, the app fetches and displays a motivational quote.
+
+The app is built with **React Native + Expo** so it runs on both Android and iOS from a single codebase. Alarms, settings, and wake-up history are stored locally in **SQLite**; registered users can sync across devices via a **MongoDB Atlas** cloud backend. Image classification for the "find an object" challenge runs **on-device with TensorFlow Lite** (MobileNet via `@tensorflow/tfjs-react-native`), and the optional voice challenge uses **Expo Speech Recognition**. The UI is fully localized in **Slovenian and English** via `react-i18next`.
+
+## ✨ Key Features
+
+1. **Alarm management with wake-up challenges** — color search, QR scanning, object recognition, and step counting
+2. **Motivational quote of the day** fetched from the ZenQuotes REST API, with local caching for offline use
+3. **Local SQLite database** for alarms, settings, and wake-up statistics
+4. **Cloud sync via MongoDB Atlas** for registered users, with offline queue and last-write-wins conflict resolution
+5. **On-device image classification** with TensorFlow Lite (MobileNet) for the "find an object" challenge
+6. **Voice challenge** powered by Expo Speech Recognition, plus full **Slovenian / English** localization
+
+<details>
+  <summary><b>Feature 1 — Alarms & wake-up challenges</b></summary>
+
+- **Implementation:** Expo Notifications schedules alarms and fires local notifications. Each alarm carries its own challenge config (type, difficulty). The color challenge generates random target colors; the QR challenge uses Expo Camera; the steps challenge uses Expo Sensors (pedometer). Alarm state is managed via React Context + AsyncStorage.
+- **Data sources:** locally stored alarms (SQLite), user challenge preferences, sensor input (camera, pedometer).
+- **Known limitations:** iOS limits local notifications; the pedometer requires motion-sensor permission; alarms may not fire reliably in Do Not Disturb mode.
+
+</details>
+
+<details>
+  <summary><b>Feature 2 — Motivational quotes (ZenQuotes API)</b></summary>
+
+- **Implementation:** `fetch` against `https://zenquotes.io/api/today`. Quotes are shown after a successful wake-up. A Repository pattern decides whether to serve a fresh quote from the network or a cached one from SQLite, so the screen still works offline. Timeout and no-connection errors surface a friendly message.
+
+</details>
+
+<details>
+  <summary><b>Feature 3 — Local SQLite database</b></summary>
+
+- **Implementation:** Expo SQLite for an on-device relational store.
+- **Schema (E-R):** `User(id, name, email, language)`, `Alarm(id, user_id, time, repeat_days, active, sound)`, `AlarmChallenge(id, alarm_id, challenge_type, difficulty, params)`, `WakeUpStat(id, alarm_id, date, wake_time, success, challenge_duration)`, `CachedQuote(id, text, author, date)`. Tables join via ID foreign keys.
+
+</details>
+
+<details>
+  <summary><b>Feature 4 — Cloud sync (MongoDB Atlas)</b></summary>
+
+- **Implementation:** MongoDB Atlas, accessed via the MongoDB Data API or a small Express.js backend. JWT-based auth. On sign-in, alarms and settings sync between device and cloud. Offline edits queue locally and replay when connectivity returns.
+- **Known limitation:** simultaneous edits across devices are resolved with a **last-write-wins** strategy.
+
+</details>
+
+<details>
+  <summary><b>Feature 5 — On-device image classification</b></summary>
+
+- **Implementation:** TensorFlow Lite (MobileNet) running locally via `@tensorflow/tfjs-react-native`. When configuring the alarm, the user picks a target object (e.g. toothbrush, coffee mug). On wake-up, the user must point the camera at that object — the model classifies the image and confirms a match.
+- **Known limitation:** classification accuracy depends on lighting and camera quality.
+
+</details>
+
+<details>
+  <summary><b>Feature 6 — Voice challenge & i18n</b></summary>
+
+- **Implementation:** Expo Speech Recognition lets the user dismiss the alarm by speaking a configured phrase (e.g. *"Today is going to be great!"*). The whole UI, notifications, and challenge copy are translated via `react-i18next`, and the language is user-selectable in settings.
+- **Known limitation:** on some devices, speech recognition requires an internet connection.
+
+</details>
+
+---
+
+## 🛠️ Tech Stack & Boilerplate
+
+The app is built on top of an Expo + React Native boilerplate. The sections below document the underlying tooling.
 
 ## 🎯 Pre-configured Features
 

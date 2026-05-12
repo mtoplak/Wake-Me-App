@@ -1,4 +1,5 @@
 import { getDb } from './db';
+import { fetchTodaysQuote } from '../quoteApi';
 import { CachedQuote } from './types';
 
 export async function listQuotes(limit = 30): Promise<CachedQuote[]> {
@@ -22,6 +23,14 @@ export async function getTodaysQuote(): Promise<CachedQuote | null> {
   const today = new Date().toISOString().slice(0, 10);
   const todays = await getQuoteForDate(today);
   if (todays) return todays;
+
+  const fetched = await fetchTodaysQuote();
+  if (fetched) {
+    await upsertQuote({ text: fetched.text, author: fetched.author, date: today });
+    const stored = await getQuoteForDate(today);
+    if (stored) return stored;
+  }
+
   const db = await getDb();
   return (
     (await db.getFirstAsync<CachedQuote>(

@@ -15,7 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync, AudioSource } from 'expo-audio';
-import { listAlarms, getTodaysQuote, CachedQuote, Alarm, recordWake } from '@/services/database';
+import { listAlarms, Alarm, recordWake } from '@/services/database';
+import { fetchRandomQuote, FetchedQuote } from '@/services/quoteApi';
 import { acknowledgeAlarm, setAlarmActiveForeground } from '@/services/alarmScheduler';
 import { colors } from '@/theme';
 import { getAlarmSource } from './sounds';
@@ -47,7 +48,7 @@ export default function AlarmRinging() {
   const params = useLocalSearchParams<{ alarmId?: string }>();
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [phase, setPhase] = useState<'ringing' | 'colorChallenge' | 'quote'>('ringing');
-  const [quote, setQuote] = useState<CachedQuote | null>(null);
+  const [quote, setQuote] = useState<{ text: string; author: string } | null>(null);
 
   const now = useMemo(() => new Date(), []);
   const fallback = formatTime(now.getHours(), now.getMinutes());
@@ -81,6 +82,10 @@ export default function AlarmRinging() {
   const [trackWidth, setTrackWidth] = useState(0);
   const slideRange = Math.max(0, trackWidth - THUMB_SIZE - THUMB_INSET * 2);
 
+  // Prefetch the post-alarm quote while the user is still swiping/doing the
+  // challenge, so the transition to the quote screen is instant.
+  const quotePromiseRef = useRef<Promise<FetchedQuote | null> | null>(null);
+
   // Drawer keeps this screen mounted after "Start the day" — without a reset,
   // phase stays `quote` and the next alarm open shows quote with no ring UI.
   useFocusEffect(
@@ -89,6 +94,7 @@ export default function AlarmRinging() {
       setQuote(null);
       setTrackWidth(0);
       slide.setValue(0);
+      quotePromiseRef.current = fetchRandomQuote();
     }, [params.alarmId, slide]),
   );
 
@@ -168,7 +174,7 @@ export default function AlarmRinging() {
       setPhase('colorChallenge');
       return;
     }
-    const q = await getTodaysQuote();
+    const q = await (quotePromiseRef.current ?? fetchRandomQuote());
     setQuote(q);
     setPhase('quote');
   };
@@ -188,7 +194,7 @@ export default function AlarmRinging() {
           challengeType: 'color',
         });
       }
-      const q = await getTodaysQuote();
+      const q = await (quotePromiseRef.current ?? fetchRandomQuote());
       setQuote(q);
       setPhase('quote');
     },

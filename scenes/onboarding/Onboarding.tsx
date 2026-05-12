@@ -140,7 +140,7 @@ export default function Onboarding() {
       />
 
       <Text style={styles.footer}>
-        You can sign in later from the Profile tab to sync across devices.
+        You can also sign in later from the Profile tab to save your alarms and sync them across your devices.
       </Text>
     </View>
   );
