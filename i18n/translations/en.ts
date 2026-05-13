@@ -150,6 +150,8 @@ const en = {
       'Recognition stops when you pause. If nothing happens, tap Stop and try again. You must pass both rounds.',
     successTitle: 'Nice work',
     successBody: 'You matched the phrase twice. (Dev screen — alarm hook-up comes next.)',
+    successBodyAlarm: 'You matched the phrase twice. Time to read your morning thought.',
+    skipUnsupportedVoice: 'Continue without voice',
     close: 'Close',
     webUnsupportedTitle: 'Not available on web',
     webUnsupportedBody:

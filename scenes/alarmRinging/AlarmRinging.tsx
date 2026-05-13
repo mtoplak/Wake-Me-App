@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync, AudioSource } from 'expo-audio';
-import { listAlarms, Alarm, recordWake } from '@/services/database';
+import { listAlarms, Alarm, recordWake, type ChallengeType } from '@/services/database';
 import { fetchRandomQuote, FetchedQuote } from '@/services/quoteApi';
 import { acknowledgeAlarm, setAlarmActiveForeground } from '@/services/alarmScheduler';
 import { useTranslation } from '@/i18n';
@@ -23,6 +23,7 @@ import { colors } from '@/theme';
 import { getAlarmSource } from './sounds';
 import { ColorChallengeFlow, type ColorChallengeCompletePayload } from './colorChallenge';
 import { QrChallengeFlow, type QrChallengeCompletePayload } from './qrChallenge';
+import { VoiceChallengeFlow, type VoiceChallengeCompletePayload } from './voiceChallenge';
 
 const SLIDER_HEIGHT = 64;
 const THUMB_SIZE = 56;
@@ -36,6 +37,34 @@ function parseRouteAlarmId(raw: string | string[] | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+const RING_FLOW_CHALLENGE_TYPES = new Set<ChallengeType>(['color', 'voice']);
+
+type RingSession = { colorSec?: number; voiceSec?: number; voiceSkipped?: boolean };
+
+function firstRingFlowChallenge(challenges: ChallengeType[]): ChallengeType | null {
+  for (const c of challenges) {
+    if (RING_FLOW_CHALLENGE_TYPES.has(c)) return c;
+  }
+  return null;
+}
+
+function nextRingFlowChallenge(challenges: ChallengeType[], completed: ChallengeType): ChallengeType | null {
+  const idx = challenges.indexOf(completed);
+  if (idx === -1) return null;
+  for (let i = idx + 1; i < challenges.length; i++) {
+    const c = challenges[i];
+    if (RING_FLOW_CHALLENGE_TYPES.has(c)) return c;
+  }
+  return null;
+}
+
+/** Last color/voice in the alarm's list — used as `challenge_type` for the wake row. */
+function recordableChallengeType(challenges: ChallengeType[], session: RingSession): ChallengeType {
+  if (session.voiceSkipped && (session.colorSec ?? 0) > 0) return 'color';
+  const ring = challenges.filter(c => RING_FLOW_CHALLENGE_TYPES.has(c));
+  return ring[ring.length - 1] ?? 'color';
+}
+
 function formatTime(hour: number, minute: number) {
   const meridiem: 'AM' | 'PM' = hour < 12 ? 'AM' : 'PM';
   const h = hour % 12 === 0 ? 12 : hour % 12;
@@ -47,12 +76,12 @@ function formatTime(hour: number, minute: number) {
 
 export default function AlarmRinging() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const params = useLocalSearchParams<{ alarmId?: string }>();
   const [alarm, setAlarm] = useState<Alarm | null>(null);
-  const [phase, setPhase] = useState<'ringing' | 'qrChallenge' | 'colorChallenge' | 'quote'>(
-    'ringing',
-  );
+  const [phase, setPhase] = useState<
+    'ringing' | 'qrChallenge' | 'colorChallenge' | 'voiceChallenge' | 'quote'
+  >('ringing');
   const [quote, setQuote] = useState<{ text: string; author: string } | null>(null);
 
   const now = useMemo(() => new Date(), []);
@@ -90,6 +119,7 @@ export default function AlarmRinging() {
   // Prefetch the post-alarm quote while the user is still swiping/doing the
   // challenge, so the transition to the quote screen is instant.
   const quotePromiseRef = useRef<Promise<FetchedQuote | null> | null>(null);
+  const ringSessionRef = useRef<RingSession>({});
 
   // Drawer keeps this screen mounted after "Start the day" — without a reset,
   // phase stays `quote` and the next alarm open shows quote with no ring UI.
@@ -100,6 +130,7 @@ export default function AlarmRinging() {
       setTrackWidth(0);
       slide.setValue(0);
       quotePromiseRef.current = fetchRandomQuote();
+      ringSessionRef.current = {};
     }, [params.alarmId, slide]),
   );
 
@@ -122,7 +153,10 @@ export default function AlarmRinging() {
   useEffect(() => {
     // Keep alarm audio annoying through the challenge flow; stop once we reach quote.
     const shouldPlayAlarmAudio =
-      phase === 'ringing' || phase === 'colorChallenge' || phase === 'qrChallenge';
+      phase === 'ringing' ||
+      phase === 'colorChallenge' ||
+      phase === 'voiceChallenge' ||
+      phase === 'qrChallenge';
     if (!shouldPlayAlarmAudio || !audioSource) return;
     player.loop = true;
     player.volume = 1;
@@ -171,6 +205,28 @@ export default function AlarmRinging() {
     setPhase('quote');
   }, []);
 
+  const flushRingWakeAndQuote = useCallback(async () => {
+    const list = alarm?.challenges ?? [];
+    const colorPart = ringSessionRef.current.colorSec ?? 0;
+    const voicePart = ringSessionRef.current.voiceSkipped ? 0 : (ringSessionRef.current.voiceSec ?? 0);
+    const totalDur = Math.max(1, colorPart + voicePart);
+    const challengeType = recordableChallengeType(list, ringSessionRef.current);
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const wakeTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (alarm) {
+      await recordWake({
+        alarmId: alarm.id,
+        date,
+        wakeTime,
+        success: true,
+        challengeDuration: totalDur,
+        challengeType,
+      });
+    }
+    await finishWithQuote();
+  }, [alarm, finishWithQuote]);
+
   const hasQrChallenge = (a: Alarm | null) =>
     !!a?.challenges?.includes('qr') && !!a.challengeParams?.qr;
 
@@ -189,9 +245,15 @@ export default function AlarmRinging() {
       setPhase('qrChallenge');
       return;
     }
-    if (current?.challenges?.includes('color')) {
+    const firstRing = firstRingFlowChallenge(current?.challenges ?? []);
+    if (firstRing === 'color') {
       setAlarm(current);
       setPhase('colorChallenge');
+      return;
+    }
+    if (firstRing === 'voice') {
+      setAlarm(current);
+      setPhase('voiceChallenge');
       return;
     }
     await finishWithQuote();
@@ -212,8 +274,14 @@ export default function AlarmRinging() {
           challengeType: 'qr',
         });
       }
-      if (alarm?.challenges?.includes('color')) {
+      const list = alarm?.challenges ?? [];
+      const next = nextRingFlowChallenge(list, 'qr');
+      if (next === 'color') {
         setPhase('colorChallenge');
+        return;
+      }
+      if (next === 'voice') {
+        setPhase('voiceChallenge');
         return;
       }
       await finishWithQuote();
@@ -223,22 +291,34 @@ export default function AlarmRinging() {
 
   const handleColorChallengeComplete = useCallback(
     async ({ durationSec }: ColorChallengeCompletePayload) => {
-      const now = new Date();
-      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const wakeTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      if (alarm) {
-        await recordWake({
-          alarmId: alarm.id,
-          date,
-          wakeTime,
-          success: true,
-          challengeDuration: durationSec,
-          challengeType: 'color',
-        });
+      ringSessionRef.current.colorSec = durationSec;
+      const list = alarm?.challenges ?? [];
+      const next = nextRingFlowChallenge(list, 'color');
+      if (next === 'voice') {
+        setPhase('voiceChallenge');
+        return;
       }
-      await finishWithQuote();
+      await flushRingWakeAndQuote();
     },
-    [alarm, finishWithQuote],
+    [alarm, flushRingWakeAndQuote],
+  );
+
+  const handleVoiceChallengeComplete = useCallback(
+    async (payload?: VoiceChallengeCompletePayload) => {
+      if (payload?.skipped) {
+        ringSessionRef.current.voiceSkipped = true;
+      } else if (payload) {
+        ringSessionRef.current.voiceSec = payload.durationSec;
+      }
+      const list = alarm?.challenges ?? [];
+      const next = nextRingFlowChallenge(list, 'voice');
+      if (next === 'color') {
+        setPhase('colorChallenge');
+        return;
+      }
+      await flushRingWakeAndQuote();
+    },
+    [alarm, flushRingWakeAndQuote],
   );
 
   const panResponder = useMemo(
@@ -306,6 +386,16 @@ export default function AlarmRinging() {
 
   if (phase === 'colorChallenge') {
     return <ColorChallengeFlow onComplete={handleColorChallengeComplete} />;
+  }
+
+  if (phase === 'voiceChallenge') {
+    return (
+      <VoiceChallengeFlow
+        variant="alarm"
+        language={language}
+        onComplete={handleVoiceChallengeComplete}
+      />
+    );
   }
 
   if (phase === 'quote') {

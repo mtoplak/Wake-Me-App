@@ -21,12 +21,24 @@ const VoiceChallengeNativeSession = lazy(() => import('./VoiceChallengeNativeSes
 
 type UiStep = 'intro' | 'listen1' | 'listen2' | 'success';
 
-type Props = {
-  language: Language;
-  onComplete: () => void;
+export type VoiceChallengeCompletePayload = {
+  durationSec: number;
+  /** True when native speech is unavailable (e.g. Expo Go) and the user exits the gate. */
+  skipped?: boolean;
 };
 
-export function VoiceChallengeFlow({ language, onComplete }: Props) {
+type Props = {
+  language: Language;
+  /** `alarm`: track duration for wake stats; unsupported clients may skip with `skipped`. */
+  variant?: 'dev' | 'alarm';
+  onComplete: (payload?: VoiceChallengeCompletePayload) => void;
+};
+
+export function VoiceChallengeFlow({
+  language,
+  variant = 'dev',
+  onComplete,
+}: Props) {
   const { t } = useTranslation();
   const vt = t.voiceChallenge;
   const [phrase] = useState(() => pickRandomVoicePhrase(language));
@@ -36,6 +48,7 @@ export function VoiceChallengeFlow({ language, onComplete }: Props) {
   const [liveTranscript, setLiveTranscript] = useState('');
   const [permissionDenied, setPermissionDenied] = useState(false);
   const echoPassRef = useRef(0);
+  const challengeStartedAtRef = useRef<number | null>(null);
 
   const handlePhraseMatched = useCallback(() => {
     if (echoPassRef.current === 0) {
@@ -79,8 +92,28 @@ export function VoiceChallengeFlow({ language, onComplete }: Props) {
       return;
     }
     echoPassRef.current = 0;
+    if (variant === 'alarm') {
+      challengeStartedAtRef.current = Date.now();
+    }
     setStep('listen1');
   };
+
+  const leaveUnsupported = useCallback(() => {
+    if (variant === 'alarm') {
+      onComplete({ durationSec: 0, skipped: true });
+      return;
+    }
+    onComplete();
+  }, [onComplete, variant]);
+
+  const onSuccessDone = useCallback(() => {
+    if (variant === 'alarm' && challengeStartedAtRef.current != null) {
+      const durationSec = Math.max(1, Math.round((Date.now() - challengeStartedAtRef.current) / 1000));
+      onComplete({ durationSec });
+      return;
+    }
+    onComplete();
+  }, [onComplete, variant]);
 
   if (isWeb) {
     return (
@@ -89,8 +122,10 @@ export function VoiceChallengeFlow({ language, onComplete }: Props) {
           <Ionicons name="mic-off-outline" size={48} color={colors.textMuted} />
           <Text style={styles.title}>{vt.webUnsupportedTitle}</Text>
           <Text style={styles.body}>{vt.webUnsupportedBody}</Text>
-          <Pressable style={styles.primaryBtn} onPress={onComplete}>
-            <Text style={styles.primaryBtnText}>{vt.close}</Text>
+          <Pressable style={styles.primaryBtn} onPress={leaveUnsupported}>
+            <Text style={styles.primaryBtnText}>
+              {variant === 'alarm' ? vt.skipUnsupportedVoice : vt.close}
+            </Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -104,8 +139,10 @@ export function VoiceChallengeFlow({ language, onComplete }: Props) {
           <Ionicons name="phone-portrait-outline" size={48} color={colors.textMuted} />
           <Text style={styles.title}>{vt.expoGoUnsupportedTitle}</Text>
           <Text style={styles.body}>{vt.expoGoUnsupportedBody}</Text>
-          <Pressable style={styles.primaryBtn} onPress={onComplete}>
-            <Text style={styles.primaryBtnText}>{vt.close}</Text>
+          <Pressable style={styles.primaryBtn} onPress={leaveUnsupported}>
+            <Text style={styles.primaryBtnText}>
+              {variant === 'alarm' ? vt.skipUnsupportedVoice : vt.close}
+            </Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -146,8 +183,8 @@ export function VoiceChallengeFlow({ language, onComplete }: Props) {
             <Ionicons name="checkmark-circle" size={48} color={colors.success} />
           </View>
           <Text style={styles.title}>{vt.successTitle}</Text>
-          <Text style={styles.body}>{vt.successBody}</Text>
-          <Pressable style={styles.primaryBtn} onPress={onComplete}>
+          <Text style={styles.body}>{variant === 'alarm' ? vt.successBodyAlarm : vt.successBody}</Text>
+          <Pressable style={styles.primaryBtn} onPress={onSuccessDone}>
             <Text style={styles.primaryBtnText}>{t.common.done}</Text>
           </Pressable>
         </View>

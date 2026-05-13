@@ -172,6 +172,8 @@ const sl: typeof en = {
       'Prepoznavanje se ustavi ob premoru. Če se nič ne zgodi, pritisni Ustavi in poskusi znova. Moraš opraviti oba kroga.',
     successTitle: 'Super',
     successBody: 'Frazo si ujel dvakrat. (Dev zaslon — povezava z alarmom pride v naslednjem koraku.)',
+    successBodyAlarm: 'Frazo si ujel dvakrat. Čas za jutranjo misel.',
+    skipUnsupportedVoice: 'Nadaljuj brez glasovnega izziva',
     close: 'Zapri',
     webUnsupportedTitle: 'Ni na voljo na spletu',
     webUnsupportedBody:
