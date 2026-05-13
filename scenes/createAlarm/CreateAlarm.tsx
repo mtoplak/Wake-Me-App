@@ -21,6 +21,7 @@ import { createAlarm } from '@/services/database';
 import { alarmSounds, getAlarmSource } from '@/scenes/alarmRinging/sounds';
 import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
+import { QrSetupModal } from './QrSetupModal';
 
 const WHEEL_ITEM_HEIGHT = 56;
 const WHEEL_VISIBLE_COUNT = 5;
@@ -57,7 +58,9 @@ export default function CreateAlarm() {
   const [hour, setHour] = useState(initialNow.hour);
   const [minute, setMinute] = useState(initialNow.minute);
   const [activeDays, setActiveDays] = useState<string[]>([]);
-  const [challenges, setChallenges] = useState<ChallengeKey[]>(['qr']);
+  const [challenges, setChallenges] = useState<ChallengeKey[]>(['color']);
+  const [qrValue, setQrValue] = useState<string | null>(null);
+  const [showQrSetup, setShowQrSetup] = useState(false);
   const [sound, setSound] = useState(SOUND_OPTIONS[0] ?? 'Sunrise');
   const [label, setLabel] = useState(t.createAlarm.defaultLabel);
   const [saving, setSaving] = useState(false);
@@ -89,7 +92,10 @@ export default function CreateAlarm() {
 
   const toggleChallenge = (key: ChallengeKey) => {
     setChallenges(prev => {
-      if (prev.includes(key)) return prev.filter(c => c !== key);
+      if (prev.includes(key)) {
+        if (key === 'qr') setQrValue(null);
+        return prev.filter(c => c !== key);
+      }
       if (prev.length >= MAX_CHALLENGES) {
         Alert.alert(
           t.createAlarm.limitReachedTitle,
@@ -97,8 +103,23 @@ export default function CreateAlarm() {
         );
         return prev;
       }
+      if (key === 'qr') setShowQrSetup(true);
       return [...prev, key];
     });
+  };
+
+  const handleQrSetupCancel = () => {
+    setShowQrSetup(false);
+    if (!qrValue) {
+      // User backed out without capturing → don't leave QR challenge selected
+      // with no value, since save would fail.
+      setChallenges(prev => prev.filter(c => c !== 'qr'));
+    }
+  };
+
+  const handleQrCaptured = (value: string) => {
+    setQrValue(value);
+    setShowQrSetup(false);
   };
 
   const openLabelModal = () => {
@@ -155,6 +176,11 @@ export default function CreateAlarm() {
       Alert.alert(t.createAlarm.pickChallengeTitle, t.createAlarm.pickChallengeBody);
       return;
     }
+    if (challenges.includes('qr') && !qrValue) {
+      Alert.alert('Scan a QR code', 'Capture the QR code that will stop this alarm before saving.');
+      setShowQrSetup(true);
+      return;
+    }
     try {
       setSaving(true);
       await createAlarm({
@@ -166,6 +192,7 @@ export default function CreateAlarm() {
         sound,
         vibration: true,
         challenges,
+        challengeParams: qrValue ? { qr: qrValue } : {},
       });
       router.back();
     } catch (err) {
@@ -226,6 +253,10 @@ export default function CreateAlarm() {
             const active = challenges.includes(key);
             const disabled = !active && challenges.length >= MAX_CHALLENGES;
             const meta = t.challenges[key];
+            const subtitle =
+              key === 'qr' && active && qrValue
+                ? `Code: ${qrValue.length > 24 ? `${qrValue.slice(0, 24)}…` : qrValue}`
+                : meta.subtitle;
             return (
               <Pressable
                 key={key}
@@ -238,8 +269,17 @@ export default function CreateAlarm() {
                 <View style={styles.challengeIcon}>{CHALLENGE_ICONS[key]}</View>
                 <View style={styles.challengeText}>
                   <Text style={styles.challengeTitle}>{meta.title}</Text>
-                  <Text style={styles.challengeSubtitle}>{meta.subtitle}</Text>
+                  <Text style={styles.challengeSubtitle}>{subtitle}</Text>
                 </View>
+                {key === 'qr' && active && qrValue ? (
+                  <Pressable
+                    hitSlop={10}
+                    onPress={() => setShowQrSetup(true)}
+                    style={styles.rescanBtn}
+                    accessibilityRole="button">
+                    <Ionicons name="refresh" size={16} color={colors.accent} />
+                  </Pressable>
+                ) : null}
                 <View style={[styles.checkbox, active && styles.checkboxActive]}>
                   {active && <AntDesign name="check" size={14} color={colors.white} />}
                 </View>
@@ -273,6 +313,13 @@ export default function CreateAlarm() {
           </Text>
         </Pressable>
       </ScrollView>
+
+      <QrSetupModal
+        visible={showQrSetup}
+        initialValue={qrValue ?? undefined}
+        onCancel={handleQrSetupCancel}
+        onCapture={handleQrCaptured}
+      />
 
       <Modal
         visible={showLabelModal}
@@ -695,6 +742,15 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  rescanBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
   },
   checkboxActive: {
     backgroundColor: colors.accent,

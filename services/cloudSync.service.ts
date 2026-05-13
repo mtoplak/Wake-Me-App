@@ -1,5 +1,5 @@
 import { listAlarms, createAlarm, deleteAlarm, getAllSettings, setSetting } from './database';
-import { Alarm } from './database/types';
+import { Alarm, ChallengeParams } from './database/types';
 import { withSyncSuppressed } from './cloudSyncWriters';
 import { getAuth, getFirestore } from './firebase';
 
@@ -23,6 +23,7 @@ interface CloudAlarmDoc {
   sound: string;
   vibration: boolean;
   challenges: string[];
+  challengeParams?: ChallengeParams;
 }
 
 function toCloudAlarm(a: Alarm): CloudAlarmDoc {
@@ -35,6 +36,7 @@ function toCloudAlarm(a: Alarm): CloudAlarmDoc {
     sound: a.sound,
     vibration: a.vibration,
     challenges: a.challenges,
+    challengeParams: a.challengeParams ?? {},
   };
 }
 
@@ -84,6 +86,7 @@ export async function pullCloudToLocal(): Promise<{ alarms: number; settings: nu
         sound: data.sound,
         vibration: data.vibration,
         challenges: (data.challenges ?? []) as Alarm['challenges'],
+        challengeParams: data.challengeParams ?? {},
       });
       alarmCount += 1;
     }
