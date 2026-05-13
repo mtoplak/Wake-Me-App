@@ -22,6 +22,7 @@ import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
 import { getAlarmSource } from './sounds';
 import { ColorChallengeFlow, type ColorChallengeCompletePayload } from './colorChallenge';
+import { QrChallengeFlow, type QrChallengeCompletePayload } from './qrChallenge';
 
 const SLIDER_HEIGHT = 64;
 const THUMB_SIZE = 56;
@@ -49,7 +50,9 @@ export default function AlarmRinging() {
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ alarmId?: string }>();
   const [alarm, setAlarm] = useState<Alarm | null>(null);
-  const [phase, setPhase] = useState<'ringing' | 'colorChallenge' | 'quote'>('ringing');
+  const [phase, setPhase] = useState<'ringing' | 'qrChallenge' | 'colorChallenge' | 'quote'>(
+    'ringing',
+  );
   const [quote, setQuote] = useState<{ text: string; author: string } | null>(null);
 
   const now = useMemo(() => new Date(), []);
@@ -118,7 +121,8 @@ export default function AlarmRinging() {
 
   useEffect(() => {
     // Keep alarm audio annoying through the challenge flow; stop once we reach quote.
-    const shouldPlayAlarmAudio = phase === 'ringing' || phase === 'colorChallenge';
+    const shouldPlayAlarmAudio =
+      phase === 'ringing' || phase === 'colorChallenge' || phase === 'qrChallenge';
     if (!shouldPlayAlarmAudio || !audioSource) return;
     player.loop = true;
     player.volume = 1;
@@ -161,6 +165,15 @@ export default function AlarmRinging() {
     return () => loop.stop();
   }, [phase, pulse]);
 
+  const finishWithQuote = useCallback(async () => {
+    const q = await (quotePromiseRef.current ?? fetchRandomQuote());
+    setQuote(q);
+    setPhase('quote');
+  }, []);
+
+  const hasQrChallenge = (a: Alarm | null) =>
+    !!a?.challenges?.includes('qr') && !!a.challengeParams?.qr;
+
   const onDismiss = async () => {
     let current = alarm;
     if (!current) {
@@ -171,15 +184,42 @@ export default function AlarmRinging() {
           ? list.find(a => a.id === routeId) ?? null
           : list.find(a => a.enabled) ?? list[0] ?? null;
     }
+    if (hasQrChallenge(current)) {
+      setAlarm(current);
+      setPhase('qrChallenge');
+      return;
+    }
     if (current?.challenges?.includes('color')) {
       setAlarm(current);
       setPhase('colorChallenge');
       return;
     }
-    const q = await (quotePromiseRef.current ?? fetchRandomQuote());
-    setQuote(q);
-    setPhase('quote');
+    await finishWithQuote();
   };
+
+  const handleQrChallengeComplete = useCallback(
+    async ({ durationSec }: QrChallengeCompletePayload) => {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const wakeTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      if (alarm) {
+        await recordWake({
+          alarmId: alarm.id,
+          date,
+          wakeTime,
+          success: true,
+          challengeDuration: durationSec,
+          challengeType: 'qr',
+        });
+      }
+      if (alarm?.challenges?.includes('color')) {
+        setPhase('colorChallenge');
+        return;
+      }
+      await finishWithQuote();
+    },
+    [alarm, finishWithQuote],
+  );
 
   const handleColorChallengeComplete = useCallback(
     async ({ durationSec }: ColorChallengeCompletePayload) => {
@@ -196,11 +236,9 @@ export default function AlarmRinging() {
           challengeType: 'color',
         });
       }
-      const q = await (quotePromiseRef.current ?? fetchRandomQuote());
-      setQuote(q);
-      setPhase('quote');
+      await finishWithQuote();
     },
-    [alarm],
+    [alarm, finishWithQuote],
   );
 
   const panResponder = useMemo(
@@ -256,6 +294,15 @@ export default function AlarmRinging() {
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
+
+  if (phase === 'qrChallenge') {
+    return (
+      <QrChallengeFlow
+        requiredValue={alarm?.challengeParams?.qr ?? ''}
+        onComplete={handleQrChallengeComplete}
+      />
+    );
+  }
 
   if (phase === 'colorChallenge') {
     return <ColorChallengeFlow onComplete={handleColorChallengeComplete} />;

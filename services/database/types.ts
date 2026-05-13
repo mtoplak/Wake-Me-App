@@ -21,6 +21,8 @@ export interface AlarmRecord {
   created_at: string;
 }
 
+export type ChallengeParams = Partial<Record<ChallengeType, string>>;
+
 export interface Alarm {
   id: number;
   hour: number;
@@ -31,6 +33,7 @@ export interface Alarm {
   sound: string;
   vibration: boolean;
   challenges: ChallengeType[];
+  challengeParams: ChallengeParams;
 }
 
 export interface AlarmInput {
@@ -42,6 +45,7 @@ export interface AlarmInput {
   sound?: string;
   vibration?: boolean;
   challenges: ChallengeType[];
+  challengeParams?: ChallengeParams;
 }
 
 export interface WakeStatRecord {

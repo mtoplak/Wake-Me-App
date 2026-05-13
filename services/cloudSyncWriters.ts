@@ -36,6 +36,7 @@ function toCloudAlarm(a: Alarm) {
     sound: a.sound,
     vibration: a.vibration,
     challenges: a.challenges,
+    challengeParams: a.challengeParams ?? {},
   };
 }
 

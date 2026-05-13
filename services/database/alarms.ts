@@ -1,9 +1,20 @@
 import { getDb } from './db';
-import { Alarm, AlarmChallengeRecord, AlarmInput, AlarmRecord, ChallengeType } from './types';
+import {
+  Alarm,
+  AlarmChallengeRecord,
+  AlarmInput,
+  AlarmRecord,
+  ChallengeParams,
+  ChallengeType,
+} from './types';
 import { cancelAlarm, scheduleAlarm } from '../alarmScheduler';
 import { syncAlarmUp, syncAlarmDeleteUp } from '../cloudSyncWriters';
 
-function mapAlarm(row: AlarmRecord, challenges: ChallengeType[]): Alarm {
+function mapAlarm(
+  row: AlarmRecord,
+  challenges: ChallengeType[],
+  challengeParams: ChallengeParams,
+): Alarm {
   return {
     id: row.id,
     hour: row.hour,
@@ -14,6 +25,7 @@ function mapAlarm(row: AlarmRecord, challenges: ChallengeType[]): Alarm {
     sound: row.sound,
     vibration: row.vibration === 1,
     challenges,
+    challengeParams,
   };
 }
 
@@ -30,12 +42,20 @@ export async function listAlarms(): Promise<Alarm[]> {
     ids,
   );
   const byAlarm = new Map<number, ChallengeType[]>();
+  const paramsByAlarm = new Map<number, ChallengeParams>();
   for (const c of challengeRows) {
     const list = byAlarm.get(c.alarm_id) ?? [];
     list.push(c.challenge_type);
     byAlarm.set(c.alarm_id, list);
+    if (c.params != null) {
+      const params = paramsByAlarm.get(c.alarm_id) ?? {};
+      params[c.challenge_type] = c.params;
+      paramsByAlarm.set(c.alarm_id, params);
+    }
   }
-  return rows.map(r => mapAlarm(r, byAlarm.get(r.id) ?? []));
+  return rows.map(r =>
+    mapAlarm(r, byAlarm.get(r.id) ?? [], paramsByAlarm.get(r.id) ?? {}),
+  );
 }
 
 export async function createAlarm(input: AlarmInput): Promise<number> {
@@ -54,10 +74,11 @@ export async function createAlarm(input: AlarmInput): Promise<number> {
     ],
   );
   const alarmId = result.lastInsertRowId;
+  const challengeParams = input.challengeParams ?? {};
   for (const c of input.challenges) {
     await db.runAsync(
-      'INSERT INTO alarm_challenges (alarm_id, challenge_type, difficulty) VALUES (?, ?, ?)',
-      [alarmId, c, 'normal'],
+      'INSERT INTO alarm_challenges (alarm_id, challenge_type, difficulty, params) VALUES (?, ?, ?, ?)',
+      [alarmId, c, 'normal', challengeParams[c] ?? null],
     );
   }
   const alarm: Alarm = {
@@ -70,6 +91,7 @@ export async function createAlarm(input: AlarmInput): Promise<number> {
     sound: input.sound ?? 'Sunrise',
     vibration: input.vibration !== false,
     challenges: input.challenges,
+    challengeParams,
   };
   await scheduleAlarm(alarm);
   syncAlarmUp(alarm);
@@ -84,9 +106,14 @@ async function loadAlarmById(id: number): Promise<Alarm | null> {
     'SELECT * FROM alarm_challenges WHERE alarm_id = ?',
     [id],
   );
+  const params: ChallengeParams = {};
+  for (const c of challengeRows) {
+    if (c.params != null) params[c.challenge_type] = c.params;
+  }
   return mapAlarm(
     row,
     challengeRows.map(c => c.challenge_type),
+    params,
   );
 }
 
