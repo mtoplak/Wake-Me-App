@@ -11,6 +11,10 @@ export default function DrawerWithTabsLayout() {
         name="alarmRinging"
         options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false }}
       />
+      <Drawer.Screen
+        name="voiceChallengeDev"
+        options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false, title: 'Voice dev' }}
+      />
     </Drawer>
   );
 }

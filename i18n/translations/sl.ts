@@ -151,6 +151,37 @@ const sl: typeof en = {
     startTheDay: 'Začni dan',
   },
 
+  voiceChallenge: {
+    devTitle: 'Glasovni izziv (dev)',
+    introTitle: 'Preverjanje z odmevom',
+    introBody:
+      'Dvakrat zapored izgovoriš isto naključno frazo. Dovoli mikrofon, nato pritisni Poslušaj in govori jasno.',
+    continue: 'Nadaljuj',
+    permissionDenied:
+      'Mikrofon ali prepoznavanje govora je za to aplikacijo izklopljen. Vklopi ju v sistemskih nastavitvah.',
+    openSettings: 'Odpri nastavitve',
+    listenRound1: '1. krog od 2',
+    listenRound2: '2. krog — ponovi še enkrat',
+    phraseLabel: 'Reci to frazo',
+    heardLabel: 'Zaznano',
+    listening: 'Poslušam…',
+    emptyTranscript: '—',
+    listenCta: 'Začni poslušanje',
+    stop: 'Ustavi',
+    listenHint:
+      'Prepoznavanje se ustavi ob premoru. Če se nič ne zgodi, pritisni Ustavi in poskusi znova. Moraš opraviti oba kroga.',
+    successTitle: 'Super',
+    successBody: 'Frazo si ujel dvakrat. (Dev zaslon — povezava z alarmom pride v naslednjem koraku.)',
+    close: 'Zapri',
+    webUnsupportedTitle: 'Ni na voljo na spletu',
+    webUnsupportedBody:
+      'Ta izziv teče na iOS in Android v razvijalski (dev) gradnji.',
+    expoGoUnsupportedTitle: 'Ni na voljo v Expo Go',
+    expoGoUnsupportedBody:
+      'Prepoznavanje govora zahteva razvijalsko gradnjo (expo run:ios / expo run:android) z vključenim native modulom. Expo Go ga ne naloži.',
+    errorTitle: 'Prepoznavanje govora',
+  },
+
   streak: {
     title: 'Tvoj streak',
     subtitle: 'Vsako jutro ohrani ogenj',
@@ -204,6 +235,7 @@ const sl: typeof en = {
     rateApp: 'Oceni aplikacijo',
     version: 'Različica',
     resetOnboarding: 'Ponastavi uvod (dev)',
+    voiceChallengeDev: 'Preizkusi glasovni izziv (dev)',
     footer: 'WakeMeApp Budilka · Za zaspance',
     signOutTitle: 'Odjava?',
     signOutBody: 'Tvoji alarmi ostanejo na tej napravi. Sinhronizacija se ustavi.',

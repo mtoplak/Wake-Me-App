@@ -21,6 +21,7 @@ import {
 import { signInWithGoogle, signOut, syncOnSignIn } from '@/services';
 import { useAppSlice } from '@/slices';
 import { useDataPersist, DataPersistKeys } from '@/hooks';
+import { useRouter } from 'expo-router';
 import { useTranslation, type Language } from '@/i18n';
 import { colors } from '@/theme';
 
@@ -47,6 +48,7 @@ const KEYS = {
 };
 
 export default function Settings() {
+  const router = useRouter();
   const { dispatch, user, loggedIn, setUser, setLoggedIn, setLanguage } = useAppSlice();
   const { setPersistData, removePersistData } = useDataPersist();
   const { t, language } = useTranslation();
@@ -354,6 +356,12 @@ export default function Settings() {
               iconBg={colors.surfaceMuted}
               label={t.settings.resetOnboarding}
               onPress={handleResetOnboarding}
+            />
+            <Row
+              icon={<Ionicons name="mic-circle-outline" size={18} color={colors.accent} />}
+              iconBg={colors.accentSoft}
+              label={t.settings.voiceChallengeDev}
+              onPress={() => router.push('/(main)/voiceChallengeDev')}
               last
             />
           </View>

@@ -89,6 +89,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           ],
         },
       ],
+      [
+        'expo-speech-recognition',
+        {
+          microphonePermission:
+            'Allow Wake Me App to use the microphone for the voice phrase wake-up challenge.',
+          speechRecognitionPermission:
+            'Allow Wake Me App to use speech recognition to verify your wake-up phrase.',
+          androidSpeechServicePackages: ['com.google.android.googlequicksearchbox'],
+        },
+      ],
     ],
   };
   // console.log('[##] expo config', expoConfig);

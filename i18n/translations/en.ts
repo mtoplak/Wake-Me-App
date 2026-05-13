@@ -129,6 +129,37 @@ const en = {
     startTheDay: 'Start the day',
   },
 
+  voiceChallenge: {
+    devTitle: 'Voice challenge (dev)',
+    introTitle: 'Echo voice check',
+    introBody:
+      'You will say the same random phrase twice in a row. Grant the microphone when asked, then tap listen and speak clearly.',
+    continue: 'Continue',
+    permissionDenied:
+      'Microphone or speech recognition is off for this app. You can enable it in system settings.',
+    openSettings: 'Open settings',
+    listenRound1: 'Round 1 of 2',
+    listenRound2: 'Round 2 of 2 — say it again',
+    phraseLabel: 'Say this phrase',
+    heardLabel: 'Heard',
+    listening: 'Listening…',
+    emptyTranscript: '—',
+    listenCta: 'Start listening',
+    stop: 'Stop',
+    listenHint:
+      'Recognition stops when you pause. If nothing happens, tap Stop and try again. You must pass both rounds.',
+    successTitle: 'Nice work',
+    successBody: 'You matched the phrase twice. (Dev screen — alarm hook-up comes next.)',
+    close: 'Close',
+    webUnsupportedTitle: 'Not available on web',
+    webUnsupportedBody:
+      'Speech recognition for this challenge runs on iOS and Android in a development build.',
+    expoGoUnsupportedTitle: 'Not available in Expo Go',
+    expoGoUnsupportedBody:
+      'Speech recognition needs a development build (expo run:ios / expo run:android) with the native module linked. Expo Go cannot load it.',
+    errorTitle: 'Speech recognition',
+  },
+
   streak: {
     title: 'Your Streak',
     subtitle: 'Keep the fire burning every morning',
@@ -182,6 +213,7 @@ const en = {
     rateApp: 'Rate the app',
     version: 'Version',
     resetOnboarding: 'Reset onboarding (dev)',
+    voiceChallengeDev: 'Test voice challenge (dev)',
     footer: 'WakeMeApp Alarm Clock · Made for sleepyheads',
     signOutTitle: 'Sign out?',
     signOutBody: 'Your alarms stay on this device. Cloud sync will pause.',
