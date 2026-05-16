@@ -31,6 +31,14 @@
           <string>com.watarumaeda.react-native-boilerplate</string>
         </array>
       </dict>
+      <dict>
+        <key>CFBundleURLName</key>
+        <string>com.googleusercontent.apps.165362524264-rb9ccjvfreiv9745ilf49v74623tr7mm</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.165362524264-rb9ccjvfreiv9745ilf49v74623tr7mm</string>
+        </array>
+      </dict>
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
