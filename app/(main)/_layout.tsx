@@ -15,6 +15,10 @@ export default function DrawerWithTabsLayout() {
         name="voiceChallengeDev"
         options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false, title: 'Voice dev' }}
       />
+      <Drawer.Screen
+        name="objectChallengeDev"
+        options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false, title: 'Object dev' }}
+      />
     </Drawer>
   );
 }

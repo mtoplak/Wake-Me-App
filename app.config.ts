@@ -75,6 +75,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       [
+        'expo-camera',
+        {
+          cameraPermission:
+            'Allow Wake Me App to use the camera for QR and find-object wake-up challenges.',
+          microphonePermission: false,
+          recordAudioAndroid: false,
+        },
+      ],
+      [
         'expo-speech-recognition',
         {
           microphonePermission:

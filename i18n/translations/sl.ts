@@ -184,6 +184,30 @@ const sl: typeof en = {
     errorTitle: 'Prepoznavanje govora',
   },
 
+  objectChallenge: {
+    devTitle: 'Najdi predmet (dev)',
+    introTitle: 'Najdi predmet',
+    introBody:
+      'Izbran je naključen predmet iz doma. Ga poišči in usmeri kamero nanj. Naprava vsake nekaj sekund preveri sliko z lokalnim modelom.',
+    findLabel: 'Poišči',
+    openCamera: 'Odpri kamero',
+    scanHint: 'Predmet naj bo v sredini kadra. Alarm se ustavi, ko ga prepozna.',
+    scanning: 'Preverjam…',
+    wrongObject: 'To ni pravi predmet — išči naprej',
+    skipUnsupported: 'Nadaljuj brez skeniranja',
+    expoGoUnsupportedTitle: 'Ni na voljo v Expo Go',
+    expoGoUnsupportedBody:
+      'Prepoznavanje predmetov zahteva razvijalsko gradnjo z native ML modulom. Expo Go ga ne naloži.',
+    objects: {
+      cup: 'Skodelica / skodela',
+      book: 'Knjiga',
+      laptop: 'Prenosnik',
+      bottle: 'Steklenica',
+      clock: 'Ura',
+      remote: 'TV daljinec',
+    },
+  },
+
   streak: {
     title: 'Tvoj streak',
     subtitle: 'Vsako jutro ohrani ogenj',
@@ -238,6 +262,7 @@ const sl: typeof en = {
     version: 'Različica',
     resetOnboarding: 'Ponastavi uvod (dev)',
     voiceChallengeDev: 'Preizkusi glasovni izziv (dev)',
+    objectChallengeDev: 'Preizkusi najdi predmet (dev)',
     footer: 'WakeMeApp Budilka · Za zaspance',
     signOutTitle: 'Odjava?',
     signOutBody: 'Tvoji alarmi ostanejo na tej napravi. Sinhronizacija se ustavi.',

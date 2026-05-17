@@ -36,6 +36,7 @@
     "@react-native-firebase/auth": "^24.0.0",
     "@react-native-firebase/firestore": "^24.0.0",
     "@react-native-google-signin/google-signin": "^16.1.2",
+    "@react-native-ml-kit/image-labeling": "^2.0.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/drawer": "^7.1.1",
     "@react-navigation/native": "^7.0.14",

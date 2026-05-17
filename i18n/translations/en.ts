@@ -162,6 +162,30 @@ const en = {
     errorTitle: 'Speech recognition',
   },
 
+  objectChallenge: {
+    devTitle: 'Find object (dev)',
+    introTitle: 'Find object',
+    introBody:
+      'A random household item was picked. Find it in your home and point the camera at it. On-device vision checks the scene every few seconds.',
+    findLabel: 'Find this',
+    openCamera: 'Open camera',
+    scanHint: 'Center the object in frame. The alarm stops when it is recognized.',
+    scanning: 'Checking…',
+    wrongObject: 'Not that item — keep looking',
+    skipUnsupported: 'Continue without object scan',
+    expoGoUnsupportedTitle: 'Not available in Expo Go',
+    expoGoUnsupportedBody:
+      'Object recognition needs a development build with the native ML module. Expo Go cannot load it.',
+    objects: {
+      cup: 'Coffee cup / mug',
+      book: 'Book',
+      laptop: 'Laptop',
+      bottle: 'Bottle',
+      clock: 'Clock',
+      remote: 'TV remote',
+    },
+  },
+
   streak: {
     title: 'Your Streak',
     subtitle: 'Keep the fire burning every morning',
@@ -216,6 +240,7 @@ const en = {
     version: 'Version',
     resetOnboarding: 'Reset onboarding (dev)',
     voiceChallengeDev: 'Test voice challenge (dev)',
+    objectChallengeDev: 'Test find object (dev)',
     footer: 'WakeMeApp Alarm Clock · Made for sleepyheads',
     signOutTitle: 'Sign out?',
     signOutBody: 'Your alarms stay on this device. Cloud sync will pause.',

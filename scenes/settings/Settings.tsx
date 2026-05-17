@@ -362,6 +362,14 @@ export default function Settings() {
               iconBg={colors.accentSoft}
               label={t.settings.voiceChallengeDev}
               onPress={() => router.push('/(main)/voiceChallengeDev')}
+            />
+            <Row
+              icon={
+                <MaterialCommunityIcons name="image-search-outline" size={18} color={colors.warning} />
+              }
+              iconBg={colors.warningSoft}
+              label={t.settings.objectChallengeDev}
+              onPress={() => router.push('/(main)/objectChallengeDev')}
               last
             />
           </View>
