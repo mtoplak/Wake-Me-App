@@ -9,6 +9,8 @@
     "dev:android": "cross-env EXPO_NO_DOTENV=1 dotenvx run -f .env.dev -- expo start --android -c",
     "dev:web": "cross-env EXPO_NO_DOTENV=1 dotenvx run -f .env.dev -- expo start --web -c",
     "dev:doctor": "cross-env EXPO_NO_DOTENV=1 dotenvx run -f .env.dev -- npx expo-doctor",
+    "dev:run:ios": "cross-env EXPO_NO_DOTENV=1 dotenvx run -f .env.dev -- npx expo run:ios",
+    "dev:run:android": "cross-env EXPO_NO_DOTENV=1 dotenvx run -f .env.dev -- npx expo run:android",
     "dev:secret:push": "dotenvx run -f .env.dev -- eas secret:push --scope project --env-file .env.dev --force",
     "dev:secret:list": "dotenvx run -f .env.dev -- eas env:list",
     "dev:build:mobile": "npm run dev:secret:push && EXPO_NO_DOTENV=1 dotenv -e .env.dev -- npx eas build --profile development",

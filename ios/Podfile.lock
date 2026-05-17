@@ -41,6 +41,10 @@ PODS:
     - ExpoModulesCore
   - ExpoBlur (15.0.8):
     - ExpoModulesCore
+  - ExpoCamera (17.0.10):
+    - ExpoModulesCore
+    - ZXingObjC/OneD
+    - ZXingObjC/PDF417
   - ExpoCrypto (15.0.9):
     - ExpoModulesCore
   - ExpoFileSystem (19.0.22):
@@ -88,6 +92,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - ExpoSpeechRecognition (3.1.3):
+    - ExpoModulesCore
   - ExpoSplashScreen (31.0.13):
     - ExpoModulesCore
   - ExpoSQLite (16.0.10):
@@ -1499,7 +1505,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-slider (5.2.0):
+  - react-native-slider (5.0.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1511,7 +1517,7 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-slider/common (= 5.2.0)
+    - react-native-slider/common (= 5.0.1)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1522,7 +1528,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-slider/common (5.2.0):
+  - react-native-slider/common (5.0.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2186,6 +2192,11 @@ PODS:
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - Yoga (0.0.0)
+  - ZXingObjC/Core (3.6.9)
+  - ZXingObjC/OneD (3.6.9):
+    - ZXingObjC/Core
+  - ZXingObjC/PDF417 (3.6.9):
+    - ZXingObjC/Core
 
 DEPENDENCIES:
   - EASClient (from `../node_modules/expo-eas-client/ios`)
@@ -2198,6 +2209,7 @@ DEPENDENCIES:
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoAudio (from `../node_modules/expo-audio/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
+  - ExpoCamera (from `../node_modules/expo-camera/ios`)
   - ExpoCrypto (from `../node_modules/expo-auth-session/node_modules/expo-crypto/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
@@ -2208,6 +2220,7 @@ DEPENDENCIES:
   - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
+  - ExpoSpeechRecognition (from `../node_modules/expo-speech-recognition/ios`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoSQLite (from `../node_modules/expo-sqlite/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
@@ -2304,6 +2317,7 @@ SPEC REPOS:
     - SDWebImageAVIFCoder
     - SDWebImageSVGCoder
     - SDWebImageWebPCoder
+    - ZXingObjC
 
 EXTERNAL SOURCES:
   EASClient:
@@ -2326,6 +2340,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-audio/ios"
   ExpoBlur:
     :path: "../node_modules/expo-blur/ios"
+  ExpoCamera:
+    :path: "../node_modules/expo-camera/ios"
   ExpoCrypto:
     :path: "../node_modules/expo-auth-session/node_modules/expo-crypto/ios"
   ExpoFileSystem:
@@ -2346,6 +2362,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-linking/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core"
+  ExpoSpeechRecognition:
+    :path: "../node_modules/expo-speech-recognition/ios"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
   ExpoSQLite:
@@ -2527,6 +2545,7 @@ SPEC CHECKSUMS:
   ExpoAsset: 9e5a7c9c0a9fb83ad5b2bb365141f2bd7f289b66
   ExpoAudio: e4cfe3a2f3317b8487460685385a9867a07fb4fb
   ExpoBlur: b90747a3f22a8b6ceffd9cb0dc41a4184efdc656
+  ExpoCamera: 6a326deb45ba840749652e4c15198317aa78497e
   ExpoCrypto: e2a2c4c748aac8485e5675f027b7901f511d43ff
   ExpoFileSystem: ad991457efaa14253723f1dda997eac6024c700d
   ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
@@ -2537,6 +2556,7 @@ SPEC CHECKSUMS:
   ExpoLinearGradient: 809102bdb979f590083af49f7fa4805cd931bd58
   ExpoLinking: 2ef632ad5013e3f1568fae9408d56ab9af5efc55
   ExpoModulesCore: 9e6a5514828e7dd5ded9e99d33557be2d284e660
+  ExpoSpeechRecognition: 95a6287f24fb8764ded6e9d0dd667a1e9e633dab
   ExpoSplashScreen: bc3cffefca2716e5f22350ca109badd7e50ec14d
   ExpoSQLite: 7eedbe476870a5f18d6b89c817c4ac6f299830ad
   ExpoSymbols: 349ee2b4d7d5ff3ea8436467914f8a67635aa354
@@ -2585,7 +2605,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 9050ee10c19f4f7fca8963d0211b2854d624973e
   React-microtasksnativemodule: f775db9e991c6f3b8ccbc02bfcde22770f96e23b
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
-  react-native-slider: d535cb9791fe29bd2cd70c0c3556545aba3c1f55
+  react-native-slider: 8c562583722c396a3682f451f0b6e68e351ec3b9
   react-native-webview: b29007f4723bca10872028067b07abacfa1cb35a
   React-NativeModulesApple: 8969913947d5b576de4ed371a939455a8daf28aa
   React-oscompat: ce47230ed20185e91de62d8c6d139ae61763d09c
@@ -2629,6 +2649,7 @@ SPEC CHECKSUMS:
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
+  ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5
 
 PODFILE CHECKSUM: 27a7ec7dbca29d8c5e5c14e7be0fa0eb2e4cde64
 
