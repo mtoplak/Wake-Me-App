@@ -18,8 +18,8 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		82CF29FFB3F84456A7A7E1DA /* birds.caf in Resources */ = {isa = PBXBuildFile; fileRef = 408B6E5A00BA47878A734FD0 /* birds.caf */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		CC499181B6D73FEBDD14082D /* libPods-WakeMeAppAlarmClock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 23585BE5CAF0BCB1C3499C43 /* libPods-WakeMeAppAlarmClock.a */; };
 		E3DF5120005140AE9496D2C2 /* OpenSans-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F67EA2BE01134E5A9289FDA3 /* OpenSans-BoldItalic.ttf */; };
-		F038344784644936A04DA1AF /* libPods-WakeMeAppAlarmClock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C7AB824B2EF2ADE7D41AFF57 /* libPods-WakeMeAppAlarmClock.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		F4B3686F650F442195088463 /* sunrise.caf in Resources */ = {isa = PBXBuildFile; fileRef = 39AC21001A0A44B88151E909 /* sunrise.caf */; };
 		F4F36E44B2D041EFAB34A28C /* chimes.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6F428A52A23F4F8A83FF24DF /* chimes.caf */; };
@@ -29,6 +29,7 @@
 		13B07F961A680F5B00A75B9A /* WakeMeAppAlarmClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WakeMeAppAlarmClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = WakeMeAppAlarmClock/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = WakeMeAppAlarmClock/Info.plist; sourceTree = "<group>"; };
+		23585BE5CAF0BCB1C3499C43 /* libPods-WakeMeAppAlarmClock.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WakeMeAppAlarmClock.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		29DAC76D0081431A1FAA8AA0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = WakeMeAppAlarmClock/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		39AC21001A0A44B88151E909 /* sunrise.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = sunrise.caf; path = WakeMeAppAlarmClock/sunrise.caf; sourceTree = "<group>"; };
 		408B6E5A00BA47878A734FD0 /* birds.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = birds.caf; path = WakeMeAppAlarmClock/birds.caf; sourceTree = "<group>"; };
@@ -42,7 +43,6 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		BC0468F3B9F6399F32874D08 /* Pods-WakeMeAppAlarmClock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WakeMeAppAlarmClock.debug.xcconfig"; path = "Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock.debug.xcconfig"; sourceTree = "<group>"; };
 		C0F3BD7AA84040DA941298EA /* OpenSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Regular.ttf"; path = "../assets/fonts/OpenSans-Regular.ttf"; sourceTree = "<group>"; };
-		C7AB824B2EF2ADE7D41AFF57 /* libPods-WakeMeAppAlarmClock.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WakeMeAppAlarmClock.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C970EC51FC314D38AEBAA7BC /* OpenSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Bold.ttf"; path = "../assets/fonts/OpenSans-Bold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = WakeMeAppAlarmClock/AppDelegate.swift; sourceTree = "<group>"; };
@@ -55,7 +55,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F038344784644936A04DA1AF /* libPods-WakeMeAppAlarmClock.a in Frameworks */,
+				CC499181B6D73FEBDD14082D /* libPods-WakeMeAppAlarmClock.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,7 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				C7AB824B2EF2ADE7D41AFF57 /* libPods-WakeMeAppAlarmClock.a */,
+				23585BE5CAF0BCB1C3499C43 /* libPods-WakeMeAppAlarmClock.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -501,6 +501,19 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${PODS_ROOT}/ReactCommon",
+					"${PODS_ROOT}/ReactCommon/react/nativemodule/core",
+					"${PODS_ROOT}/React-runtimeexecutor",
+					"${PODS_ROOT}/React-runtimeexecutor/platform/ios",
+					"${PODS_ROOT}/ReactCommon-Samples",
+					"${PODS_ROOT}/ReactCommon-Samples/platform/ios",
+					"${PODS_ROOT}/React-Fabric/react/renderer/components/view/platform/cxx",
+					"${PODS_ROOT}/React-NativeModulesApple",
+					"${PODS_ROOT}/React-graphics",
+					"${PODS_ROOT}/React-graphics/react/renderer/graphics/platform/ios",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
@@ -557,6 +570,19 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${PODS_ROOT}/ReactCommon",
+					"${PODS_ROOT}/ReactCommon/react/nativemodule/core",
+					"${PODS_ROOT}/React-runtimeexecutor",
+					"${PODS_ROOT}/React-runtimeexecutor/platform/ios",
+					"${PODS_ROOT}/ReactCommon-Samples",
+					"${PODS_ROOT}/ReactCommon-Samples/platform/ios",
+					"${PODS_ROOT}/React-Fabric/react/renderer/components/view/platform/cxx",
+					"${PODS_ROOT}/React-NativeModulesApple",
+					"${PODS_ROOT}/React-graphics",
+					"${PODS_ROOT}/React-graphics/react/renderer/graphics/platform/ios",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
