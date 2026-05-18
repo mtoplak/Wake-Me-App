@@ -8,7 +8,11 @@ import {
   Switch,
   ActivityIndicator,
   Alert,
+  Modal,
+  TextInput,
+  Keyboard,
 } from 'react-native';
+import { getVoicePhraseSuggestions } from '@/scenes/alarmRinging/voiceChallenge';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import {
@@ -40,7 +44,6 @@ type RowProps = {
 const KEYS = {
   cloudSync: 'pref.cloudSync',
   vibration: 'pref.vibration',
-  voicePhrase: 'pref.voicePhraseEnabled',
   appearance: 'pref.appearance',
   defaultSound: 'pref.defaultSound',
   voicePhraseText: 'pref.voicePhraseText',
@@ -57,11 +60,14 @@ export default function Settings() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [cloudSync, setCloudSync] = useState(true);
   const [vibration, setVibration] = useState(true);
-  const [voice, setVoice] = useState(false);
   const [appearance, setAppearance] = useState(t.settings.appearanceLight);
   const [defaultSound, setDefaultSound] = useState('Sunrise');
-  const [phrase, setPhrase] = useState('“Today will be great!”');
+  const [phrase, setPhrase] = useState('');
   const [stepGoal, setStepGoal] = useState('30 steps');
+
+  const [showPhraseModal, setShowPhraseModal] = useState(false);
+  const [phraseDraft, setPhraseDraft] = useState('');
+  const phraseSuggestions = getVoicePhraseSuggestions(language);
 
   const load = useCallback(async () => {
     const [p, all] = await Promise.all([getProfile(), getAllSettings()]);
@@ -69,10 +75,9 @@ export default function Settings() {
     if (p?.language) dispatch(setLanguage(p.language));
     setCloudSync((all[KEYS.cloudSync] ?? '1') === '1');
     setVibration((all[KEYS.vibration] ?? '1') === '1');
-    setVoice((all[KEYS.voicePhrase] ?? '0') === '1');
     setAppearance(all[KEYS.appearance] ?? t.settings.appearanceLight);
     setDefaultSound(all[KEYS.defaultSound] ?? 'Sunrise');
-    setPhrase(all[KEYS.voicePhraseText] ?? '“Today will be great!”');
+    setPhrase(all[KEYS.voicePhraseText] ?? '');
     setStepGoal(all[KEYS.stepGoal] ?? '30 steps');
   }, [dispatch, setLanguage, t.settings.appearanceLight]);
 
@@ -92,9 +97,15 @@ export default function Settings() {
     setVibration(v);
     await persistBool(KEYS.vibration, v);
   };
-  const onToggleVoice = async (v: boolean) => {
-    setVoice(v);
-    await persistBool(KEYS.voicePhrase, v);
+  const openPhraseModal = () => {
+    setPhraseDraft(phrase);
+    setShowPhraseModal(true);
+  };
+  const savePhrase = async () => {
+    const trimmed = phraseDraft.trim();
+    setPhrase(trimmed);
+    setShowPhraseModal(false);
+    await setSetting(KEYS.voicePhraseText, trimmed);
   };
   const onSelectLanguage = async (lang: Language) => {
     dispatch(setLanguage(lang));
@@ -171,7 +182,7 @@ export default function Settings() {
   }
 
   const authInitial = loggedIn
-    ? ((user?.name ?? user?.email ?? 'U').trim().charAt(0).toUpperCase() || 'U')
+    ? (user?.name ?? user?.email ?? 'U').trim().charAt(0).toUpperCase() || 'U'
     : 'G';
 
   return (
@@ -297,15 +308,8 @@ export default function Settings() {
             icon={<Ionicons name="mic-outline" size={18} color={colors.accent} />}
             iconBg={colors.accentSoft}
             label={t.settings.voicePhrase}
-            value={phrase}
-            trailing={
-              <Switch
-                value={voice}
-                onValueChange={onToggleVoice}
-                trackColor={{ true: colors.accent, false: colors.border }}
-                thumbColor={colors.white}
-              />
-            }
+            value={phrase || t.settings.voicePhraseEmpty}
+            onPress={openPhraseModal}
           />
           <Row
             icon={<Ionicons name="walk-outline" size={18} color={colors.success} />}
@@ -358,14 +362,12 @@ export default function Settings() {
               onPress={handleResetOnboarding}
             />
             <Row
-              icon={<Ionicons name="mic-circle-outline" size={18} color={colors.accent} />}
-              iconBg={colors.accentSoft}
-              label={t.settings.voiceChallengeDev}
-              onPress={() => router.push('/(main)/voiceChallengeDev')}
-            />
-            <Row
               icon={
-                <MaterialCommunityIcons name="image-search-outline" size={18} color={colors.warning} />
+                <MaterialCommunityIcons
+                  name="image-search-outline"
+                  size={18}
+                  color={colors.warning}
+                />
               }
               iconBg={colors.warningSoft}
               label={t.settings.objectChallengeDev}
@@ -383,6 +385,65 @@ export default function Settings() {
 
         <Text style={styles.footer}>{t.settings.footer}</Text>
       </ScrollView>
+
+      <Modal
+        visible={showPhraseModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPhraseModal(false)}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => {
+            Keyboard.dismiss();
+            setShowPhraseModal(false);
+          }}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>{t.settings.voicePhraseModalTitle}</Text>
+            <Text style={styles.modalSubtitle}>{t.settings.voicePhraseModalSubtitle}</Text>
+            <TextInput
+              value={phraseDraft}
+              onChangeText={setPhraseDraft}
+              placeholder={t.settings.voicePhraseInputPlaceholder}
+              placeholderTextColor={colors.textMuted}
+              style={styles.modalInput}
+              returnKeyType="done"
+              maxLength={120}
+              autoFocus
+            />
+
+            <Text style={styles.suggestionsLabel}>{t.settings.voicePhraseSuggestions}</Text>
+            <ScrollView
+              style={styles.suggestionsScroll}
+              contentContainerStyle={styles.suggestionsList}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}>
+              {phraseSuggestions.map(suggestion => {
+                const active = suggestion === phraseDraft.trim();
+                return (
+                  <Pressable
+                    key={suggestion}
+                    onPress={() => setPhraseDraft(suggestion)}
+                    style={[styles.suggestionRow, active && styles.suggestionRowActive]}>
+                    <Text style={[styles.suggestionText, active && styles.suggestionTextActive]}>
+                      {suggestion}
+                    </Text>
+                    {active && <AntDesign name="check" size={14} color={colors.accent} />}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalSecondary} onPress={() => setShowPhraseModal(false)}>
+                <Text style={styles.modalSecondaryText}>{t.common.cancel}</Text>
+              </Pressable>
+              <Pressable style={styles.modalPrimary} onPress={savePhrase}>
+                <Text style={styles.modalPrimaryText}>{t.common.save}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -511,4 +572,94 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 28,
   },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 20,
+    maxHeight: '85%',
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 14,
+    lineHeight: 18,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.textPrimary,
+    backgroundColor: colors.background,
+  },
+  suggestionsLabel: {
+    marginTop: 16,
+    marginBottom: 8,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  suggestionsScroll: {
+    maxHeight: 220,
+  },
+  suggestionsList: {
+    gap: 6,
+    paddingBottom: 4,
+  },
+  suggestionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+  },
+  suggestionRowActive: {
+    backgroundColor: colors.accentSoft,
+  },
+  suggestionText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  suggestionTextActive: {
+    color: colors.accent,
+    fontWeight: '700',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 18,
+  },
+  modalSecondary: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  modalSecondaryText: { color: colors.textSecondary, fontWeight: '600' },
+  modalPrimary: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: colors.accent,
+  },
+  modalPrimaryText: { color: colors.white, fontWeight: '700' },
 });

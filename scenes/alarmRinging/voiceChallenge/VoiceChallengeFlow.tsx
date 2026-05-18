@@ -31,17 +31,23 @@ type Props = {
   language: Language;
   /** `alarm`: track duration for wake stats; unsupported clients may skip with `skipped`. */
   variant?: 'dev' | 'alarm';
+  /** Optional user-configured phrase. Falls back to a curated random pick if empty. */
+  phraseOverride?: string | null;
   onComplete: (payload?: VoiceChallengeCompletePayload) => void;
 };
 
 export function VoiceChallengeFlow({
   language,
   variant = 'dev',
+  phraseOverride,
   onComplete,
 }: Props) {
   const { t } = useTranslation();
   const vt = t.voiceChallenge;
-  const [phrase] = useState(() => pickRandomVoicePhrase(language));
+  const [phrase] = useState(() => {
+    const trimmed = phraseOverride?.trim();
+    return trimmed && trimmed.length > 0 ? trimmed : pickRandomVoicePhrase(language);
+  });
 
   const [step, setStep] = useState<UiStep>('intro');
   const [listening, setListening] = useState(false);

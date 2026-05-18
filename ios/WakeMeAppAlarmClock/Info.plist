@@ -28,7 +28,6 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>wake-me-app</string>
-          <string>com.watarumaeda.react-native-boilerplate</string>
         </array>
       </dict>
       <dict>
@@ -53,8 +52,12 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSCameraUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to use the camera for the QR, color, and object wake-up challenges.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <string>Allow $(PRODUCT_NAME) to use the microphone for the voice phrase wake-up challenge.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to use speech recognition to verify your wake-up phrase.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

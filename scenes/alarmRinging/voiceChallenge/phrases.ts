@@ -37,3 +37,7 @@ export function pickRandomVoicePhrase(language: Language): string {
   const i = Math.floor(Math.random() * list.length);
   return list[i] ?? list[0];
 }
+
+export function getVoicePhraseSuggestions(language: Language): readonly string[] {
+  return BY_LANG[language] ?? BY_LANG.EN;
+}

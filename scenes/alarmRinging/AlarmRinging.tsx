@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync, AudioSource } from 'expo-audio';
-import { listAlarms, Alarm, recordWake, type ChallengeType } from '@/services/database';
+import { listAlarms, Alarm, recordWake, getSetting, type ChallengeType } from '@/services/database';
 import { fetchRandomQuote, FetchedQuote } from '@/services/quoteApi';
 import { acknowledgeAlarm, setAlarmActiveForeground } from '@/services/alarmScheduler';
 import { useTranslation } from '@/i18n';
@@ -107,13 +107,18 @@ export default function AlarmRinging() {
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [phase, setPhase] = useState<RingPhase>('ringing');
   const [quote, setQuote] = useState<{ text: string; author: string } | null>(null);
+  const [voicePhrase, setVoicePhrase] = useState<string | null>(null);
 
   const now = useMemo(() => new Date(), []);
   const fallback = formatTime(now.getHours(), now.getMinutes());
 
   useEffect(() => {
     (async () => {
-      const list = await listAlarms();
+      const [list, savedPhrase] = await Promise.all([
+        listAlarms(),
+        getSetting('pref.voicePhraseText'),
+      ]);
+      setVoicePhrase(savedPhrase);
       const routeId = parseRouteAlarmId(params.alarmId);
       const found =
         routeId != null
@@ -476,6 +481,7 @@ export default function AlarmRinging() {
       <VoiceChallengeFlow
         variant="alarm"
         language={language}
+        phraseOverride={voicePhrase}
         onComplete={handleVoiceChallengeComplete}
       />
     );

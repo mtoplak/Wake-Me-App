@@ -58,7 +58,7 @@ export default function CreateAlarm() {
   const [hour, setHour] = useState(initialNow.hour);
   const [minute, setMinute] = useState(initialNow.minute);
   const [activeDays, setActiveDays] = useState<string[]>([]);
-  const [challenges, setChallenges] = useState<ChallengeKey[]>(['color']);
+  const [challenges, setChallenges] = useState<ChallengeKey[]>([]);
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [showQrSetup, setShowQrSetup] = useState(false);
   const [sound, setSound] = useState(SOUND_OPTIONS[0] ?? 'Sunrise');

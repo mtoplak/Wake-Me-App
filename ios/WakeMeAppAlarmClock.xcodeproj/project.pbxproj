@@ -30,24 +30,24 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = WakeMeAppAlarmClock/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = WakeMeAppAlarmClock/Info.plist; sourceTree = "<group>"; };
 		23585BE5CAF0BCB1C3499C43 /* libPods-WakeMeAppAlarmClock.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WakeMeAppAlarmClock.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		29DAC76D0081431A1FAA8AA0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = WakeMeAppAlarmClock/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		39AC21001A0A44B88151E909 /* sunrise.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = sunrise.caf; path = WakeMeAppAlarmClock/sunrise.caf; sourceTree = "<group>"; };
-		408B6E5A00BA47878A734FD0 /* birds.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = birds.caf; path = WakeMeAppAlarmClock/birds.caf; sourceTree = "<group>"; };
-		5672BA9B48BB482DA47F436D /* OpenSans-Semibold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Semibold.ttf"; path = "../assets/fonts/OpenSans-Semibold.ttf"; sourceTree = "<group>"; };
-		6E2CA15D427B4996B221C113 /* OpenSans-SemiboldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-SemiboldItalic.ttf"; path = "../assets/fonts/OpenSans-SemiboldItalic.ttf"; sourceTree = "<group>"; };
-		6F428A52A23F4F8A83FF24DF /* chimes.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = chimes.caf; path = WakeMeAppAlarmClock/chimes.caf; sourceTree = "<group>"; };
+		29DAC76D0081431A1FAA8AA0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = WakeMeAppAlarmClock/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		39AC21001A0A44B88151E909 /* sunrise.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = sunrise.caf; path = WakeMeAppAlarmClock/sunrise.caf; sourceTree = "<group>"; };
+		408B6E5A00BA47878A734FD0 /* birds.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = birds.caf; path = WakeMeAppAlarmClock/birds.caf; sourceTree = "<group>"; };
+		5672BA9B48BB482DA47F436D /* OpenSans-Semibold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Semibold.ttf"; path = "../assets/fonts/OpenSans-Semibold.ttf"; sourceTree = "<group>"; };
+		6E2CA15D427B4996B221C113 /* OpenSans-SemiboldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-SemiboldItalic.ttf"; path = "../assets/fonts/OpenSans-SemiboldItalic.ttf"; sourceTree = "<group>"; };
+		6F428A52A23F4F8A83FF24DF /* chimes.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = chimes.caf; path = WakeMeAppAlarmClock/chimes.caf; sourceTree = "<group>"; };
 		84E4BFBB50CFC3504154E327 /* Pods-WakeMeAppAlarmClock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WakeMeAppAlarmClock.release.xcconfig"; path = "Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock.release.xcconfig"; sourceTree = "<group>"; };
-		A43E6175A00741F4814906E6 /* OpenSans-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Italic.ttf"; path = "../assets/fonts/OpenSans-Italic.ttf"; sourceTree = "<group>"; };
+		A43E6175A00741F4814906E6 /* OpenSans-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Italic.ttf"; path = "../assets/fonts/OpenSans-Italic.ttf"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = WakeMeAppAlarmClock/SplashScreen.storyboard; sourceTree = "<group>"; };
 		B1531E85BC002DE58BA6621E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-WakeMeAppAlarmClock/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		BC0468F3B9F6399F32874D08 /* Pods-WakeMeAppAlarmClock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WakeMeAppAlarmClock.debug.xcconfig"; path = "Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock.debug.xcconfig"; sourceTree = "<group>"; };
-		C0F3BD7AA84040DA941298EA /* OpenSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Regular.ttf"; path = "../assets/fonts/OpenSans-Regular.ttf"; sourceTree = "<group>"; };
-		C970EC51FC314D38AEBAA7BC /* OpenSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Bold.ttf"; path = "../assets/fonts/OpenSans-Bold.ttf"; sourceTree = "<group>"; };
+		C0F3BD7AA84040DA941298EA /* OpenSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Regular.ttf"; path = "../assets/fonts/OpenSans-Regular.ttf"; sourceTree = "<group>"; };
+		C970EC51FC314D38AEBAA7BC /* OpenSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Bold.ttf"; path = "../assets/fonts/OpenSans-Bold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = WakeMeAppAlarmClock/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* WakeMeAppAlarmClock-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "WakeMeAppAlarmClock-Bridging-Header.h"; path = "WakeMeAppAlarmClock/WakeMeAppAlarmClock-Bridging-Header.h"; sourceTree = "<group>"; };
-		F67EA2BE01134E5A9289FDA3 /* OpenSans-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-BoldItalic.ttf"; path = "../assets/fonts/OpenSans-BoldItalic.ttf"; sourceTree = "<group>"; };
+		F67EA2BE01134E5A9289FDA3 /* OpenSans-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-BoldItalic.ttf"; path = "../assets/fonts/OpenSans-BoldItalic.ttf"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,7 +102,6 @@
 				BC0468F3B9F6399F32874D08 /* Pods-WakeMeAppAlarmClock.debug.xcconfig */,
 				84E4BFBB50CFC3504154E327 /* Pods-WakeMeAppAlarmClock.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -148,7 +147,6 @@
 				6E2CA15D427B4996B221C113 /* OpenSans-SemiboldItalic.ttf */,
 			);
 			name = Resources;
-			path = "";
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -396,6 +394,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = WakeMeAppAlarmClock/WakeMeAppAlarmClock.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9F74X88286;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -414,7 +413,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.watarumaeda.react-native-boilerplate";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mtoplak.wakemeapp";
 				PRODUCT_NAME = WakeMeAppAlarmClock;
 				SWIFT_OBJC_BRIDGING_HEADER = "WakeMeAppAlarmClock/WakeMeAppAlarmClock-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -432,6 +431,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = WakeMeAppAlarmClock/WakeMeAppAlarmClock.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9F74X88286;
 				INFOPLIST_FILE = WakeMeAppAlarmClock/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -445,7 +445,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.watarumaeda.react-native-boilerplate";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.mtoplak.wakemeapp";
 				PRODUCT_NAME = WakeMeAppAlarmClock;
 				SWIFT_OBJC_BRIDGING_HEADER = "WakeMeAppAlarmClock/WakeMeAppAlarmClock-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
