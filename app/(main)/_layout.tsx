@@ -19,6 +19,10 @@ export default function DrawerWithTabsLayout() {
         name="objectChallengeDev"
         options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false, title: 'Object dev' }}
       />
+      <Drawer.Screen
+        name="stepsChallengeDev"
+        options={{ drawerItemStyle: { display: 'none' }, swipeEnabled: false, title: 'Steps dev' }}
+      />
     </Drawer>
   );
 }

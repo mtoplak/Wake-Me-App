@@ -25,6 +25,7 @@ import { ColorChallengeFlow, type ColorChallengeCompletePayload } from './colorC
 import { QrChallengeFlow, type QrChallengeCompletePayload } from './qrChallenge';
 import { VoiceChallengeFlow, type VoiceChallengeCompletePayload } from './voiceChallenge';
 import { ObjectChallengeFlow, type ObjectChallengeCompletePayload } from './objectChallenge';
+import { StepsChallengeFlow, type StepsChallengeCompletePayload } from './stepsChallenge';
 
 const SLIDER_HEIGHT = 64;
 const THUMB_SIZE = 56;
@@ -38,12 +39,21 @@ function parseRouteAlarmId(raw: string | string[] | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-const RING_FLOW_CHALLENGE_TYPES = new Set<ChallengeType>(['object', 'color', 'voice']);
+const RING_FLOW_CHALLENGE_TYPES = new Set<ChallengeType>(['steps', 'object', 'color', 'voice']);
 
-type RingPhase = 'ringing' | 'qrChallenge' | 'objectChallenge' | 'colorChallenge' | 'voiceChallenge' | 'quote';
+type RingPhase =
+  | 'ringing'
+  | 'qrChallenge'
+  | 'stepsChallenge'
+  | 'objectChallenge'
+  | 'colorChallenge'
+  | 'voiceChallenge'
+  | 'quote';
 
 function phaseForChallenge(type: ChallengeType): RingPhase | null {
   switch (type) {
+    case 'steps':
+      return 'stepsChallenge';
     case 'object':
       return 'objectChallenge';
     case 'color':
@@ -169,6 +179,7 @@ export default function AlarmRinging() {
     const shouldPlayAlarmAudio =
       phase === 'ringing' ||
       phase === 'qrChallenge' ||
+      phase === 'stepsChallenge' ||
       phase === 'objectChallenge' ||
       phase === 'colorChallenge' ||
       phase === 'voiceChallenge';
@@ -287,6 +298,33 @@ export default function AlarmRinging() {
       }
       const list = alarm?.challenges ?? [];
       const next = nextRingFlowChallenge(list, 'qr');
+      const nextPhase = next ? phaseForChallenge(next) : null;
+      if (nextPhase) {
+        setPhase(nextPhase);
+        return;
+      }
+      await finishWithQuote();
+    },
+    [alarm, finishWithQuote],
+  );
+
+  const handleStepsChallengeComplete = useCallback(
+    async ({ durationSec }: StepsChallengeCompletePayload) => {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const wakeTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      if (alarm) {
+        await recordWake({
+          alarmId: alarm.id,
+          date,
+          wakeTime,
+          success: true,
+          challengeDuration: durationSec,
+          challengeType: 'steps',
+        });
+      }
+      const list = alarm?.challenges ?? [];
+      const next = nextRingFlowChallenge(list, 'steps');
       const nextPhase = next ? phaseForChallenge(next) : null;
       if (nextPhase) {
         setPhase(nextPhase);
@@ -419,6 +457,10 @@ export default function AlarmRinging() {
         onComplete={handleQrChallengeComplete}
       />
     );
+  }
+
+  if (phase === 'stepsChallenge') {
+    return <StepsChallengeFlow alarm={alarm} onComplete={handleStepsChallengeComplete} />;
   }
 
   if (phase === 'objectChallenge') {

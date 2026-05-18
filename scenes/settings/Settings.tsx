@@ -370,6 +370,12 @@ export default function Settings() {
               iconBg={colors.warningSoft}
               label={t.settings.objectChallengeDev}
               onPress={() => router.push('/(main)/objectChallengeDev')}
+            />
+            <Row
+              icon={<Ionicons name="walk-outline" size={18} color={colors.success} />}
+              iconBg={colors.successSoft}
+              label={t.settings.stepsChallengeDev}
+              onPress={() => router.push('/(main)/stepsChallengeDev')}
               last
             />
           </View>
