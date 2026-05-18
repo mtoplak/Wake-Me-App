@@ -8,7 +8,7 @@ import { loadImages, loadFonts, colors } from '@/theme';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSlice } from '@/slices';
-import { subscribeToAuth, configureGoogleSignIn } from '@/services';
+import { subscribeToAuth, configureGoogleSignIn, subscribeCloudAutoSync } from '@/services';
 import { getDb, getProfile, listAlarms, seedIfEmpty } from '@/services/database';
 import { ensureAlarmPermissions, rescheduleAllAlarms } from '@/services/alarmScheduler';
 import Provider from '@/providers';
@@ -64,6 +64,17 @@ function Router() {
     });
     return () => unsub();
   }, [dispatch, setUser, setLoggedIn]);
+
+  /**
+   * On every Firebase auth-state transition into a signed-in state, pull the
+   * user's data from Firestore (or push local up if the cloud is empty). This
+   * is what restores settings/profile/alarms after the local SQLite cache is
+   * wiped on app launch.
+   */
+  useEffect(() => {
+    const unsub = subscribeCloudAutoSync();
+    return () => unsub();
+  }, []);
 
   return (
     <Fragment>

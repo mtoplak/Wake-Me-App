@@ -38,6 +38,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-sqlite',
       'expo-web-browser',
       [
+        'expo-build-properties',
+        {
+          // @react-native-ml-kit/image-labeling requires iOS 15.5+
+          ios: { deploymentTarget: '15.5' },
+        },
+      ],
+      [
         'expo-notifications',
         {
           icon: './assets/images/alarm-clock-favicon.png',

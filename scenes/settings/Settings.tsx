@@ -60,7 +60,9 @@ export default function Settings() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [cloudSync, setCloudSync] = useState(true);
   const [vibration, setVibration] = useState(true);
-  const [appearance, setAppearance] = useState(t.settings.appearanceLight);
+  // Stored raw — display label is resolved via translation at render time so
+  // it follows live language switches without re-running `load`.
+  const [appearance, setAppearance] = useState<string | null>(null);
   const [defaultSound, setDefaultSound] = useState('Sunrise');
   const [phrase, setPhrase] = useState('');
   const [stepGoal, setStepGoal] = useState('30 steps');
@@ -69,17 +71,23 @@ export default function Settings() {
   const [phraseDraft, setPhraseDraft] = useState('');
   const phraseSuggestions = getVoicePhraseSuggestions(language);
 
+  // Note: do NOT dispatch `setLanguage` here, and do NOT depend on translated
+  // strings like `t.settings.appearanceLight`. Both create a feedback loop
+  // when the user toggles language: the translated string changes, this
+  // callback recreates, useEffect re-runs load, which reads the still-stale
+  // SQLite value and dispatches the old language — causing a visible flicker.
+  // Boot-time language load lives in app/_layout.tsx; `onSelectLanguage` is
+  // the only place Redux language should be mutated from this screen.
   const load = useCallback(async () => {
     const [p, all] = await Promise.all([getProfile(), getAllSettings()]);
     setProfile(p);
-    if (p?.language) dispatch(setLanguage(p.language));
     setCloudSync((all[KEYS.cloudSync] ?? '1') === '1');
     setVibration((all[KEYS.vibration] ?? '1') === '1');
-    setAppearance(all[KEYS.appearance] ?? t.settings.appearanceLight);
+    setAppearance(all[KEYS.appearance] ?? null);
     setDefaultSound(all[KEYS.defaultSound] ?? 'Sunrise');
     setPhrase(all[KEYS.voicePhraseText] ?? '');
     setStepGoal(all[KEYS.stepGoal] ?? '30 steps');
-  }, [dispatch, setLanguage, t.settings.appearanceLight]);
+  }, []);
 
   useEffect(() => {
     load().finally(() => setLoading(false));
@@ -278,7 +286,7 @@ export default function Settings() {
             icon={<Ionicons name="moon-outline" size={18} color={colors.accent} />}
             iconBg={colors.accentSoft}
             label={t.settings.appearance}
-            value={appearance}
+            value={appearance ?? t.settings.appearanceLight}
           />
           <Row
             icon={<Ionicons name="musical-notes-outline" size={18} color={colors.flame} />}

@@ -16,7 +16,13 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signOut as firebaseSignOut,
+} from 'firebase/auth';
 import { User } from '@/types';
+import { getFirebaseAuth, isFirebaseConfigured } from './firebase';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -55,13 +61,14 @@ async function persist(user: User | undefined): Promise<void> {
   notify();
 }
 
-// Minimal base64url decoder for JWT payloads — avoids pulling in a polyfill
-// just for one decode. Returns the raw decoded string.
-function base64UrlDecode(input: string): string {
+// Minimal base64url → UTF-8 decoder for JWT payloads. JWT claims like `name`
+// may contain non-ASCII characters (e.g. "Maša"), so the byte stream must be
+// decoded as UTF-8, not Latin-1 — otherwise multi-byte sequences mojibake.
+function base64UrlToBytes(input: string): Uint8Array {
   const normalized = input.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let output = '';
+  const bytes: number[] = [];
   let buffer = 0;
   let bits = 0;
   for (const c of padded.replace(/=+$/, '')) {
@@ -71,16 +78,46 @@ function base64UrlDecode(input: string): string {
     bits += 6;
     if (bits >= 8) {
       bits -= 8;
-      output += String.fromCharCode((buffer >> bits) & 0xff);
+      bytes.push((buffer >> bits) & 0xff);
     }
   }
-  return output;
+  return Uint8Array.from(bytes);
+}
+
+function utf8Decode(bytes: Uint8Array): string {
+  // Hermes (RN 0.79+) ships TextDecoder globally. Fall back to a manual decode
+  // on environments that don't.
+  if (typeof TextDecoder !== 'undefined') {
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+  let out = '';
+  for (let i = 0; i < bytes.length; ) {
+    const b1 = bytes[i++];
+    if (b1 < 0x80) {
+      out += String.fromCharCode(b1);
+    } else if (b1 < 0xe0) {
+      const b2 = bytes[i++];
+      out += String.fromCharCode(((b1 & 0x1f) << 6) | (b2 & 0x3f));
+    } else if (b1 < 0xf0) {
+      const b2 = bytes[i++];
+      const b3 = bytes[i++];
+      out += String.fromCharCode(((b1 & 0x0f) << 12) | ((b2 & 0x3f) << 6) | (b3 & 0x3f));
+    } else {
+      const b2 = bytes[i++];
+      const b3 = bytes[i++];
+      const b4 = bytes[i++];
+      const cp = ((b1 & 0x07) << 18) | ((b2 & 0x3f) << 12) | ((b3 & 0x3f) << 6) | (b4 & 0x3f);
+      const surrogate = cp - 0x10000;
+      out += String.fromCharCode(0xd800 + (surrogate >> 10), 0xdc00 + (surrogate & 0x3ff));
+    }
+  }
+  return out;
 }
 
 function decodeIdToken(token: string): Record<string, unknown> {
   const [, payload] = token.split('.');
   if (!payload) throw new Error('Malformed id_token');
-  return JSON.parse(base64UrlDecode(payload)) as Record<string, unknown>;
+  return JSON.parse(utf8Decode(base64UrlToBytes(payload))) as Record<string, unknown>;
 }
 
 function getClientId(): string {
@@ -112,10 +149,10 @@ function getRedirectUri(clientId: string): string {
   return AuthSession.makeRedirectUri({ scheme: 'wakemeapp' });
 }
 
-// Always returns false now that Firebase native modules are gone — kept so the
-// existing callers (`app/_layout.tsx`, scenes/*) don't need to change.
+// Reports whether Firebase JS SDK is configured (env vars present). Sign-in
+// works without it, but cloud sync only kicks in when this is true.
 export function isFirebaseAvailable(): boolean {
-  return false;
+  return isFirebaseConfigured();
 }
 
 // No configuration step needed for expo-auth-session — left as a no-op to
@@ -186,8 +223,21 @@ export async function signInWithGoogle(): Promise<User> {
     picture?: string;
   };
 
+  let firebaseUid: string | undefined;
+  if (isFirebaseConfigured()) {
+    try {
+      const credential = GoogleAuthProvider.credential(idToken, tokenResponse.accessToken);
+      const result = await signInWithCredential(getFirebaseAuth(), credential);
+      firebaseUid = result.user.uid;
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[auth] Firebase signInWithCredential failed', err);
+      }
+    }
+  }
+
   const user: User = {
-    uid: payload.sub,
+    uid: firebaseUid ?? payload.sub,
     name: payload.name ?? 'User',
     email: payload.email ?? '',
     photoURL: payload.picture,
@@ -199,6 +249,15 @@ export async function signInWithGoogle(): Promise<User> {
 }
 
 export async function signOut(): Promise<void> {
+  if (isFirebaseConfigured()) {
+    try {
+      await firebaseSignOut(getFirebaseAuth());
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[auth] Firebase signOut failed', err);
+      }
+    }
+  }
   await persist(undefined);
 }
 

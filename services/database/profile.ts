@@ -1,5 +1,6 @@
 import { getDb } from './db';
 import { UserProfile } from './types';
+import { syncProfileUp } from '../cloudSyncWriters';
 
 export async function getProfile(): Promise<UserProfile | null> {
   const db = await getDb();
@@ -26,4 +27,5 @@ export async function upsertProfile(profile: Omit<UserProfile, 'id'>): Promise<v
       profile.language,
     ]);
   }
+  syncProfileUp(profile);
 }
