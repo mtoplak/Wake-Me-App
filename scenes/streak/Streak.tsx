@@ -14,110 +14,53 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
 import {
   CachedQuote,
-  ChallengeType,
+  ChallengeBreakdownItem,
+  ChallengeInsights,
+  EarlyBirdScore,
   WakeStat,
-  getStatsSummary,
-  getTodaysQuote,
-  listRecentStats,
 } from '@/services/database';
 import { getCurrentUser, pullCloudToLocal, wipeWakeStats } from '@/services';
 import { isFirebaseConfigured } from '@/services/firebase';
-import { useTranslation, type Translations } from '@/i18n';
+import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
-
-type DayStatus = 'success' | 'fail' | 'today' | 'upcoming';
-type DayCell = { label: string; date: number; status: DayStatus; iso: string };
-
-const DAY_KEYS: (keyof Translations['days']['short'])[] = [
-  'mon',
-  'tue',
-  'wed',
-  'thu',
-  'fri',
-  'sat',
-  'sun',
-];
-
-function isoDay(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
-
-function buildWeek(stats: WakeStat[], t: Translations): DayCell[] {
-  const today = new Date();
-  const dayOfWeek = (today.getDay() + 6) % 7; // Mon=0
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - dayOfWeek);
-
-  const successByDate = new Map<string, boolean>();
-  for (const s of stats) {
-    const prev = successByDate.get(s.date);
-    successByDate.set(s.date, prev === true ? true : s.success);
-  }
-
-  const todayIso = isoDay(today);
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const iso = isoDay(d);
-    let status: DayStatus = 'upcoming';
-    if (iso === todayIso) status = 'today';
-    else if (successByDate.has(iso)) status = successByDate.get(iso) ? 'success' : 'fail';
-    return { label: t.days.short[DAY_KEYS[i]], date: d.getDate(), status, iso };
-  });
-}
-
-function challengeLabel(c: ChallengeType | null, t: Translations): string {
-  switch (c) {
-    case 'qr':
-      return t.challengeLabel.qr;
-    case 'object':
-      return t.challengeLabel.object;
-    case 'color':
-      return t.challengeLabel.color;
-    case 'steps':
-      return t.challengeLabel.steps;
-    case 'voice':
-      return t.challengeLabel.voice;
-    default:
-      return t.challengeLabel.wakeUp;
-  }
-}
-
-function relativeDay(iso: string, t: Translations): string {
-  const today = new Date();
-  const target = new Date(iso);
-  const todayIso = isoDay(today);
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  if (iso === todayIso) return t.streak.today;
-  if (iso === isoDay(yesterday)) return t.streak.yesterday;
-  return target.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-}
+import {
+  breakdownBarWidthPct,
+  buildWeek,
+  challengeIconName,
+  challengeLabel,
+  dotStyle,
+  earlyBirdTierIcon,
+  earlyBirdTierLabel,
+  EMPTY_CHALLENGE_INSIGHTS,
+  EMPTY_STREAK_SUMMARY,
+  formatChallengeDuration,
+  hasChallengeInsights,
+  loadStreakScreenData,
+  maxBreakdownCount,
+  relativeDay,
+  shouldShowInsightsPlaceholder,
+  weekSuccessRatio,
+  type StreakSummary,
+} from './streakUtils';
 
 export default function Streak() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState({
-    total: 0,
-    successes: 0,
-    successRate: 0,
-    bestStreak: 0,
-    currentStreak: 0,
-  });
+  const [summary, setSummary] = useState<StreakSummary>(EMPTY_STREAK_SUMMARY);
   const [stats, setStats] = useState<WakeStat[]>([]);
   const [quote, setQuote] = useState<CachedQuote | null>(null);
+  const [insights, setInsights] = useState<ChallengeInsights>(EMPTY_CHALLENGE_INSIGHTS);
+  const [earlyBird, setEarlyBird] = useState<EarlyBirdScore | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [wiping, setWiping] = useState(false);
 
   const load = useCallback(async () => {
-    const [s, recent, q] = await Promise.all([
-      getStatsSummary(),
-      listRecentStats(20),
-      getTodaysQuote(),
-    ]);
-    setSummary(s);
-    setStats(recent);
-    setQuote(q);
+    const data = await loadStreakScreenData();
+    setSummary(data.summary);
+    setStats(data.stats);
+    setQuote(data.quote);
+    setInsights(data.insights);
+    setEarlyBird(data.earlyBird);
   }, []);
 
   useEffect(() => {
@@ -147,7 +90,10 @@ export default function Streak() {
   }, [load]);
 
   const week = useMemo(() => buildWeek(stats, t), [stats, t]);
-  const weekRatio = `${week.filter(d => d.status === 'success').length} / 7`;
+  const weekRatio = weekSuccessRatio(week);
+  const breakdownMax = useMemo(() => maxBreakdownCount(insights), [insights]);
+  const hasInsights = hasChallengeInsights(insights);
+  const showInsightsPlaceholder = shouldShowInsightsPlaceholder(summary, insights);
 
   const handleWipeStreak = useCallback(() => {
     const signedIn = isFirebaseConfigured() && !!getCurrentUser();
@@ -261,6 +207,92 @@ export default function Streak() {
           />
         </View>
 
+        {earlyBird && (
+          <View style={styles.earlyBirdCard}>
+            <View style={styles.earlyBirdHeader}>
+              <View style={styles.earlyBirdIconWrap}>
+                <Ionicons
+                  name={earlyBirdTierIcon(earlyBird.tier)}
+                  size={28}
+                  color={colors.warning}
+                />
+              </View>
+              <View style={styles.earlyBirdHeaderText}>
+                <Text style={styles.insightsTitle}>{t.streak.earlyBirdTitle}</Text>
+                <Text style={styles.earlyBirdTier}>{earlyBirdTierLabel(earlyBird.tier, t)}</Text>
+              </View>
+              <Text style={styles.earlyBirdPercent}>{earlyBird.percent}%</Text>
+            </View>
+            <View style={styles.earlyBirdBarTrack}>
+              <View style={[styles.earlyBirdBarFill, { width: `${earlyBird.percent}%` }]} />
+            </View>
+            <Text style={styles.earlyBirdHint}>
+              {t.streak.earlyBirdDetail(earlyBird.earlyDays, earlyBird.totalDays, earlyBird.thresholdHour)}
+            </Text>
+            <Text style={styles.insightsHint}>{t.streak.earlyBirdHint(earlyBird.thresholdHour)}</Text>
+          </View>
+        )}
+
+        {hasInsights ? (
+          <>
+            {insights.breakdown.length > 0 && (
+              <View style={styles.insightsCard}>
+                <Text style={styles.insightsTitle}>{t.streak.challengeBreakdown}</Text>
+                <Text style={styles.insightsHint}>{t.streak.challengeBreakdownHint}</Text>
+                {insights.breakdown.map(item => (
+                  <ChallengeBreakdownRow
+                    key={item.type}
+                    item={item}
+                    maxCount={breakdownMax}
+                    label={challengeLabel(item.type, t)}
+                    icon={challengeIconName(item.type)}
+                  />
+                ))}
+              </View>
+            )}
+
+            {insights.avgDurationSec != null && (
+              <View style={styles.insightsCard}>
+                <Text style={styles.insightsTitle}>{t.streak.challengeTime}</Text>
+                <View style={styles.durationHero}>
+                  <MaterialCommunityIcons name="timer-outline" size={28} color={colors.accent} />
+                  <View>
+                    <Text style={styles.durationValue}>
+                      {formatChallengeDuration(insights.avgDurationSec, t)}
+                    </Text>
+                    <Text style={styles.durationLabel}>{t.streak.avgChallengeTime}</Text>
+                  </View>
+                </View>
+                {(insights.fastestDurationSec != null || insights.slowestDurationSec != null) && (
+                  <View style={styles.durationRow}>
+                    {insights.fastestDurationSec != null && (
+                      <View style={styles.durationPill}>
+                        <Text style={styles.durationPillLabel}>{t.streak.fastestChallenge}</Text>
+                        <Text style={styles.durationPillValue}>
+                          {formatChallengeDuration(insights.fastestDurationSec, t)}
+                        </Text>
+                      </View>
+                    )}
+                    {insights.slowestDurationSec != null && (
+                      <View style={styles.durationPill}>
+                        <Text style={styles.durationPillLabel}>{t.streak.slowestChallenge}</Text>
+                        <Text style={styles.durationPillValue}>
+                          {formatChallengeDuration(insights.slowestDurationSec, t)}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+            )}
+          </>
+        ) : showInsightsPlaceholder ? (
+          <View style={styles.insightsEmptyCard}>
+            <MaterialCommunityIcons name="chart-bar" size={24} color={colors.textMuted} />
+            <Text style={styles.insightsEmptyText}>{t.streak.insightsEmpty}</Text>
+          </View>
+        ) : null}
+
         {quote && (
           <View style={styles.quoteCard}>
             <Ionicons name="sparkles" size={18} color={colors.accent} />
@@ -294,7 +326,12 @@ export default function Streak() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.historyTitle}>{relativeDay(h.date, t)}</Text>
-                  <Text style={styles.historySub}>{challengeLabel(h.challengeType, t)}</Text>
+                  <Text style={styles.historySub}>
+                    {challengeLabel(h.challengeType, t)}
+                    {h.challengeDuration != null
+                      ? ` · ${formatChallengeDuration(h.challengeDuration, t)}`
+                      : ''}
+                  </Text>
                 </View>
                 <Text style={styles.historyTime}>{h.wakeTime}</Text>
               </View>
@@ -317,6 +354,34 @@ export default function Streak() {
   );
 }
 
+function ChallengeBreakdownRow({
+  item,
+  maxCount,
+  label,
+  icon,
+}: {
+  item: ChallengeBreakdownItem;
+  maxCount: number;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}) {
+  const widthPct = breakdownBarWidthPct(item.count, maxCount);
+  return (
+    <View style={styles.breakdownRow}>
+      <View style={styles.breakdownLabelWrap}>
+        <Ionicons name={icon} size={16} color={colors.accent} />
+        <Text style={styles.breakdownLabel} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+      <View style={styles.breakdownBarTrack}>
+        <View style={[styles.breakdownBarFill, { width: `${widthPct}%` }]} />
+      </View>
+      <Text style={styles.breakdownCount}>{item.count}</Text>
+    </View>
+  );
+}
+
 function StatTile({
   icon,
   tint,
@@ -335,18 +400,6 @@ function StatTile({
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
-}
-
-function dotStyle(status: DayStatus) {
-  if (status === 'success') return { backgroundColor: colors.accent };
-  if (status === 'fail') return { backgroundColor: colors.flame };
-  if (status === 'today')
-    return {
-      backgroundColor: colors.surface,
-      borderWidth: 2,
-      borderColor: colors.accent,
-    };
-  return { backgroundColor: colors.border };
 }
 
 const styles = StyleSheet.create({
@@ -417,6 +470,56 @@ const styles = StyleSheet.create({
   todayInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent },
   dayDate: { fontSize: 12, color: colors.textSecondary },
   statsRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  earlyBirdCard: {
+    marginTop: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 18,
+  },
+  earlyBirdHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  earlyBirdIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: colors.warningSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  earlyBirdHeaderText: { flex: 1 },
+  earlyBirdTier: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.warning,
+  },
+  earlyBirdPercent: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    letterSpacing: -1,
+  },
+  earlyBirdBarTrack: {
+    marginTop: 16,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.border,
+    overflow: 'hidden',
+  },
+  earlyBirdBarFill: {
+    height: '100%',
+    borderRadius: 5,
+    backgroundColor: colors.warning,
+  },
+  earlyBirdHint: {
+    marginTop: 10,
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
   statTile: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -434,6 +537,118 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 20, fontWeight: '700', color: colors.textPrimary },
   statLabel: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  insightsCard: {
+    marginTop: 18,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 18,
+  },
+  insightsTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  insightsHint: {
+    marginTop: 4,
+    marginBottom: 14,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  breakdownLabelWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    width: 88,
+  },
+  breakdownLabel: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  breakdownBarTrack: {
+    flex: 1,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.border,
+    overflow: 'hidden',
+  },
+  breakdownBarFill: {
+    height: '100%',
+    borderRadius: 4,
+    backgroundColor: colors.accent,
+  },
+  breakdownCount: {
+    width: 24,
+    textAlign: 'right',
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  durationHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginTop: 4,
+  },
+  durationValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    letterSpacing: -0.5,
+  },
+  durationLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  durationRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+  },
+  durationPill: {
+    flex: 1,
+    backgroundColor: colors.accentSoft,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  durationPillLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  durationPillValue: {
+    marginTop: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.accent,
+  },
+  insightsEmptyCard: {
+    marginTop: 18,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    paddingVertical: 22,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  insightsEmptyText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 18,
+  },
   quoteCard: {
     marginTop: 18,
     backgroundColor: colors.accentSoft,

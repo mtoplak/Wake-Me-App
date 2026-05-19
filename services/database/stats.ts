@@ -134,3 +134,135 @@ export async function getStatsSummary(): Promise<{
     currentStreak,
   };
 }
+
+export type ChallengeBreakdownItem = {
+  type: ChallengeType;
+  count: number;
+};
+
+export type ChallengeInsights = {
+  breakdown: ChallengeBreakdownItem[];
+  avgDurationSec: number | null;
+  fastestDurationSec: number | null;
+  slowestDurationSec: number | null;
+  timedChallengeCount: number;
+};
+
+const CHALLENGE_ORDER: ChallengeType[] = ['qr', 'object', 'color', 'steps', 'voice'];
+
+export async function getChallengeInsights(): Promise<ChallengeInsights> {
+  const db = await getDb();
+
+  const breakdownRows = await db.getAllAsync<{ challenge_type: string; count: number }>(
+    `SELECT challenge_type, COUNT(*) as count
+     FROM wake_stats
+     WHERE success = 1 AND challenge_type IS NOT NULL
+     GROUP BY challenge_type`,
+  );
+
+  const breakdown = breakdownRows
+    .map(row => ({
+      type: row.challenge_type as ChallengeType,
+      count: row.count,
+    }))
+    .filter(row => CHALLENGE_ORDER.includes(row.type))
+    .sort((a, b) => b.count - a.count || CHALLENGE_ORDER.indexOf(a.type) - CHALLENGE_ORDER.indexOf(b.type));
+
+  const durationRow = await db.getFirstAsync<{
+    avg_duration: number | null;
+    fastest: number | null;
+    slowest: number | null;
+    timed_count: number;
+  }>(
+    `SELECT
+       ROUND(AVG(challenge_duration)) as avg_duration,
+       MIN(challenge_duration) as fastest,
+       MAX(challenge_duration) as slowest,
+       COUNT(*) as timed_count
+     FROM wake_stats
+     WHERE success = 1 AND challenge_duration IS NOT NULL`,
+  );
+
+  const timedChallengeCount = durationRow?.timed_count ?? 0;
+
+  return {
+    breakdown,
+    avgDurationSec:
+      timedChallengeCount > 0 && durationRow?.avg_duration != null
+        ? Math.round(durationRow.avg_duration)
+        : null,
+    fastestDurationSec: durationRow?.fastest ?? null,
+    slowestDurationSec: durationRow?.slowest ?? null,
+    timedChallengeCount,
+  };
+}
+
+/** Mornings counted as "early" when the first successful wake is before this hour. */
+export const EARLY_BIRD_THRESHOLD_HOUR = 8;
+
+export type EarlyBirdTier = 'nightOwl' | 'rising' | 'earlyBird' | 'sunriseChampion';
+
+export type EarlyBirdScore = {
+  percent: number;
+  tier: EarlyBirdTier;
+  earlyDays: number;
+  totalDays: number;
+  thresholdHour: number;
+};
+
+function parseWakeTimeMinutes(wakeTime: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(wakeTime.trim());
+  if (!match) return null;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour > 23 || minute > 59) return null;
+  return hour * 60 + minute;
+}
+
+function tierFromEarlyBirdPercent(percent: number): EarlyBirdTier {
+  if (percent >= 75) return 'sunriseChampion';
+  if (percent >= 50) return 'earlyBird';
+  if (percent >= 25) return 'rising';
+  return 'nightOwl';
+}
+
+/**
+ * % of days with a successful wake where the earliest wake that day was before 7:00.
+ * Uses one wake per calendar day (earliest successful `wake_time`).
+ */
+export async function getEarlyBirdScore(): Promise<EarlyBirdScore | null> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ date: string; wake_time: string }>(
+    `SELECT date, wake_time FROM wake_stats
+     WHERE success = 1
+     ORDER BY date ASC, wake_time ASC`,
+  );
+
+  const earliestMinutesByDay = new Map<string, number>();
+  for (const row of rows) {
+    const minutes = parseWakeTimeMinutes(row.wake_time);
+    if (minutes == null) continue;
+    const prev = earliestMinutesByDay.get(row.date);
+    if (prev === undefined || minutes < prev) {
+      earliestMinutesByDay.set(row.date, minutes);
+    }
+  }
+
+  const totalDays = earliestMinutesByDay.size;
+  if (totalDays === 0) return null;
+
+  const thresholdMinutes = EARLY_BIRD_THRESHOLD_HOUR * 60;
+  let earlyDays = 0;
+  for (const minutes of earliestMinutesByDay.values()) {
+    if (minutes < thresholdMinutes) earlyDays += 1;
+  }
+
+  const percent = Math.round((earlyDays / totalDays) * 100);
+  return {
+    percent,
+    tier: tierFromEarlyBirdPercent(percent),
+    earlyDays,
+    totalDays,
+    thresholdHour: EARLY_BIRD_THRESHOLD_HOUR,
+  };
+}
