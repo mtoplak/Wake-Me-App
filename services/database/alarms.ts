@@ -145,3 +145,90 @@ export async function countAlarms(): Promise<number> {
   const row = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) as count FROM alarms');
   return row?.count ?? 0;
 }
+
+/**
+ * Move an alarm to a new SQLite id (cloud doc id collision). Preserves challenges
+ * and wake_stats links; reschedules notifications for the new id.
+ */
+export async function reassignAlarmId(fromId: number, toId: number): Promise<Alarm> {
+  const alarm = await loadAlarmById(fromId);
+  if (!alarm) throw new Error(`Alarm ${fromId} not found`);
+
+  await cancelAlarm(fromId);
+  const db = await getDb();
+
+  await db.runAsync(
+    `INSERT INTO alarms (id, hour, minute, label, repeat_days, enabled, sound, vibration)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      toId,
+      alarm.hour,
+      alarm.minute,
+      alarm.label,
+      alarm.repeatDays.join(','),
+      alarm.enabled ? 1 : 0,
+      alarm.sound,
+      alarm.vibration ? 1 : 0,
+    ],
+  );
+
+  const challengeRows = await db.getAllAsync<AlarmChallengeRecord>(
+    'SELECT * FROM alarm_challenges WHERE alarm_id = ?',
+    [fromId],
+  );
+  for (const c of challengeRows) {
+    await db.runAsync(
+      'INSERT INTO alarm_challenges (alarm_id, challenge_type, difficulty, params) VALUES (?, ?, ?, ?)',
+      [toId, c.challenge_type, c.difficulty, c.params],
+    );
+  }
+
+  await db.runAsync('UPDATE wake_stats SET alarm_id = ? WHERE alarm_id = ?', [toId, fromId]);
+  await db.runAsync('DELETE FROM alarm_notifications WHERE alarm_id = ?', [fromId]);
+  await db.runAsync('DELETE FROM alarm_challenges WHERE alarm_id = ?', [fromId]);
+  await db.runAsync('DELETE FROM alarms WHERE id = ?', [fromId]);
+
+  const reassigned: Alarm = { ...alarm, id: toId };
+  if (reassigned.enabled) await scheduleAlarm(reassigned);
+  return reassigned;
+}
+
+/** Insert alarm from cloud pull without pushing back to Firestore. */
+export async function insertAlarmFromCloud(input: AlarmInput): Promise<number> {
+  const db = await getDb();
+  const result = await db.runAsync(
+    `INSERT INTO alarms (hour, minute, label, repeat_days, enabled, sound, vibration)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      input.hour,
+      input.minute,
+      input.label,
+      input.repeatDays.join(','),
+      input.enabled === false ? 0 : 1,
+      input.sound ?? 'Sunrise',
+      input.vibration === false ? 0 : 1,
+    ],
+  );
+  const alarmId = result.lastInsertRowId;
+  const challengeParams = input.challengeParams ?? {};
+  for (const c of input.challenges) {
+    await db.runAsync(
+      'INSERT INTO alarm_challenges (alarm_id, challenge_type, difficulty, params) VALUES (?, ?, ?, ?)',
+      [alarmId, c, 'normal', challengeParams[c] ?? null],
+    );
+  }
+  const alarm: Alarm = {
+    id: alarmId,
+    hour: input.hour,
+    minute: input.minute,
+    label: input.label,
+    repeatDays: input.repeatDays,
+    enabled: input.enabled !== false,
+    sound: input.sound ?? 'Sunrise',
+    vibration: input.vibration !== false,
+    challenges: input.challenges,
+    challengeParams,
+  };
+  if (alarm.enabled) await scheduleAlarm(alarm);
+  return alarmId;
+}

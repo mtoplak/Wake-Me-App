@@ -9,7 +9,7 @@ import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSlice } from '@/slices';
 import { subscribeToAuth, configureGoogleSignIn, subscribeCloudAutoSync } from '@/services';
-import { getDb, getProfile, listAlarms, seedIfEmpty } from '@/services/database';
+import { getDb, getProfile, listAlarms } from '@/services/database';
 import { ensureAlarmPermissions, rescheduleAllAlarms } from '@/services/alarmScheduler';
 import Provider from '@/providers';
 
@@ -29,7 +29,7 @@ function Router() {
   useEffect(() => {
     (async () => {
       try {
-        await Promise.all([loadImages(), loadFonts(), getDb().then(() => seedIfEmpty())]);
+        await Promise.all([loadImages(), loadFonts(), getDb()]);
 
         getProfile()
           .then(p => {

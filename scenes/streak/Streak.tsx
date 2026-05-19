@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
 import {
@@ -10,6 +20,8 @@ import {
   getTodaysQuote,
   listRecentStats,
 } from '@/services/database';
+import { getCurrentUser, pullCloudToLocal, wipeWakeStats } from '@/services';
+import { isFirebaseConfigured } from '@/services/firebase';
 import { useTranslation, type Translations } from '@/i18n';
 import { colors } from '@/theme';
 
@@ -94,6 +106,8 @@ export default function Streak() {
   });
   const [stats, setStats] = useState<WakeStat[]>([]);
   const [quote, setQuote] = useState<CachedQuote | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [wiping, setWiping] = useState(false);
 
   const load = useCallback(async () => {
     const [s, recent, q] = await Promise.all([
@@ -110,8 +124,59 @@ export default function Streak() {
     load().finally(() => setLoading(false));
   }, [load]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (loading) return;
+      load();
+    }, [load, loading]),
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      if (isFirebaseConfigured() && getCurrentUser()) {
+        await pullCloudToLocal();
+      }
+    } catch (err) {
+      if (__DEV__) {
+        console.warn('[streak] cloud pull failed', err);
+      }
+    }
+    await load();
+    setRefreshing(false);
+  }, [load]);
+
   const week = useMemo(() => buildWeek(stats, t), [stats, t]);
   const weekRatio = `${week.filter(d => d.status === 'success').length} / 7`;
+
+  const handleWipeStreak = useCallback(() => {
+    const signedIn = isFirebaseConfigured() && !!getCurrentUser();
+    Alert.alert(
+      t.streak.wipeTitle,
+      signedIn ? t.streak.wipeBodyCloud : t.streak.wipeBodyLocal,
+      [
+        { text: t.common.cancel, style: 'cancel' },
+        {
+          text: t.streak.wipeConfirm,
+          style: 'destructive',
+          onPress: async () => {
+            setWiping(true);
+            try {
+              await wipeWakeStats();
+              await load();
+            } catch (err) {
+              Alert.alert(
+                t.streak.wipeFailed,
+                err instanceof Error ? err.message : t.common.unknown,
+              );
+            } finally {
+              setWiping(false);
+            }
+          },
+        },
+      ],
+    );
+  }, [load, t]);
 
   if (loading) {
     return (
@@ -125,7 +190,12 @@ export default function Streak() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
+        }>
         <Text style={styles.title}>{t.streak.title}</Text>
         <Text style={styles.subtitle}>{t.streak.subtitle}</Text>
 
@@ -231,6 +301,17 @@ export default function Streak() {
             ))}
           </View>
         )}
+
+        <TouchableOpacity
+          style={styles.wipeButton}
+          onPress={handleWipeStreak}
+          disabled={wiping || refreshing}
+          activeOpacity={0.7}>
+          <Ionicons name="trash-outline" size={18} color={colors.flame} />
+          <Text style={styles.wipeButtonText}>
+            {wiping ? t.streak.wipeClearing : t.streak.wipeStreak}
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -413,4 +494,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyText: { color: colors.textMuted, fontSize: 13 },
+  wipeButton: {
+    marginTop: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.flameSoft,
+    backgroundColor: colors.surface,
+  },
+  wipeButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.flame,
+  },
 });

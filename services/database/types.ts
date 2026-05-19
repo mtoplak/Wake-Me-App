@@ -60,6 +60,7 @@ export interface WakeStatRecord {
 
 export interface WakeStat {
   id: number;
+  alarmId: number | null;
   date: string;
   wakeTime: string;
   success: boolean;

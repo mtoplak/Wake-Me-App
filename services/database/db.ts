@@ -25,12 +25,11 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
 
 async function openAndInit(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
-  // Wipe + recreate in one batch so concurrent queries on the connection queue
-  // can't slot a SELECT between DROP and CREATE and see "no such table".
-  await db.execAsync(WIPE_SQL + SCHEMA_SQL);
+  await db.execAsync(SCHEMA_SQL);
   return db;
 }
 
+/** Dev-only: wipe all tables and recreate schema. */
 export async function resetDb(): Promise<void> {
   const db = await getDb();
   await db.execAsync(WIPE_SQL + SCHEMA_SQL);

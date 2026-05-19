@@ -5,4 +5,3 @@ export * from './settings';
 export * from './stats';
 export * from './types';
 export { getDb, resetDb } from './db';
-export { seedIfEmpty } from './seed';

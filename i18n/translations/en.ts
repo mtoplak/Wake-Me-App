@@ -225,6 +225,15 @@ const en = {
     empty: 'No wake-ups recorded yet',
     today: 'Today',
     yesterday: 'Yesterday',
+    wipeStreak: 'Clear streak history',
+    wipeTitle: 'Clear streak history?',
+    wipeBodyLocal:
+      'All wake-up history on this device will be deleted. Your cloud backup is unchanged — signing in can restore it.',
+    wipeBodyCloud:
+      'All wake-up history on this device and in your cloud account will be permanently deleted.',
+    wipeConfirm: 'Clear',
+    wipeClearing: 'Clearing…',
+    wipeFailed: 'Could not clear streak history',
   },
 
   quotes: {

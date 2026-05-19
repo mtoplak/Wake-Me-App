@@ -247,6 +247,15 @@ const sl: typeof en = {
     empty: 'Še ni zabeleženih zbujanj',
     today: 'Danes',
     yesterday: 'Včeraj',
+    wipeStreak: 'Počisti zgodovino streaka',
+    wipeTitle: 'Počistiti zgodovino streaka?',
+    wipeBodyLocal:
+      'Vsa zgodovina zbujanj na tej napravi bo izbrisana. Varnostna kopija v oblaku ostane — ob prijavi se lahko obnovi.',
+    wipeBodyCloud:
+      'Vsa zgodovina zbujanj na tej napravi in v oblaku bo trajno izbrisana.',
+    wipeConfirm: 'Počisti',
+    wipeClearing: 'Brisanje …',
+    wipeFailed: 'Zgodovine streaka ni bilo mogoče izbrisati',
   },
 
   quotes: {
