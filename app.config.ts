@@ -91,6 +91,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       [
+        'react-native-vision-camera',
+        {
+          cameraPermissionText:
+            'Allow Wake Me App to use the camera for the find-object wake-up challenge.',
+          enableMicrophonePermission: false,
+        },
+      ],
+      'react-native-fast-tflite',
+      [
         'expo-speech-recognition',
         {
           microphonePermission:

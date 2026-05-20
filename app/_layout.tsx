@@ -11,6 +11,10 @@ import { useAppSlice } from '@/slices';
 import { subscribeToAuth, configureGoogleSignIn, subscribeCloudAutoSync } from '@/services';
 import { getDb, getProfile, listAlarms } from '@/services/database';
 import { ensureAlarmPermissions, rescheduleAllAlarms } from '@/services/alarmScheduler';
+import {
+  isObjectDetectionAvailable,
+  preloadObjectModel,
+} from '@/scenes/alarmRinging/objectChallenge/objectDetection';
 import Provider from '@/providers';
 
 // keep the splash screen visible while complete fetching resources
@@ -53,6 +57,21 @@ function Router() {
       }
     })();
   }, [dispatch, setLanguage]);
+
+  /**
+   * Warm up the MobileNet TFLite model at app launch so the find-object
+   * challenge has it in memory before the user ever reaches the camera screen.
+   * The load is fire-and-forget on the native thread (~1-2 s) and the JS thread
+   * stays free — without this preload, the load only starts when the camera
+   * screen mounts, costing the user a visible wait every time. Skipped on Expo
+   * Go / web where the native module is missing.
+   */
+  useEffect(() => {
+    if (!isObjectDetectionAvailable()) return;
+    preloadObjectModel().catch(() => {
+      // Re-attempted (and surfaced) when ObjectCameraView mounts.
+    });
+  }, []);
 
   /**
    * subscribe to Firebase auth state changes

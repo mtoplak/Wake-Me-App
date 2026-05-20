@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
+import { isObjectDetectionAvailable, preloadObjectModel } from './objectDetection';
 import type { WakeObjectId } from './objects';
 
 type Props = {
@@ -11,6 +13,18 @@ type Props = {
 };
 
 export function ObjectChallengeIntro({ targetId, onAccept }: Props) {
+  // Fire off the model load while the user is reading the intro. Loading the
+  // ~3.6 MB MobileNet takes ~1-2 s on cold start; by the time they tap "Open
+  // camera" the promise is usually resolved, so first inference happens
+  // immediately when the camera produces its first frame.
+  useEffect(() => {
+    if (!isObjectDetectionAvailable()) return;
+    preloadObjectModel().catch(() => {
+      // Errors surface again when the camera view mounts and reuses the
+      // promise — no need to handle them here.
+    });
+  }, []);
+
   const { t } = useTranslation();
   const ot = t.objectChallenge;
   const targetName = ot.objects[targetId];

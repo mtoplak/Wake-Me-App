@@ -84,12 +84,10 @@ function base64UrlToBytes(input: string): Uint8Array {
   return Uint8Array.from(bytes);
 }
 
+// Manual UTF-8 decoder — used in place of `TextDecoder` because Expo Go's
+// JSC runtime ships it but mishandles non-ASCII multi-byte sequences in some
+// versions. Hand-rolled decode is platform-agnostic and tiny.
 function utf8Decode(bytes: Uint8Array): string {
-  // Hermes (RN 0.79+) ships TextDecoder globally. Fall back to a manual decode
-  // on environments that don't.
-  if (typeof TextDecoder !== 'undefined') {
-    return new TextDecoder('utf-8').decode(bytes);
-  }
   let out = '';
   for (let i = 0; i < bytes.length; ) {
     const b1 = bytes[i++];

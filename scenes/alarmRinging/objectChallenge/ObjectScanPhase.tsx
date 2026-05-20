@@ -4,13 +4,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
-import { ObjectCameraView, type ObjectCameraViewHandle } from './ObjectCameraView';
-import { classifyImageUri, isObjectDetectionAvailable } from './objectDetection';
+import { ObjectCameraView } from './ObjectCameraView';
+import { isObjectDetectionAvailable, type ImageLabel } from './objectDetection';
 import { objectDetectedInLabels } from './matchObjectLabel';
 import type { WakeObjectId } from './objects';
 
-const SCAN_INTERVAL_MS = 2200;
 const WRONG_TOAST_MS = 1600;
+/**
+ * Number of consecutive frames the matcher must succeed before we declare a
+ * win. The frame processor runs at ~5 Hz, so 2 in a row ≈ 400 ms of stable
+ * detection. This is the main guard against false positives from random
+ * misclassifications: a real object held in frame produces stable top-3 hits,
+ * while a flicker (one rogue rank-3 guess) doesn't survive the next frame.
+ */
+const REQUIRED_CONSECUTIVE_MATCHES = 2;
 
 type Props = {
   targetId: WakeObjectId;
@@ -22,40 +29,47 @@ export function ObjectScanPhase({ targetId, onSuccess, onSkipUnsupported }: Prop
   const { t } = useTranslation();
   const ot = t.objectChallenge;
   const targetName = ot.objects[targetId];
-  const cameraRef = useRef<ObjectCameraViewHandle>(null);
   const matchedRef = useRef(false);
-  const [scanning, setScanning] = useState(false);
+  const matchStreakRef = useRef(0);
+  const [modelStatus, setModelStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [wrongAt, setWrongAt] = useState(0);
   const toastFade = useRef(new Animated.Value(0)).current;
+  const lastWrongAtRef = useRef(0);
   const mlAvailable = isObjectDetectionAvailable();
 
-  const runScan = useCallback(async () => {
-    if (matchedRef.current || !mlAvailable) return;
-    setScanning(true);
-    try {
-      const uri = await cameraRef.current?.snapForClassification();
-      if (!uri || matchedRef.current) return;
-      const labels = await classifyImageUri(uri);
+  const handleLabels = useCallback(
+    (labels: ImageLabel[]) => {
+      if (matchedRef.current) return;
+      if (__DEV__) {
+        // Throttled debug print of top-5: confirms what MobileNet actually sees
+        // each scan. Remove (or gate behind a feature flag) once tuning is done.
+        console.log(
+          `[object-challenge] target=${targetId} top5=`,
+          labels.map(l => `${l.text}:${l.confidence.toFixed(2)}`).join(' | '),
+        );
+      }
       if (objectDetectedInLabels(targetId, labels)) {
-        matchedRef.current = true;
-        onSuccess();
+        matchStreakRef.current += 1;
+        if (matchStreakRef.current >= REQUIRED_CONSECUTIVE_MATCHES) {
+          matchedRef.current = true;
+          onSuccess();
+        }
         return;
       }
-      if (labels.length > 0) {
+      matchStreakRef.current = 0;
+      // Only flash the "wrong" toast when the model is meaningfully confident
+      // about its top guess — i.e. the gap from top-1 to top-2 is wide. Without
+      // this check, an empty/dark room (uniform-ish distribution where all top-5
+      // are ~1.0 relative to each other) would buzz constantly.
+      const top2Ratio = labels[1]?.confidence ?? 1;
+      const isConfident = top2Ratio < 0.75;
+      if (isConfident && Date.now() - lastWrongAtRef.current > WRONG_TOAST_MS) {
+        lastWrongAtRef.current = Date.now();
         setWrongAt(Date.now());
       }
-    } finally {
-      setScanning(false);
-    }
-  }, [mlAvailable, onSuccess, targetId]);
-
-  useEffect(() => {
-    if (!mlAvailable || matchedRef.current) return;
-    const id = setInterval(() => {
-      void runScan();
-    }, SCAN_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [mlAvailable, runScan]);
+    },
+    [onSuccess, targetId],
+  );
 
   useEffect(() => {
     if (wrongAt === 0) return;
@@ -92,15 +106,16 @@ export function ObjectScanPhase({ targetId, onSuccess, onSkipUnsupported }: Prop
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <ObjectCameraView
-        ref={cameraRef}
         paused={matchedRef.current}
+        onLabels={handleLabels}
+        onModelStatus={setModelStatus}
         overlay={
           <View style={styles.overlay} pointerEvents="box-none">
             <View style={styles.topCard}>
               <Text style={styles.findLabel}>{ot.findLabel}</Text>
               <Text style={styles.targetName}>{targetName}</Text>
               <Text style={styles.hint}>{ot.scanHint}</Text>
-              {scanning ? (
+              {modelStatus === 'loading' ? (
                 <View style={styles.scanRow}>
                   <ActivityIndicator color={colors.accent} size="small" />
                   <Text style={styles.scanningText}>{ot.scanning}</Text>

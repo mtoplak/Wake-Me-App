@@ -66,20 +66,13 @@ export default function Quotes() {
           <View style={styles.todayCard}>
             <View style={styles.sparkleRow}>
               <Ionicons name="sparkles" size={16} color={colors.accent} />
-              <Text style={styles.todayBadge}>{t.quotes.todayBadge} · {formatDate(today.date)}</Text>
+              <Text style={styles.todayBadge}>
+                {t.quotes.todayBadge} · {formatDate(today.date)}
+              </Text>
             </View>
             <Text style={styles.quote}>“{today.text}”</Text>
             <Text style={styles.author}>— {today.author}</Text>
-            <View style={styles.actionsRow}>
-              <View style={styles.actionPill}>
-                <Ionicons name="bookmark-outline" size={14} color={colors.accent} />
-                <Text style={styles.actionText}>{t.quotes.save}</Text>
-              </View>
-              <View style={styles.actionPill}>
-                <Ionicons name="share-outline" size={14} color={colors.accent} />
-                <Text style={styles.actionText}>{t.quotes.share}</Text>
-              </View>
-            </View>
+            <View style={styles.actionsRow}></View>
           </View>
         )}
 

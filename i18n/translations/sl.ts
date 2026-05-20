@@ -171,13 +171,13 @@ const sl: typeof en = {
     listenHint:
       'Prepoznavanje se ustavi ob premoru. Če se nič ne zgodi, pritisni Ustavi in poskusi znova. Moraš opraviti oba kroga.',
     successTitle: 'Super',
-    successBody: 'Frazo si ujel dvakrat. (Dev zaslon — povezava z alarmom pride v naslednjem koraku.)',
+    successBody:
+      'Frazo si ujel dvakrat. (Dev zaslon — povezava z alarmom pride v naslednjem koraku.)',
     successBodyAlarm: 'Frazo si ujel dvakrat. Čas za jutranjo misel.',
     skipUnsupportedVoice: 'Nadaljuj brez glasovnega izziva',
     close: 'Zapri',
     webUnsupportedTitle: 'Ni na voljo na spletu',
-    webUnsupportedBody:
-      'Ta izziv teče na iOS in Android v razvijalski (dev) gradnji.',
+    webUnsupportedBody: 'Ta izziv teče na iOS in Android v razvijalski (dev) gradnji.',
     expoGoUnsupportedTitle: 'Ni na voljo v Expo Go',
     expoGoUnsupportedBody:
       'Prepoznavanje govora zahteva razvijalsko gradnjo (expo run:ios / expo run:android) z vključenim native modulom. Expo Go ga ne naloži.',
@@ -203,7 +203,8 @@ const sl: typeof en = {
     successTitle: 'Uspešno',
     successBody: 'Cilj korakov je dosežen. Telo je zdaj budno.',
     unavailableTitle: 'Pedometer ni na voljo',
-    unavailableBody: 'Ta naprava ne šteje korakov. Poskusi na fizičnem iPhone ali Android telefonu.',
+    unavailableBody:
+      'Ta naprava ne šteje korakov. Poskusi na fizičnem iPhone ali Android telefonu.',
     permissionTitle: 'Potreben dostop do gibanja',
     permissionBody: 'Dovoli dostop do gibanja in telesne pripravljenosti za štetje korakov.',
     openSettings: 'Odpri nastavitve',
@@ -230,6 +231,9 @@ const sl: typeof en = {
       bottle: 'Steklenica',
       clock: 'Ura',
       remote: 'TV daljinec',
+      phone: 'Telefon',
+      sunglasses: 'Sončna očala',
+      shoe: 'Čevelj',
     },
   },
 
@@ -270,8 +274,7 @@ const sl: typeof en = {
     wipeTitle: 'Počistiti zgodovino streaka?',
     wipeBodyLocal:
       'Vsa zgodovina zbujanj na tej napravi bo izbrisana. Varnostna kopija v oblaku ostane — ob prijavi se lahko obnovi.',
-    wipeBodyCloud:
-      'Vsa zgodovina zbujanj na tej napravi in v oblaku bo trajno izbrisana.',
+    wipeBodyCloud: 'Vsa zgodovina zbujanj na tej napravi in v oblaku bo trajno izbrisana.',
     wipeConfirm: 'Počisti',
     wipeClearing: 'Brisanje …',
     wipeFailed: 'Zgodovine streaka ni bilo mogoče izbrisati',
@@ -281,8 +284,6 @@ const sl: typeof en = {
     title: 'Dnevni navdih',
     subtitle: 'Nova misel vsako jutro',
     todayBadge: 'Danes',
-    save: 'Shrani',
-    share: 'Deli',
     archive: 'Arhiv',
     empty: 'Še ni arhiviranih citatov',
   },
@@ -304,7 +305,6 @@ const sl: typeof en = {
     language: 'Jezik',
     appearance: 'Videz',
     appearanceLight: 'Svetlo',
-    defaultSound: 'Privzeti zvok',
     vibration: 'Vibracija',
     voicePhrase: 'Glasovna fraza',
     voicePhraseModalTitle: 'Glasovna fraza',
@@ -328,8 +328,7 @@ const sl: typeof en = {
     signOutFailed: 'Odjava ni uspela',
     signInFailed: 'Prijava ni uspela',
     resetOnboardTitle: 'Ponovno prikaži uvod?',
-    resetOnboardBody:
-      'To pobriše zastavico uvoda. Ponovno zaženi aplikacijo za pozdravni zaslon.',
+    resetOnboardBody: 'To pobriše zastavico uvoda. Ponovno zaženi aplikacijo za pozdravni zaslon.',
     resetOnboardDone: 'Ponovno zaženi aplikacijo za uvod.',
     doneTitle: 'Končano',
   },

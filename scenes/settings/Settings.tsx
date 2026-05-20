@@ -45,7 +45,6 @@ const KEYS = {
   cloudSync: 'pref.cloudSync',
   vibration: 'pref.vibration',
   appearance: 'pref.appearance',
-  defaultSound: 'pref.defaultSound',
   voicePhraseText: 'pref.voicePhraseText',
   stepGoal: 'pref.stepGoal',
 };
@@ -63,7 +62,6 @@ export default function Settings() {
   // Stored raw — display label is resolved via translation at render time so
   // it follows live language switches without re-running `load`.
   const [appearance, setAppearance] = useState<string | null>(null);
-  const [defaultSound, setDefaultSound] = useState('Sunrise');
   const [phrase, setPhrase] = useState('');
   const [stepGoal, setStepGoal] = useState('30 steps');
 
@@ -84,7 +82,6 @@ export default function Settings() {
     setCloudSync((all[KEYS.cloudSync] ?? '1') === '1');
     setVibration((all[KEYS.vibration] ?? '1') === '1');
     setAppearance(all[KEYS.appearance] ?? null);
-    setDefaultSound(all[KEYS.defaultSound] ?? 'Sunrise');
     setPhrase(all[KEYS.voicePhraseText] ?? '');
     setStepGoal(all[KEYS.stepGoal] ?? '30 steps');
   }, []);
@@ -115,12 +112,16 @@ export default function Settings() {
     setShowPhraseModal(false);
     await setSetting(KEYS.voicePhraseText, trimmed);
   };
-  const onSelectLanguage = async (lang: Language) => {
+  const onSelectLanguage = (lang: Language) => {
+    if (lang === language) return;
+    // Update UI state synchronously — Redux + local profile commit in the
+    // same render. Persistence is fire-and-forget so the toggle doesn't wait
+    // on SQLite + Firestore.
     dispatch(setLanguage(lang));
+    if (profile) setProfile({ ...profile, language: lang });
     const name = profile?.name ?? user?.name ?? '';
     const email = profile?.email ?? user?.email ?? '';
-    await upsertProfile({ name, email, language: lang });
-    if (profile) setProfile({ ...profile, language: lang });
+    upsertProfile({ name, email, language: lang }).catch(() => {});
   };
 
   const handleSignIn = async () => {
@@ -287,12 +288,6 @@ export default function Settings() {
             iconBg={colors.accentSoft}
             label={t.settings.appearance}
             value={appearance ?? t.settings.appearanceLight}
-          />
-          <Row
-            icon={<Ionicons name="musical-notes-outline" size={18} color={colors.flame} />}
-            iconBg={colors.flameSoft}
-            label={t.settings.defaultSound}
-            value={defaultSound}
           />
           <Row
             icon={<MaterialCommunityIcons name="vibrate" size={18} color={colors.success} />}
