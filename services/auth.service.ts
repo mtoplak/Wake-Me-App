@@ -21,8 +21,10 @@ import {
   signInWithCredential,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { User } from '@/types';
-import { getFirebaseAuth, isFirebaseConfigured } from './firebase';
+import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from './firebase';
+import { getProfile, upsertProfile } from './database';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -221,12 +223,62 @@ export async function signInWithGoogle(): Promise<User> {
     picture?: string;
   };
 
+  const profileName = payload.name ?? 'User';
+  const profileEmail = payload.email ?? '';
+
+  // Seed the local SQLite profile BEFORE we call `signInWithCredential`. The
+  // Firebase auth state change kicks off `subscribeCloudAutoSync`, which on a
+  // fresh user runs `pushLocalToCloud` — and that path reads `getProfile()`
+  // and only writes `users/{uid}/profile/main` when SQLite has a profile row.
+  // Seeding first avoids the empty-profile race that prevented Google sign-ins
+  // from creating any Firestore document on first login. Preserve any
+  // pre-existing language so re-sign-in doesn't reset the user's choice.
+  try {
+    const existingProfile = await getProfile();
+    await upsertProfile({
+      name: profileName,
+      email: profileEmail,
+      language: existingProfile?.language ?? 'EN',
+    });
+  } catch (err) {
+    if (__DEV__) {
+      console.warn('[auth] failed to seed local SQLite profile', err);
+    }
+  }
+
   let firebaseUid: string | undefined;
   if (isFirebaseConfigured()) {
     try {
       const credential = GoogleAuthProvider.credential(idToken, tokenResponse.accessToken);
       const result = await signInWithCredential(getFirebaseAuth(), credential);
       firebaseUid = result.user.uid;
+
+      // Write/refresh the top-level user identity document at `users/{uid}`.
+      // Without this, signed-in users only appear in Firestore as the implicit
+      // parent of the `profile/main` subcollection doc — fine for app logic
+      // but invisible-ish in the Firestore console. `createdAt` is only set
+      // on first sign-in (gated by getDoc); `lastSignInAt` updates every time.
+      try {
+        const firestore = getFirebaseDb();
+        const userRef = doc(firestore, 'users', firebaseUid);
+        const snap = await getDoc(userRef);
+        await setDoc(
+          userRef,
+          {
+            uid: firebaseUid,
+            email: profileEmail,
+            name: profileName,
+            photoURL: payload.picture ?? null,
+            ...(snap.exists() ? {} : { createdAt: serverTimestamp() }),
+            lastSignInAt: serverTimestamp(),
+          },
+          { merge: true },
+        );
+      } catch (innerErr) {
+        if (__DEV__) {
+          console.warn('[auth] failed to write users/{uid} identity doc', innerErr);
+        }
+      }
     } catch (err) {
       if (__DEV__) {
         console.warn('[auth] Firebase signInWithCredential failed', err);
@@ -236,8 +288,8 @@ export async function signInWithGoogle(): Promise<User> {
 
   const user: User = {
     uid: firebaseUid ?? payload.sub,
-    name: payload.name ?? 'User',
-    email: payload.email ?? '',
+    name: profileName,
+    email: profileEmail,
     photoURL: payload.picture,
     isAnonymous: false,
   };
