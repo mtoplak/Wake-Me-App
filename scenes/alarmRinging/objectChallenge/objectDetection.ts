@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { loadTensorflowModel, type TensorflowModel } from 'react-native-fast-tflite';
+import type { TensorflowModel } from 'react-native-fast-tflite';
 
 export type ImageLabel = {
   text: string;
@@ -51,7 +51,16 @@ export const MODEL_INPUT_SIZE = 224;
 let modelPromise: Promise<TensorflowModel> | null = null;
 export function preloadObjectModel(): Promise<TensorflowModel> {
   if (!modelPromise) {
-    modelPromise = loadTensorflowModel(MOBILENET_ASSET).catch(err => {
+    modelPromise = (async () => {
+      if (!isObjectDetectionAvailable()) {
+        throw new Error('Object detection is not available in this build (Expo Go / web).');
+      }
+      // Lazy-require so the native TurboModule isn't touched at app startup in
+      // Expo Go, where it doesn't exist and would crash the JS bundle on load.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { loadTensorflowModel } = require('react-native-fast-tflite') as typeof import('react-native-fast-tflite');
+      return loadTensorflowModel(MOBILENET_ASSET);
+    })().catch(err => {
       // Clear the cache on failure so the next attempt can retry.
       modelPromise = null;
       throw err;

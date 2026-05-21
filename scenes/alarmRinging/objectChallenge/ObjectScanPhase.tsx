@@ -4,10 +4,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
-import { ObjectCameraView } from './ObjectCameraView';
+import type { ObjectCameraView as ObjectCameraViewType } from './ObjectCameraView';
 import { isObjectDetectionAvailable, type ImageLabel } from './objectDetection';
 import { objectDetectedInLabels } from './matchObjectLabel';
 import type { WakeObjectId } from './objects';
+
+// Lazy-load ObjectCameraView. It imports react-native-vision-camera, whose
+// native module throws a CameraError at require-time inside Expo Go. We only
+// ever render it when isObjectDetectionAvailable() is true (dev/release build),
+// so a runtime require() — evaluated at render, not at module init — keeps the
+// vision-camera module out of the Expo Go startup graph.
+let CachedObjectCameraView: typeof ObjectCameraViewType | null = null;
+function getObjectCameraView(): typeof ObjectCameraViewType {
+  if (!CachedObjectCameraView) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    CachedObjectCameraView = require('./ObjectCameraView').ObjectCameraView;
+  }
+  return CachedObjectCameraView as typeof ObjectCameraViewType;
+}
 
 const WRONG_TOAST_MS = 1600;
 /**
@@ -103,6 +117,7 @@ export function ObjectScanPhase({ targetId, onSuccess, onSkipUnsupported }: Prop
     );
   }
 
+  const ObjectCameraView = getObjectCameraView();
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <ObjectCameraView

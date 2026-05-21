@@ -13,6 +13,12 @@ import {
   Keyboard,
 } from 'react-native';
 import { getVoicePhraseSuggestions } from '@/scenes/alarmRinging/voiceChallenge';
+import {
+  DEFAULT_STEP_GOAL,
+  MAX_STEP_GOAL,
+  MIN_STEP_GOAL,
+  parseStepGoalString,
+} from '@/scenes/alarmRinging/stepsChallenge/stepGoal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign, Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import {
@@ -63,10 +69,13 @@ export default function Settings() {
   // it follows live language switches without re-running `load`.
   const [appearance, setAppearance] = useState<string | null>(null);
   const [phrase, setPhrase] = useState('');
-  const [stepGoal, setStepGoal] = useState('30 steps');
+  const [stepGoal, setStepGoal] = useState<number>(DEFAULT_STEP_GOAL);
 
   const [showPhraseModal, setShowPhraseModal] = useState(false);
   const [phraseDraft, setPhraseDraft] = useState('');
+  const [showStepGoalModal, setShowStepGoalModal] = useState(false);
+  const [stepGoalDraft, setStepGoalDraft] = useState('');
+  const [stepGoalError, setStepGoalError] = useState(false);
   const phraseSuggestions = getVoicePhraseSuggestions(language);
 
   // Note: do NOT dispatch `setLanguage` here, and do NOT depend on translated
@@ -83,7 +92,7 @@ export default function Settings() {
     setVibration((all[KEYS.vibration] ?? '1') === '1');
     setAppearance(all[KEYS.appearance] ?? null);
     setPhrase(all[KEYS.voicePhraseText] ?? '');
-    setStepGoal(all[KEYS.stepGoal] ?? '30 steps');
+    setStepGoal(parseStepGoalString(all[KEYS.stepGoal]));
   }, []);
 
   useEffect(() => {
@@ -111,6 +120,21 @@ export default function Settings() {
     setPhrase(trimmed);
     setShowPhraseModal(false);
     await setSetting(KEYS.voicePhraseText, trimmed);
+  };
+  const openStepGoalModal = () => {
+    setStepGoalDraft(String(stepGoal));
+    setStepGoalError(false);
+    setShowStepGoalModal(true);
+  };
+  const saveStepGoal = async () => {
+    const n = parseInt(stepGoalDraft.replace(/\D/g, ''), 10);
+    if (!Number.isFinite(n) || n < MIN_STEP_GOAL || n > MAX_STEP_GOAL) {
+      setStepGoalError(true);
+      return;
+    }
+    setStepGoal(n);
+    setShowStepGoalModal(false);
+    await setSetting(KEYS.stepGoal, String(n));
   };
   const onSelectLanguage = (lang: Language) => {
     if (lang === language) return;
@@ -283,12 +307,12 @@ export default function Settings() {
               </View>
             }
           />
-          <Row
+          {/* <Row
             icon={<Ionicons name="moon-outline" size={18} color={colors.accent} />}
             iconBg={colors.accentSoft}
             label={t.settings.appearance}
             value={appearance ?? t.settings.appearanceLight}
-          />
+          /> */}
           <Row
             icon={<MaterialCommunityIcons name="vibrate" size={18} color={colors.success} />}
             iconBg={colors.successSoft}
@@ -318,20 +342,8 @@ export default function Settings() {
             icon={<Ionicons name="walk-outline" size={18} color={colors.success} />}
             iconBg={colors.successSoft}
             label={t.settings.stepGoal}
-            value={stepGoal}
-          />
-          <Row
-            icon={
-              <MaterialCommunityIcons
-                name="image-search-outline"
-                size={18}
-                color={colors.warning}
-              />
-            }
-            iconBg={colors.warningSoft}
-            label={t.settings.objectLibrary}
-            value={t.settings.objectLibraryValue}
-            last
+            value={`${stepGoal} ${t.stepsChallenge.goalUnit}`}
+            onPress={openStepGoalModal}
           />
         </View>
 
@@ -363,25 +375,6 @@ export default function Settings() {
               iconBg={colors.surfaceMuted}
               label={t.settings.resetOnboarding}
               onPress={handleResetOnboarding}
-            />
-            <Row
-              icon={
-                <MaterialCommunityIcons
-                  name="image-search-outline"
-                  size={18}
-                  color={colors.warning}
-                />
-              }
-              iconBg={colors.warningSoft}
-              label={t.settings.objectChallengeDev}
-              onPress={() => router.push('/(main)/objectChallengeDev')}
-            />
-            <Row
-              icon={<Ionicons name="walk-outline" size={18} color={colors.success} />}
-              iconBg={colors.successSoft}
-              label={t.settings.stepsChallengeDev}
-              onPress={() => router.push('/(main)/stepsChallengeDev')}
-              last
             />
           </View>
         )}
@@ -441,6 +434,51 @@ export default function Settings() {
                 <Text style={styles.modalSecondaryText}>{t.common.cancel}</Text>
               </Pressable>
               <Pressable style={styles.modalPrimary} onPress={savePhrase}>
+                <Text style={styles.modalPrimaryText}>{t.common.save}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={showStepGoalModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowStepGoalModal(false)}>
+        <Pressable
+          style={[styles.modalBackdrop, styles.modalBackdropTop]}
+          onPress={() => {
+            Keyboard.dismiss();
+            setShowStepGoalModal(false);
+          }}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>{t.settings.stepGoalModalTitle}</Text>
+            <Text style={styles.modalSubtitle}>{t.settings.stepGoalModalSubtitle}</Text>
+            <TextInput
+              value={stepGoalDraft}
+              onChangeText={text => {
+                setStepGoalDraft(text.replace(/\D/g, '').slice(0, 3));
+                if (stepGoalError) setStepGoalError(false);
+              }}
+              placeholder={t.settings.stepGoalInputPlaceholder}
+              placeholderTextColor={colors.textMuted}
+              style={[styles.modalInput, stepGoalError && styles.modalInputError]}
+              keyboardType="number-pad"
+              returnKeyType="done"
+              maxLength={3}
+              autoFocus
+              onSubmitEditing={saveStepGoal}
+            />
+            {stepGoalError ? (
+              <Text style={styles.modalErrorText}>{t.settings.stepGoalRangeError}</Text>
+            ) : null}
+
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalSecondary} onPress={() => setShowStepGoalModal(false)}>
+                <Text style={styles.modalSecondaryText}>{t.common.cancel}</Text>
+              </Pressable>
+              <Pressable style={styles.modalPrimary} onPress={saveStepGoal}>
                 <Text style={styles.modalPrimaryText}>{t.common.save}</Text>
               </Pressable>
             </View>
@@ -581,6 +619,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
+  modalBackdropTop: {
+    justifyContent: 'flex-start',
+    paddingTop: 200,
+  },
   modalCard: {
     backgroundColor: colors.surface,
     borderRadius: 20,
@@ -608,6 +650,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textPrimary,
     backgroundColor: colors.background,
+  },
+  modalInputError: {
+    borderColor: colors.danger,
+  },
+  modalErrorText: {
+    marginTop: 8,
+    fontSize: 13,
+    color: colors.danger,
   },
   suggestionsLabel: {
     marginTop: 16,

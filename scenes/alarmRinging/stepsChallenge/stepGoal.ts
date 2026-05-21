@@ -3,8 +3,8 @@ import type { Alarm } from '@/services/database';
 
 export const SETTINGS_STEP_GOAL_KEY = 'pref.stepGoal';
 export const DEFAULT_STEP_GOAL = 30;
-export const MIN_STEP_GOAL = 5;
-export const MAX_STEP_GOAL = 500;
+export const MIN_STEP_GOAL = 30;
+export const MAX_STEP_GOAL = 200;
 
 /** Parses values like `"30 steps"` or `"50"`. */
 export function parseStepGoalString(raw: string | null | undefined): number {
