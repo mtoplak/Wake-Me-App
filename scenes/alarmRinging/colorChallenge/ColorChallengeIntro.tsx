@@ -17,8 +17,9 @@ export function ColorChallengeIntro({ onAccept }: Props) {
         </View>
         <Text style={styles.title}>Color challenge</Text>
         <Text style={styles.body}>
-          You will see a color for a few seconds, then match it from memory with the vertical sliders — the answer stays
-          hidden while you adjust. You need at least {COLOR_MATCH_PASS_THRESHOLD}% to pass; if you miss, a new color is shown and
+          You will see a color for a few seconds, then match it from memory using the hue, saturation, and brightness
+          sliders — the answer stays hidden while you adjust. You need at least {COLOR_MATCH_PASS_THRESHOLD}% to
+          pass; if you miss, a new color is shown and
           you memorize again. After a pass, you will see your score before continuing.
         </Text>
         <Pressable style={styles.btn} onPress={onAccept} accessibilityRole="button">

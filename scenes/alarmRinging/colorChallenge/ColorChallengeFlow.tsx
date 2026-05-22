@@ -18,6 +18,7 @@ type Props = {
 export function ColorChallengeFlow({ onComplete }: Props) {
   const [target, setTarget] = useState(() => randomPlayableTargetHsv());
   const [step, setStep] = useState<Step>('intro');
+  const [matchRound, setMatchRound] = useState(0);
   const startedAtRef = useRef<number | null>(null);
 
   const handleAccept = useCallback(() => {
@@ -31,6 +32,7 @@ export function ColorChallengeFlow({ onComplete }: Props) {
 
   const handleMatchFailed = useCallback(() => {
     setTarget(randomPlayableTargetHsv());
+    setMatchRound(r => r + 1);
     setStep('memorize');
   }, []);
 
@@ -38,7 +40,13 @@ export function ColorChallengeFlow({ onComplete }: Props) {
     ({ accuracyPercent }: { accuracyPercent: number }) => {
       const start = startedAtRef.current ?? Date.now();
       const durationSec = Math.max(1, Math.round((Date.now() - start) / 1000));
-      onComplete({ durationSec, accuracyPercent });
+      try {
+        onComplete({ durationSec, accuracyPercent });
+      } catch (err) {
+        if (__DEV__) {
+          console.warn('[colorChallenge] onComplete failed', err);
+        }
+      }
     },
     [onComplete],
   );
@@ -49,5 +57,12 @@ export function ColorChallengeFlow({ onComplete }: Props) {
   if (step === 'memorize') {
     return <ColorMemorizePhase target={target} onDone={handleMemorizeDone} />;
   }
-  return <ColorMatchPhase target={target} onSuccess={handleMatchSuccess} onFailedMatch={handleMatchFailed} />;
+  return (
+    <ColorMatchPhase
+      key={matchRound}
+      target={target}
+      onSuccess={handleMatchSuccess}
+      onFailedMatch={handleMatchFailed}
+    />
+  );
 }

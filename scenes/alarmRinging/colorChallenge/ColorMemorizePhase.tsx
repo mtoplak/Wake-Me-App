@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { HSV } from './hsvColor';
-import { hsvToHex } from './hsvColor';
+import { hsvToHex, sanitizeHsv } from './hsvColor';
 import { colors as theme } from '@/theme';
 
 const MEMORIZE_SECONDS = 5;
@@ -15,19 +15,22 @@ type Props = {
 export function ColorMemorizePhase({ target, onDone }: Props) {
   const [remaining, setRemaining] = useState(MEMORIZE_SECONDS);
   const finishedRef = useRef(false);
-  const hex = hsvToHex(target);
+  const onDoneRef = useRef(onDone);
+  const hex = hsvToHex(sanitizeHsv(target));
+
+  onDoneRef.current = onDone;
 
   useEffect(() => {
     if (remaining <= 0) {
       if (!finishedRef.current) {
         finishedRef.current = true;
-        onDone();
+        onDoneRef.current();
       }
       return;
     }
     const t = setTimeout(() => setRemaining(r => r - 1), 1000);
     return () => clearTimeout(t);
-  }, [remaining, onDone]);
+  }, [remaining]);
 
   return (
     <View style={[styles.full, { backgroundColor: hex }]}>

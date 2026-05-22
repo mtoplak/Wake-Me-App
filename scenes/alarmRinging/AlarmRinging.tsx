@@ -369,17 +369,28 @@ export default function AlarmRinging() {
 
   const handleColorChallengeComplete = useCallback(
     async ({ durationSec }: ColorChallengeCompletePayload) => {
-      ringSessionRef.current.colorSec = durationSec;
-      const list = alarm?.challenges ?? [];
-      const next = nextRingFlowChallenge(list, 'color');
-      const nextPhase = next ? phaseForChallenge(next) : null;
-      if (nextPhase) {
-        setPhase(nextPhase);
-        return;
+      try {
+        ringSessionRef.current.colorSec = durationSec;
+        const list = alarm?.challenges ?? [];
+        const next = nextRingFlowChallenge(list, 'color');
+        const nextPhase = next ? phaseForChallenge(next) : null;
+        if (nextPhase) {
+          setPhase(nextPhase);
+          return;
+        }
+        await flushRingWakeAndQuote();
+      } catch (err) {
+        if (__DEV__) {
+          console.warn('[AlarmRinging] color challenge complete failed', err);
+        }
+        try {
+          await finishWithQuote();
+        } catch {
+          setPhase('ringing');
+        }
       }
-      await flushRingWakeAndQuote();
     },
-    [alarm, flushRingWakeAndQuote],
+    [alarm, flushRingWakeAndQuote, finishWithQuote],
   );
 
   const handleVoiceChallengeComplete = useCallback(

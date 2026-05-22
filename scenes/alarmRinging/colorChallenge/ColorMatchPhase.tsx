@@ -1,11 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, LayoutChangeEvent } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Slider from '@react-native-community/slider';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import type { HSV } from './hsvColor';
-import { hsvToHex, randomPlayableTargetHsv } from './hsvColor';
+import { hsvToHex, randomPlayableTargetHsv, sanitizeHsv } from './hsvColor';
 import { colorMatchAccuracyPercent, COLOR_MATCH_PASS_THRESHOLD } from './colorAccuracy';
+import { HsvSliderRow } from './HsvSliderRow';
+import {
+  delayMs,
+  SLIDER_IDLE_WAIT_MS,
+  SLIDER_SETTLE_MS,
+  waitForSlidersIdle,
+} from './sliderSubmitGuard';
 import { colors } from '@/theme';
 
 type Props = {
@@ -16,175 +22,193 @@ type Props = {
 };
 
 const FAIL_TOAST_MS = 3000;
-const SLIDER_THICKNESS = 44;
-
-type VerticalSliderProps = {
-  label: string;
-  value: number;
-  minimumValue: number;
-  maximumValue: number;
-  step: number;
-  onValueChange: (v: number) => void;
-  disabled: boolean;
-  trackLength: number;
-};
-
-function VerticalSlider({
-  label,
-  value,
-  minimumValue,
-  maximumValue,
-  step,
-  onValueChange,
-  disabled,
-  trackLength,
-}: VerticalSliderProps) {
-  return (
-    <View style={[styles.vCol, { flex: 1, minWidth: 0 }]}>
-      <View
-        style={[
-          styles.vTrackHost,
-          {
-            height: trackLength,
-            width: '100%',
-          },
-        ]}>
-        <View style={[styles.vTrackRotate, { width: trackLength, height: SLIDER_THICKNESS }]}>
-          <Slider
-            style={{ width: trackLength, height: SLIDER_THICKNESS }}
-            minimumValue={minimumValue}
-            maximumValue={maximumValue}
-            step={step}
-            value={value}
-            onValueChange={onValueChange}
-            disabled={disabled}
-            minimumTrackTintColor={colors.accent}
-            maximumTrackTintColor={colors.border}
-            thumbTintColor={colors.accent}
-          />
-        </View>
-      </View>
-      <Text style={styles.vLabel}>{label}</Text>
-    </View>
-  );
-}
 
 export function ColorMatchPhase({ target, onSuccess, onFailedMatch }: Props) {
   const [user, setUser] = useState<HSV>(() => randomPlayableTargetHsv());
   const [resultPercent, setResultPercent] = useState<number | null>(null);
   const [failToastPct, setFailToastPct] = useState<number | null>(null);
-  const [trackLength, setTrackLength] = useState(200);
+  const [isChecking, setIsChecking] = useState(false);
+  const onFailedMatchRef = useRef(onFailedMatch);
+  const mountedRef = useRef(true);
+  const slidingCountRef = useRef(0);
+  const submitInFlightRef = useRef(false);
 
-  const onSliderAreaLayout = useCallback((e: LayoutChangeEvent) => {
-    const h = e.nativeEvent.layout.height;
-    if (h < 48) return;
-    setTrackLength(Math.max(120, Math.floor(h - 40)));
+  onFailedMatchRef.current = onFailedMatch;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
   }, []);
 
   const userHex = useMemo(() => hsvToHex(user), [user]);
-  const slidersLocked = failToastPct !== null;
+  const showResult = resultPercent !== null;
+  const uiLocked = isChecking || failToastPct !== null || showResult;
 
   useEffect(() => {
     if (failToastPct === null) return;
     const id = setTimeout(() => {
+      if (!mountedRef.current) return;
       setFailToastPct(null);
-      onFailedMatch();
+      onFailedMatchRef.current();
     }, FAIL_TOAST_MS);
     return () => clearTimeout(id);
-  }, [failToastPct, onFailedMatch]);
+  }, [failToastPct]);
 
-  const submit = () => {
-    const pct = colorMatchAccuracyPercent(target, user);
-    if (pct >= COLOR_MATCH_PASS_THRESHOLD) {
-      setResultPercent(pct);
-      return;
-    }
-    setFailToastPct(pct);
-  };
+  const patchUser = useCallback((patch: Partial<HSV>) => {
+    setUser(prev => sanitizeHsv({ ...prev, ...patch }));
+  }, []);
 
-  if (resultPercent !== null) {
-    return (
-      <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-        <View style={styles.resultInner}>
-          <View style={styles.resultIconWrap}>
-            <Ionicons name="checkmark-circle" size={56} color={colors.success} />
-          </View>
-          <Text style={styles.resultTitle}>Nice work</Text>
-          <Text style={styles.resultPercent}>{resultPercent}%</Text>
-          <Text style={styles.resultSubtitle}>match with the color you memorized</Text>
-          <Pressable
-            style={styles.continueBtn}
-            onPress={() => onSuccess({ accuracyPercent: resultPercent })}
-            accessibilityRole="button">
-            <Text style={styles.continueText}>Continue</Text>
-            <AntDesign name="arrow-right" size={18} color={colors.white} />
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const onHueChange = useCallback((h: number) => patchUser({ h }), [patchUser]);
+  const onSatChange = useCallback((s: number) => patchUser({ s }), [patchUser]);
+  const onValChange = useCallback((v: number) => patchUser({ v }), [patchUser]);
+
+  const onSlideStart = useCallback(() => {
+    slidingCountRef.current += 1;
+  }, []);
+
+  const onSlideEnd = useCallback(() => {
+    slidingCountRef.current = Math.max(0, slidingCountRef.current - 1);
+  }, []);
+
+  const isAnySliding = useCallback(() => slidingCountRef.current > 0, []);
+
+  const submit = useCallback(() => {
+    if (uiLocked || submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
+
+    void (async () => {
+      try {
+        await waitForSlidersIdle(isAnySliding, SLIDER_IDLE_WAIT_MS);
+        await delayMs(SLIDER_SETTLE_MS);
+        if (!mountedRef.current) return;
+
+        setIsChecking(true);
+        await delayMs(SLIDER_SETTLE_MS);
+        if (!mountedRef.current) return;
+
+        const safeUser = sanitizeHsv(user);
+        const safeTarget = sanitizeHsv(target);
+        const pct = colorMatchAccuracyPercent(safeTarget, safeUser);
+
+        await delayMs(SLIDER_SETTLE_MS);
+        if (!mountedRef.current) return;
+
+        setIsChecking(false);
+        if (pct >= COLOR_MATCH_PASS_THRESHOLD) {
+          setResultPercent(pct);
+        } else {
+          setFailToastPct(pct);
+        }
+      } catch (err) {
+        if (__DEV__) {
+          console.warn('[colorChallenge] submit failed', err);
+        }
+        if (mountedRef.current) {
+          setIsChecking(false);
+          setFailToastPct(0);
+        }
+      } finally {
+        submitInFlightRef.current = false;
+      }
+    })();
+  }, [isAnySliding, target, uiLocked, user]);
+
+  const handleContinue = useCallback(() => {
+    if (resultPercent === null) return;
+    onSuccess({ accuracyPercent: resultPercent });
+  }, [onSuccess, resultPercent]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
-      <Text style={styles.title}>Recreate the color</Text>
-      <Text style={styles.subtitle}>
-        The memorized color stays hidden. You start from a random mix — adjust the vertical sliders to match what you
-        remember.
-      </Text>
+      <View style={styles.matchLayer} pointerEvents={uiLocked ? 'none' : 'auto'}>
+        <Text style={styles.title}>Recreate the color</Text>
+        <Text style={styles.subtitle}>
+          The memorized color stays hidden. You start from a random mix — use the sliders to match what you
+          remember.
+        </Text>
 
-      <View style={styles.splitWrap}>
-        <View style={styles.splitTop}>
-          <Text style={styles.previewHeading}>Your guess</Text>
-          <View style={[styles.previewStrip, { backgroundColor: userHex }]} />
-          <Text style={styles.previewHint}>Drag up or down on each bar, then tap Check match when you are ready.</Text>
-        </View>
+        <View style={styles.splitWrap}>
+          <View style={styles.splitTop}>
+            <Text style={styles.previewHeading}>Your guess</Text>
+            <View style={[styles.previewStrip, { backgroundColor: userHex }]} />
+            <Text style={styles.previewHint}>Adjust hue, saturation, and brightness, then tap Check match.</Text>
+          </View>
 
-        <View style={styles.splitBottom} onLayout={onSliderAreaLayout}>
-          <View style={styles.slidersRow}>
-            <VerticalSlider
+          <View style={[styles.splitBottom, uiLocked && styles.splitBottomBusy]}>
+            <HsvSliderRow
               label="Hue"
               value={user.h}
               minimumValue={0}
               maximumValue={360}
               step={1}
-              onValueChange={h => setUser(u => ({ ...u, h }))}
-              disabled={slidersLocked}
-              trackLength={trackLength}
+              onValueChange={onHueChange}
+              onSlideStart={onSlideStart}
+              onSlideEnd={onSlideEnd}
             />
-            <VerticalSlider
+            <HsvSliderRow
               label="Saturation"
               value={user.s}
               minimumValue={0}
               maximumValue={1}
               step={0.01}
-              onValueChange={s => setUser(u => ({ ...u, s }))}
-              disabled={slidersLocked}
-              trackLength={trackLength}
+              onValueChange={onSatChange}
+              onSlideStart={onSlideStart}
+              onSlideEnd={onSlideEnd}
             />
-            <VerticalSlider
+            <HsvSliderRow
               label="Brightness"
               value={user.v}
               minimumValue={0}
               maximumValue={1}
               step={0.01}
-              onValueChange={v => setUser(u => ({ ...u, v }))}
-              disabled={slidersLocked}
-              trackLength={trackLength}
+              onValueChange={onValChange}
+              onSlideStart={onSlideStart}
+              onSlideEnd={onSlideEnd}
             />
           </View>
         </View>
+
+        {!showResult && (
+          <Pressable
+            style={[styles.submit, uiLocked && styles.submitDisabled]}
+            onPress={submit}
+            disabled={uiLocked}
+            accessibilityRole="button">
+            <Text style={styles.submitText}>Check match</Text>
+          </Pressable>
+        )}
       </View>
 
-      <Pressable
-        style={[styles.submit, slidersLocked && styles.submitDisabled]}
-        onPress={submit}
-        disabled={slidersLocked}
-        accessibilityRole="button">
-        <Text style={styles.submitText}>Check match</Text>
-      </Pressable>
+      {isChecking && (
+        <View style={styles.checkingOverlay} pointerEvents="none">
+          <Text style={styles.checkingText}>Checking your match…</Text>
+        </View>
+      )}
+
+      {showResult && (
+        <View style={styles.resultOverlay}>
+          <View style={styles.resultInner}>
+            <View style={styles.resultIconWrap}>
+              <Ionicons name="checkmark-circle" size={56} color={colors.success} />
+            </View>
+            <Text style={styles.resultTitle}>Nice work</Text>
+            <Text style={styles.resultPercent}>{resultPercent}%</Text>
+            <Text style={styles.resultSubtitle}>match with the color you memorized</Text>
+            <Pressable
+              style={styles.continueBtn}
+              onPress={handleContinue}
+              accessibilityRole="button">
+              <Text style={styles.continueText}>Continue</Text>
+              <AntDesign name="arrow-right" size={18} color={colors.white} />
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       {failToastPct !== null && (
-        <View style={styles.toastOverlay} pointerEvents="box-none" accessibilityLiveRegion="polite">
+        <View style={styles.toastOverlay} pointerEvents="box-none">
           <View style={styles.toastBox}>
             <Text style={styles.toastTitle}>Not quite</Text>
             <Text style={styles.toastBody}>
@@ -204,6 +228,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
     position: 'relative',
+  },
+  matchLayer: {
+    flex: 1,
   },
   title: {
     fontSize: 22,
@@ -229,6 +256,22 @@ const styles = StyleSheet.create({
   splitBottom: {
     flex: 1,
     minHeight: 0,
+    justifyContent: 'center',
+    gap: 4,
+  },
+  splitBottomBusy: {
+    opacity: 0.55,
+  },
+  checkingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  checkingText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    fontWeight: '600',
   },
   previewHeading: {
     fontSize: 12,
@@ -253,36 +296,6 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     flexShrink: 0,
   },
-  slidersRow: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'stretch',
-    justifyContent: 'space-between',
-    overflow: 'visible',
-    minHeight: 0,
-  },
-  vCol: {
-    alignItems: 'center',
-    overflow: 'visible',
-  },
-  vTrackHost: {
-    overflow: 'visible',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vTrackRotate: {
-    transform: [{ rotate: '-90deg' }],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vLabel: {
-    marginTop: 10,
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
   submit: {
     marginTop: 12,
     backgroundColor: colors.accent,
@@ -297,6 +310,11 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontWeight: '600',
+  },
+  resultOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
   },
   resultInner: {
     flex: 1,
