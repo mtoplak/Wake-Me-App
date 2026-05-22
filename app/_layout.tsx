@@ -8,7 +8,12 @@ import { loadImages, loadFonts, colors } from '@/theme';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSlice } from '@/slices';
-import { subscribeToAuth, configureGoogleSignIn, subscribeCloudAutoSync } from '@/services';
+import {
+  subscribeToAuth,
+  configureGoogleSignIn,
+  subscribeCloudAutoSync,
+  subscribeCloudReconnectSync,
+} from '@/services';
 import { getDb, getProfile, listAlarms } from '@/services/database';
 import { ensureAlarmPermissions, rescheduleAllAlarms } from '@/services/alarmScheduler';
 import {
@@ -92,6 +97,14 @@ function Router() {
    */
   useEffect(() => {
     const unsub = subscribeCloudAutoSync();
+    return () => unsub();
+  }, []);
+
+  /**
+   * Push local-only alarms/wake stats when connectivity returns or app is foregrounded.
+   */
+  useEffect(() => {
+    const unsub = subscribeCloudReconnectSync();
     return () => unsub();
   }, []);
 

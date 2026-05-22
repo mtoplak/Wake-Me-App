@@ -55,6 +55,9 @@ function logSyncError(operation: string, err: unknown): void {
   if (__DEV__) {
     console.warn(`[cloudSync] ${operation} failed`, err);
   }
+  import('./cloudSync.service')
+    .then(m => m.schedulePushUnsyncedToCloud())
+    .catch(() => {});
 }
 
 function logSyncOk(operation: string, key: string): void {

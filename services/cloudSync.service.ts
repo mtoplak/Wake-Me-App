@@ -4,6 +4,8 @@
  * - `pushLocalToCloud`: read everything from SQLite, mirror it into Firestore.
  * - `pullCloudToLocal`: read everything from Firestore, mirror it into SQLite
  *   (suppresses outbound writers so the pull doesn't echo back as a push).
+ * - `pushUnsyncedToCloud`: upload local-only alarms/wake stats (merge), no pull.
+ * - `subscribeCloudReconnectSync`: NetInfo + app foreground → pushUnsyncedToCloud.
  * - `syncOnSignIn`: merge local alarms and wake stats into the cloud, then pull or push.
  *   Local-only rows are kept when pulling (matched by content fingerprint).
  *
@@ -14,6 +16,8 @@
 
 import { collection, doc, getDoc, getDocs, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import NetInfo, { type NetInfoState } from '@react-native-community/netinfo';
+import { AppState, type AppStateStatus } from 'react-native';
 import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from './firebase';
 import {
   syncAlarmUpAsync,
@@ -564,6 +568,151 @@ export async function pullCloudToLocal(): Promise<{
   });
 }
 
+let inFlightPush: Promise<{ alarms: number; wakeStats: number }> | null = null;
+let inFlightSync: Promise<void> | null = null;
+
+const PUSH_DEBOUNCE_MS = 2000;
+const RECONNECT_PUSH_DELAYS_MS = [0, 1500, 4000];
+let pushDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+let reconnectBurstTimers: ReturnType<typeof setTimeout>[] = [];
+let lastNetworkOnline: boolean | null = null;
+
+/**
+ * Upload local alarms and wake stats that are missing from Firestore (by
+ * fingerprint). Does not pull — safe to run when connectivity returns.
+ */
+export async function pushUnsyncedToCloud(): Promise<{ alarms: number; wakeStats: number }> {
+  const uid = getActiveUid();
+  if (!uid) return { alarms: 0, wakeStats: 0 };
+
+  if (inFlightPush) return inFlightPush;
+
+  inFlightPush = (async () => {
+    const alarms = await mergeLocalAlarmsToCloud();
+    const wakeStats = await mergeLocalWakeStatsToCloud();
+    if (__DEV__) {
+      console.log(`[cloudSync] pushUnsynced done → alarms:${alarms} wakeStats:${wakeStats}`);
+    }
+    return { alarms, wakeStats };
+  })();
+
+  try {
+    return await inFlightPush;
+  } finally {
+    inFlightPush = null;
+  }
+}
+
+/** Debounced push after a failed per-write sync (e.g. offline burst). */
+export function schedulePushUnsyncedToCloud(): void {
+  if (!getActiveUid()) return;
+  if (pushDebounceTimer) clearTimeout(pushDebounceTimer);
+  pushDebounceTimer = setTimeout(() => {
+    pushDebounceTimer = null;
+    pushUnsyncedToCloud().catch(err => {
+      if (__DEV__) {
+        console.warn('[cloudSync] debounced pushUnsynced failed', err);
+      }
+    });
+  }, PUSH_DEBOUNCE_MS);
+}
+
+/** True when we should attempt Firestore I/O (reachability can lag after Wi‑Fi toggles). */
+function isConnectedForSync(state: NetInfoState): boolean {
+  if (state.isConnected !== true) return false;
+  if (state.isInternetReachable === false) return false;
+  return true;
+}
+
+function clearReconnectBurstTimers(): void {
+  for (const timer of reconnectBurstTimers) clearTimeout(timer);
+  reconnectBurstTimers = [];
+}
+
+function runReconnectPushAttempt(label: string): void {
+  const uid = getActiveUid();
+  if (!uid) {
+    if (__DEV__) {
+      console.log(`[cloudSync] reconnect push skipped (${label}: not signed in)`);
+    }
+    return;
+  }
+  pushUnsyncedToCloud().catch(err => {
+    if (__DEV__) {
+      console.warn(`[cloudSync] reconnect push failed (${label})`, err);
+    }
+  });
+}
+
+/** Several delayed attempts — `isInternetReachable` often stays false briefly after Wi‑Fi returns. */
+function scheduleReconnectPushBurst(): void {
+  clearReconnectBurstTimers();
+  for (const delayMs of RECONNECT_PUSH_DELAYS_MS) {
+    const timer = setTimeout(() => {
+      NetInfo.fetch()
+        .then(state => {
+          if (__DEV__) {
+            console.log('[cloudSync] reconnect check', {
+              delayMs,
+              isConnected: state.isConnected,
+              isInternetReachable: state.isInternetReachable,
+            });
+          }
+          if (!isConnectedForSync(state)) return;
+          runReconnectPushAttempt(`after ${delayMs}ms`);
+        })
+        .catch(err => {
+          if (__DEV__) {
+            console.warn('[cloudSync] NetInfo.fetch failed', err);
+          }
+        });
+    }, delayMs);
+    reconnectBurstTimers.push(timer);
+  }
+}
+
+/**
+ * When the device is back online or the app returns to foreground, push local
+ * changes that never reached Firestore. Call once at app boot.
+ */
+export function subscribeCloudReconnectSync(): () => void {
+  if (!isFirebaseConfigured()) return () => {};
+
+  const unsubNet = NetInfo.addEventListener(state => {
+    const online = isConnectedForSync(state);
+    if (online && lastNetworkOnline === false) {
+      if (__DEV__) {
+        console.log('[cloudSync] network restored → scheduling push burst');
+      }
+      scheduleReconnectPushBurst();
+    }
+    lastNetworkOnline = online;
+  });
+
+  const subApp = AppState.addEventListener('change', (next: AppStateStatus) => {
+    if (next === 'active') {
+      NetInfo.fetch().then(state => {
+        if (isConnectedForSync(state)) scheduleReconnectPushBurst();
+      });
+    }
+  });
+
+  NetInfo.fetch().then(state => {
+    lastNetworkOnline = isConnectedForSync(state);
+    if (lastNetworkOnline) scheduleReconnectPushBurst();
+  });
+
+  return () => {
+    unsubNet();
+    subApp.remove();
+    clearReconnectBurstTimers();
+    if (pushDebounceTimer) {
+      clearTimeout(pushDebounceTimer);
+      pushDebounceTimer = null;
+    }
+  };
+}
+
 /**
  * Called right after a successful sign-in. If the cloud has any of the user's
  * data, pull it down. Otherwise treat the local SQLite as the seed and push
@@ -572,8 +721,6 @@ export async function pullCloudToLocal(): Promise<{
  * Re-entrant: if a sync is already in flight (e.g. fired by both the auth
  * listener and the Settings sign-in handler), callers share the same promise.
  */
-let inFlightSync: Promise<void> | null = null;
-
 export async function syncOnSignIn(): Promise<void> {
   if (inFlightSync) return inFlightSync;
   const uid = getActiveUid();
