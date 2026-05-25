@@ -98,6 +98,10 @@ export async function createAlarm(input: AlarmInput): Promise<number> {
   return alarmId;
 }
 
+export async function getAlarmById(id: number): Promise<Alarm | null> {
+  return loadAlarmById(id);
+}
+
 async function loadAlarmById(id: number): Promise<Alarm | null> {
   const db = await getDb();
   const row = await db.getFirstAsync<AlarmRecord>('SELECT * FROM alarms WHERE id = ?', [id]);
@@ -115,6 +119,50 @@ async function loadAlarmById(id: number): Promise<Alarm | null> {
     challengeRows.map(c => c.challenge_type),
     params,
   );
+}
+
+export async function updateAlarm(id: number, input: AlarmInput): Promise<void> {
+  const existing = await loadAlarmById(id);
+  if (!existing) throw new Error(`Alarm ${id} not found`);
+
+  await cancelAlarm(id);
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE alarms SET hour = ?, minute = ?, label = ?, repeat_days = ?, sound = ? WHERE id = ?`,
+    [
+      input.hour,
+      input.minute,
+      input.label,
+      input.repeatDays.join(','),
+      input.sound ?? existing.sound,
+      id,
+    ],
+  );
+
+  await db.runAsync('DELETE FROM alarm_challenges WHERE alarm_id = ?', [id]);
+  const challengeParams = input.challengeParams ?? {};
+  for (const c of input.challenges) {
+    await db.runAsync(
+      'INSERT INTO alarm_challenges (alarm_id, challenge_type, difficulty, params) VALUES (?, ?, ?, ?)',
+      [id, c, 'normal', challengeParams[c] ?? null],
+    );
+  }
+
+  const alarm: Alarm = {
+    id,
+    hour: input.hour,
+    minute: input.minute,
+    label: input.label,
+    repeatDays: input.repeatDays,
+    enabled: existing.enabled,
+    sound: input.sound ?? existing.sound,
+    vibration: existing.vibration,
+    challenges: input.challenges,
+    challengeParams,
+  };
+
+  if (alarm.enabled) await scheduleAlarm(alarm);
+  syncAlarmUp(alarm);
 }
 
 export async function setAlarmEnabled(id: number, enabled: boolean): Promise<void> {

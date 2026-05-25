@@ -95,6 +95,10 @@ const en = {
 
   createAlarm: {
     headerTitle: 'New Alarm',
+    editHeaderTitle: 'Edit Alarm',
+    saveChanges: 'Save changes',
+    couldNotLoadTitle: 'Alarm not found',
+    couldNotLoadBody: 'This alarm may have been deleted.',
     repeat: 'Repeat',
     wakeChallenge: (count: number, max: number) => `Wake-up Challenge (${count}/${max})`,
     options: 'Options',

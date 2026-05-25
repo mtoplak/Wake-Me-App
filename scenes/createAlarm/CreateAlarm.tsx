@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  ActivityIndicator,
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native';
@@ -15,9 +16,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-worklets';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
-import { createAlarm } from '@/services/database';
+import { createAlarm, getAlarmById, updateAlarm } from '@/services/database';
 import { alarmSounds, getAlarmSource } from '@/scenes/alarmRinging/sounds';
 import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
@@ -48,8 +49,18 @@ const CHALLENGE_KEYS: ChallengeKey[] = ['qr', 'object', 'color', 'steps', 'voice
 
 const SOUND_OPTIONS = Object.keys(alarmSounds);
 
+function parseAlarmIdParam(raw: string | string[] | undefined): number | null {
+  const s = Array.isArray(raw) ? raw[0] : raw;
+  if (!s) return null;
+  const n = Number(s);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
+}
+
 export default function CreateAlarm() {
   const router = useRouter();
+  const { alarmId: alarmIdParam } = useLocalSearchParams<{ alarmId?: string | string[] }>();
+  const editId = useMemo(() => parseAlarmIdParam(alarmIdParam), [alarmIdParam]);
+  const isEditing = editId != null;
   const { t } = useTranslation();
   const initialNow = (() => {
     const d = new Date();
@@ -64,6 +75,7 @@ export default function CreateAlarm() {
   const [sound, setSound] = useState(SOUND_OPTIONS[0] ?? 'Sunrise');
   const [label, setLabel] = useState(t.createAlarm.defaultLabel);
   const [saving, setSaving] = useState(false);
+  const [loadingAlarm, setLoadingAlarm] = useState(isEditing);
 
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [labelDraft, setLabelDraft] = useState(label);
@@ -76,6 +88,46 @@ export default function CreateAlarm() {
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    setLoadingAlarm(true);
+    (async () => {
+      try {
+        const alarm = await getAlarmById(editId);
+        if (cancelled) return;
+        if (!alarm) {
+          Alert.alert(t.createAlarm.couldNotLoadTitle, t.createAlarm.couldNotLoadBody, [
+            { text: t.common.ok, onPress: () => router.back() },
+          ]);
+          return;
+        }
+        setHour(alarm.hour);
+        setMinute(alarm.minute);
+        setActiveDays(alarm.repeatDays);
+        setLabel(alarm.label || t.createAlarm.fallbackLabel);
+        setSound(alarm.sound || (SOUND_OPTIONS[0] ?? 'Sunrise'));
+        const keys = alarm.challenges.filter((c): c is ChallengeKey =>
+          CHALLENGE_KEYS.includes(c as ChallengeKey),
+        );
+        setChallenges(keys);
+        const qr = alarm.challengeParams?.qr;
+        setQrValue(typeof qr === 'string' ? qr : null);
+      } catch (err) {
+        if (!cancelled) {
+          Alert.alert(t.createAlarm.couldNotSave, String(err), [
+            { text: t.common.ok, onPress: () => router.back() },
+          ]);
+        }
+      } finally {
+        if (!cancelled) setLoadingAlarm(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, router, t]);
 
   useEffect(() => {
     return () => {
@@ -183,17 +235,24 @@ export default function CreateAlarm() {
     }
     try {
       setSaving(true);
-      await createAlarm({
+      const payload = {
         hour,
         minute,
         label,
         repeatDays: activeDays,
-        enabled: true,
         sound,
-        vibration: true,
         challenges,
         challengeParams: qrValue ? { qr: qrValue } : {},
-      });
+      };
+      if (isEditing && editId) {
+        await updateAlarm(editId, payload);
+      } else {
+        await createAlarm({
+          ...payload,
+          enabled: true,
+          vibration: true,
+        });
+      }
       router.back();
     } catch (err) {
       Alert.alert(t.createAlarm.couldNotSave, String(err));
@@ -203,6 +262,18 @@ export default function CreateAlarm() {
   };
 
   const ringLabel = useMemo(() => formatRingIn(hour, minute, t), [hour, minute, t]);
+  const headerTitle = isEditing ? t.createAlarm.editHeaderTitle : t.createAlarm.headerTitle;
+  const primarySaveLabel = isEditing ? t.createAlarm.saveChanges : t.createAlarm.saveAlarm;
+
+  if (loadingAlarm) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.loaderWrap}>
+          <ActivityIndicator size="large" color={colors.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -210,7 +281,7 @@ export default function CreateAlarm() {
         <Pressable hitSlop={12} onPress={() => router.back()} style={styles.headerBtn}>
           <AntDesign name="close" size={22} color={colors.textPrimary} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t.createAlarm.headerTitle}</Text>
+        <Text style={styles.headerTitle}>{headerTitle}</Text>
         <Pressable hitSlop={12} style={styles.headerBtn} onPress={onSave} disabled={saving}>
           <Text style={styles.headerSave}>{saving ? t.common.saving : t.common.save}</Text>
         </Pressable>
@@ -309,7 +380,7 @@ export default function CreateAlarm() {
 
         <Pressable style={styles.primaryBtn} onPress={onSave} disabled={saving}>
           <Text style={styles.primaryBtnText}>
-            {saving ? t.common.saving : t.createAlarm.saveAlarm}
+            {saving ? t.common.saving : primarySaveLabel}
           </Text>
         </Pressable>
       </ScrollView>
@@ -577,6 +648,7 @@ function formatRingIn(
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

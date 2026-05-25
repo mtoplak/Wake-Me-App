@@ -117,6 +117,10 @@ const sl: typeof en = {
 
   createAlarm: {
     headerTitle: 'Nov alarm',
+    editHeaderTitle: 'Uredi alarm',
+    saveChanges: 'Shrani spremembe',
+    couldNotLoadTitle: 'Alarm ni najden',
+    couldNotLoadBody: 'Alarm je morda bil izbrisan.',
     repeat: 'Ponovi',
     wakeChallenge: (count: number, max: number) => `Izziv za zbujanje (${count}/${max})`,
     options: 'Možnosti',

@@ -168,6 +168,9 @@ export default function MyAlarms() {
             t={t}
             onToggle={toggle}
             onDelete={handleDelete}
+            onEdit={id =>
+              router.push({ pathname: '/(main)/editAlarm', params: { alarmId: String(id) } })
+            }
           />
         ))}
 
@@ -193,9 +196,10 @@ type SwipeableAlarmCardProps = {
   t: Translations;
   onToggle: (id: number, enabled: boolean) => void;
   onDelete: (id: number) => Promise<boolean>;
+  onEdit: (id: number) => void;
 };
 
-function SwipeableAlarmCard({ alarm, t, onToggle, onDelete }: SwipeableAlarmCardProps) {
+function SwipeableAlarmCard({ alarm, t, onToggle, onDelete, onEdit }: SwipeableAlarmCardProps) {
   const swipeRef = useRef<SwipeableMethods>(null);
   const time = formatTime(alarm.hour, alarm.minute);
 
@@ -233,7 +237,8 @@ function SwipeableAlarmCard({ alarm, t, onToggle, onDelete }: SwipeableAlarmCard
           onPress={askDelete}
         />
       )}>
-      <View style={[styles.alarmCard, !alarm.enabled && styles.alarmCardOff]}>
+      <Pressable onPress={() => onEdit(alarm.id)}>
+        <View style={[styles.alarmCard, !alarm.enabled && styles.alarmCardOff]}>
         <View style={styles.alarmTop}>
           <View>
             <View style={styles.timeWrap}>
@@ -270,7 +275,8 @@ function SwipeableAlarmCard({ alarm, t, onToggle, onDelete }: SwipeableAlarmCard
             ))}
           </View>
         </View>
-      </View>
+        </View>
+      </Pressable>
     </ReanimatedSwipeable>
   );
 }
