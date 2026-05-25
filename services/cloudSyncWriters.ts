@@ -27,6 +27,7 @@ export type WakeStatSyncPayload = {
   success: boolean;
   challengeDuration: number | null;
   challengeType: ChallengeType | null;
+  completedChallengeTypes: ChallengeType[];
 };
 import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from './firebase';
 
@@ -129,6 +130,7 @@ function wakeStatToFirestore(stat: WakeStatSyncPayload) {
     success: stat.success,
     challengeDuration: stat.challengeDuration,
     challengeType: stat.challengeType,
+    completedChallengeTypes: stat.completedChallengeTypes,
     updatedAt: serverTimestamp(),
   };
 }

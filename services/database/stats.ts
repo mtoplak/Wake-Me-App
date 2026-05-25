@@ -1,8 +1,15 @@
 import { syncWakeStatUp } from '../cloudSyncWriters';
 import { getDb } from './db';
 import { ChallengeType, WakeStat, WakeStatRecord } from './types';
+import {
+  countChallengeBreakdown,
+  parseCompletedChallengeTypes,
+  serializeCompletedChallengeTypes,
+  sortBreakdownCounts,
+} from './wakeStatChallenges';
 
 function map(row: WakeStatRecord): WakeStat {
+  const challengeType = (row.challenge_type as ChallengeType | null) ?? null;
   return {
     id: row.id,
     alarmId: row.alarm_id,
@@ -10,7 +17,11 @@ function map(row: WakeStatRecord): WakeStat {
     wakeTime: row.wake_time,
     success: row.success === 1,
     challengeDuration: row.challenge_duration,
-    challengeType: (row.challenge_type as ChallengeType | null) ?? null,
+    challengeType,
+    completedChallengeTypes: parseCompletedChallengeTypes(
+      row.completed_challenge_types,
+      challengeType,
+    ),
   };
 }
 
@@ -21,18 +32,26 @@ export async function recordWake(input: {
   success: boolean;
   challengeDuration?: number;
   challengeType?: ChallengeType;
+  completedChallengeTypes?: ChallengeType[];
 }): Promise<void> {
+  const completed =
+    input.completedChallengeTypes ??
+    (input.challengeType ? [input.challengeType] : []);
+  const primaryType = input.challengeType ?? completed[completed.length - 1] ?? null;
+  const completedJson = serializeCompletedChallengeTypes(completed);
+
   const db = await getDb();
   const result = await db.runAsync(
-    `INSERT INTO wake_stats (alarm_id, date, wake_time, success, challenge_duration, challenge_type)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO wake_stats (alarm_id, date, wake_time, success, challenge_duration, challenge_type, completed_challenge_types)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       input.alarmId,
       input.date,
       input.wakeTime,
       input.success ? 1 : 0,
       input.challengeDuration ?? null,
-      input.challengeType ?? null,
+      primaryType,
+      completedJson,
     ],
   );
   const id = result.lastInsertRowId;
@@ -43,7 +62,8 @@ export async function recordWake(input: {
     wakeTime: input.wakeTime,
     success: input.success,
     challengeDuration: input.challengeDuration ?? null,
-    challengeType: input.challengeType ?? null,
+    challengeType: primaryType,
+    completedChallengeTypes: completed,
   });
 }
 
@@ -78,8 +98,8 @@ export async function reassignWakeStatId(fromId: number, toId: number): Promise<
   if (!row) return;
   await db.runAsync('DELETE FROM wake_stats WHERE id = ?', [fromId]);
   await db.runAsync(
-    `INSERT INTO wake_stats (id, alarm_id, date, wake_time, success, challenge_duration, challenge_type)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO wake_stats (id, alarm_id, date, wake_time, success, challenge_duration, challenge_type, completed_challenge_types)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       toId,
       row.alarm_id,
@@ -88,6 +108,7 @@ export async function reassignWakeStatId(fromId: number, toId: number): Promise<
       row.success,
       row.challenge_duration,
       row.challenge_type,
+      row.completed_challenge_types,
     ],
   );
 }
@@ -148,25 +169,28 @@ export type ChallengeInsights = {
   timedChallengeCount: number;
 };
 
-const CHALLENGE_ORDER: ChallengeType[] = ['qr', 'object', 'color', 'steps', 'voice'];
-
 export async function getChallengeInsights(): Promise<ChallengeInsights> {
   const db = await getDb();
 
-  const breakdownRows = await db.getAllAsync<{ challenge_type: string; count: number }>(
-    `SELECT challenge_type, COUNT(*) as count
+  const wakeRows = await db.getAllAsync<{
+    completed_challenge_types: string | null;
+    challenge_type: string | null;
+  }>(
+    `SELECT completed_challenge_types, challenge_type
      FROM wake_stats
-     WHERE success = 1 AND challenge_type IS NOT NULL
-     GROUP BY challenge_type`,
+     WHERE success = 1`,
   );
 
-  const breakdown = breakdownRows
-    .map(row => ({
-      type: row.challenge_type as ChallengeType,
-      count: row.count,
-    }))
-    .filter(row => CHALLENGE_ORDER.includes(row.type))
-    .sort((a, b) => b.count - a.count || CHALLENGE_ORDER.indexOf(a.type) - CHALLENGE_ORDER.indexOf(b.type));
+  const breakdown = sortBreakdownCounts(
+    countChallengeBreakdown(
+      wakeRows.map(row => ({
+        completedChallengeTypes: parseCompletedChallengeTypes(
+          row.completed_challenge_types,
+          (row.challenge_type as ChallengeType | null) ?? null,
+        ),
+      })),
+    ),
+  );
 
   const durationRow = await db.getFirstAsync<{
     avg_duration: number | null;

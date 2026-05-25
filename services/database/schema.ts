@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS wake_stats (
   success INTEGER NOT NULL DEFAULT 1,
   challenge_duration INTEGER,
   challenge_type TEXT,
+  completed_challenge_types TEXT,
   FOREIGN KEY (alarm_id) REFERENCES alarms (id) ON DELETE SET NULL
 );
 

@@ -28,6 +28,7 @@ import {
   buildWeek,
   challengeIconName,
   challengeLabel,
+  formatWakeChallengeSummary,
   dotStyle,
   earlyBirdTierIcon,
   earlyBirdTierLabel,
@@ -327,7 +328,7 @@ export default function Streak() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.historyTitle}>{relativeDay(h.date, t)}</Text>
                   <Text style={styles.historySub}>
-                    {challengeLabel(h.challengeType, t)}
+                    {formatWakeChallengeSummary(h, t)}
                     {h.challengeDuration != null
                       ? ` · ${formatChallengeDuration(h.challengeDuration, t)}`
                       : ''}

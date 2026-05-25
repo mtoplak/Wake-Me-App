@@ -276,6 +276,8 @@ const en = {
       about: 'About',
     },
     cloudSync: 'Cloud sync',
+    cloudSyncActive: 'On — alarms and streak sync with your account',
+    cloudSyncSignInHint: 'Sign in to back up and restore your data',
     privacy: 'Privacy & data',
     signOut: 'Sign out',
     signingOut: 'Signing out…',

@@ -35,6 +35,7 @@ import {
   listAllWakeStats,
   reassignWakeStatId,
 } from './database/stats';
+import { serializeCompletedChallengeTypes } from './database/wakeStatChallenges';
 import { Alarm, ChallengeParams, ChallengeType, UserProfile } from './database/types';
 
 export {
@@ -71,10 +72,17 @@ async function resolveWakeStatAlarmId(
 
 type WakeStatFingerprintFields = Pick<
   WakeStatSyncPayload,
-  'date' | 'wakeTime' | 'success' | 'challengeDuration' | 'challengeType' | 'alarmId'
+  | 'date'
+  | 'wakeTime'
+  | 'success'
+  | 'challengeDuration'
+  | 'challengeType'
+  | 'alarmId'
+  | 'completedChallengeTypes'
 >;
 
 function wakeStatFingerprint(stat: WakeStatFingerprintFields): string {
+  const typesKey = [...stat.completedChallengeTypes].sort().join(',');
   return [
     stat.date,
     stat.wakeTime,
@@ -82,6 +90,7 @@ function wakeStatFingerprint(stat: WakeStatFingerprintFields): string {
     stat.challengeType ?? '',
     stat.challengeDuration ?? '',
     stat.alarmId ?? '',
+    typesKey,
   ].join('|');
 }
 
@@ -233,6 +242,9 @@ function firestoreWakeStatToPayload(
     success: data.success !== false,
     challengeDuration: data.challengeDuration ?? null,
     challengeType: data.challengeType ?? null,
+    completedChallengeTypes:
+      data.completedChallengeTypes ??
+      (data.challengeType ? [data.challengeType] : []),
   };
 }
 
@@ -282,6 +294,7 @@ export async function mergeLocalWakeStatsToCloud(): Promise<number> {
       success: stat.success,
       challengeDuration: stat.challengeDuration,
       challengeType: stat.challengeType,
+      completedChallengeTypes: stat.completedChallengeTypes,
     };
     const fp = wakeStatFingerprint(payload);
     if (cloudFingerprints.has(fp)) continue;
@@ -360,6 +373,7 @@ export async function pushLocalToCloud(): Promise<void> {
       success: stat.success,
       challengeDuration: stat.challengeDuration,
       challengeType: stat.challengeType,
+      completedChallengeTypes: stat.completedChallengeTypes,
       updatedAt: serverTimestamp(),
     });
   }
@@ -393,6 +407,7 @@ interface FirestoreWakeStat {
   success?: boolean;
   challengeDuration?: number | null;
   challengeType?: ChallengeType | null;
+  completedChallengeTypes?: ChallengeType[];
 }
 
 export async function pullCloudToLocal(): Promise<{
@@ -502,16 +517,20 @@ export async function pullCloudToLocal(): Promise<{
       );
       if (existingFp) continue;
 
+      const completedJson = serializeCompletedChallengeTypes(fields.completedChallengeTypes);
+
       const localAtId = await db.getFirstAsync<{
         date: string;
         wake_time: string;
         success: number;
         challenge_duration: number | null;
         challenge_type: string | null;
+        completed_challenge_types: string | null;
         alarm_id: number | null;
-      }>('SELECT date, wake_time, success, challenge_duration, challenge_type, alarm_id FROM wake_stats WHERE id = ?', [
-        idNum,
-      ]);
+      }>(
+        'SELECT date, wake_time, success, challenge_duration, challenge_type, completed_challenge_types, alarm_id FROM wake_stats WHERE id = ?',
+        [idNum],
+      );
 
       const localFp = localAtId
         ? wakeStatFingerprint({
@@ -521,13 +540,19 @@ export async function pullCloudToLocal(): Promise<{
             challengeDuration: localAtId.challenge_duration,
             challengeType: (localAtId.challenge_type as ChallengeType | null) ?? null,
             alarmId: localAtId.alarm_id,
+            completedChallengeTypes:
+              fields.completedChallengeTypes.length > 0
+                ? fields.completedChallengeTypes
+                : localAtId.challenge_type
+                  ? [(localAtId.challenge_type as ChallengeType)]
+                  : [],
           })
         : null;
 
       if (localAtId && localFp !== fp) {
         await db.runAsync(
-          `INSERT INTO wake_stats (alarm_id, date, wake_time, success, challenge_duration, challenge_type)
-           VALUES (?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO wake_stats (alarm_id, date, wake_time, success, challenge_duration, challenge_type, completed_challenge_types)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
             alarmId,
             fields.date,
@@ -535,19 +560,21 @@ export async function pullCloudToLocal(): Promise<{
             fields.success ? 1 : 0,
             fields.challengeDuration,
             fields.challengeType,
+            completedJson,
           ],
         );
       } else {
         await db.runAsync(
-          `INSERT INTO wake_stats (id, alarm_id, date, wake_time, success, challenge_duration, challenge_type)
-           VALUES (?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO wake_stats (id, alarm_id, date, wake_time, success, challenge_duration, challenge_type, completed_challenge_types)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET
              alarm_id = excluded.alarm_id,
              date = excluded.date,
              wake_time = excluded.wake_time,
              success = excluded.success,
              challenge_duration = excluded.challenge_duration,
-             challenge_type = excluded.challenge_type`,
+             challenge_type = excluded.challenge_type,
+             completed_challenge_types = excluded.completed_challenge_types`,
           [
             idNum,
             alarmId,
@@ -556,6 +583,7 @@ export async function pullCloudToLocal(): Promise<{
             fields.success ? 1 : 0,
             fields.challengeDuration,
             fields.challengeType,
+            completedJson,
           ],
         );
       }

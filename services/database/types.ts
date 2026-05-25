@@ -56,6 +56,7 @@ export interface WakeStatRecord {
   success: number;
   challenge_duration: number | null;
   challenge_type: string | null;
+  completed_challenge_types: string | null;
 }
 
 export interface WakeStat {
@@ -66,6 +67,8 @@ export interface WakeStat {
   success: boolean;
   challengeDuration: number | null;
   challengeType: ChallengeType | null;
+  /** All challenges finished in this wake session (for breakdown). */
+  completedChallengeTypes: ChallengeType[];
 }
 
 export interface CachedQuote {

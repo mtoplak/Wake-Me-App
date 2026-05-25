@@ -167,7 +167,6 @@ export default function MyAlarms() {
             alarm={a}
             t={t}
             onToggle={toggle}
-            onOpen={() => router.push(`/(main)/alarmRinging?alarmId=${a.id}`)}
             onDelete={handleDelete}
           />
         ))}
@@ -193,11 +192,10 @@ type SwipeableAlarmCardProps = {
   alarm: Alarm;
   t: Translations;
   onToggle: (id: number, enabled: boolean) => void;
-  onOpen: () => void;
   onDelete: (id: number) => Promise<boolean>;
 };
 
-function SwipeableAlarmCard({ alarm, t, onToggle, onOpen, onDelete }: SwipeableAlarmCardProps) {
+function SwipeableAlarmCard({ alarm, t, onToggle, onDelete }: SwipeableAlarmCardProps) {
   const swipeRef = useRef<SwipeableMethods>(null);
   const time = formatTime(alarm.hour, alarm.minute);
 
@@ -235,9 +233,7 @@ function SwipeableAlarmCard({ alarm, t, onToggle, onOpen, onDelete }: SwipeableA
           onPress={askDelete}
         />
       )}>
-      <Pressable
-        onPress={onOpen}
-        style={[styles.alarmCard, !alarm.enabled && styles.alarmCardOff]}>
+      <View style={[styles.alarmCard, !alarm.enabled && styles.alarmCardOff]}>
         <View style={styles.alarmTop}>
           <View>
             <View style={styles.timeWrap}>
@@ -274,7 +270,7 @@ function SwipeableAlarmCard({ alarm, t, onToggle, onOpen, onDelete }: SwipeableA
             ))}
           </View>
         </View>
-      </Pressable>
+      </View>
     </ReanimatedSwipeable>
   );
 }

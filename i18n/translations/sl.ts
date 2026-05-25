@@ -297,6 +297,8 @@ const sl: typeof en = {
       about: 'O aplikaciji',
     },
     cloudSync: 'Sinhronizacija v oblak',
+    cloudSyncActive: 'Vklopljeno — alarmi in niz se sinhronizirata z računom',
+    cloudSyncSignInHint: 'Prijavi se za varnostno kopijo in obnovitev podatkov',
     privacy: 'Zasebnost in podatki',
     signOut: 'Odjava',
     signingOut: 'Odjavljanje…',

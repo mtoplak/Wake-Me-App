@@ -115,6 +115,18 @@ export function challengeLabel(c: ChallengeType | null, t: Translations): string
   }
 }
 
+/** Recent wake row: list every challenge from that session (e.g. "Steps · Color"). */
+export function formatWakeChallengeSummary(stat: WakeStat, t: Translations): string {
+  const types =
+    stat.completedChallengeTypes.length > 0
+      ? stat.completedChallengeTypes
+      : stat.challengeType
+        ? [stat.challengeType]
+        : [];
+  if (types.length === 0) return challengeLabel(null, t);
+  return types.map(c => challengeLabel(c, t)).join(' · ');
+}
+
 export function formatChallengeDuration(sec: number, t: Translations): string {
   if (sec < 60) return t.streak.durationSec(sec);
   const m = Math.floor(sec / 60);

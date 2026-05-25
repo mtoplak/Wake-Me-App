@@ -42,13 +42,16 @@ type RowProps = {
   iconBg: string;
   label: string;
   value?: string;
+  /** Short value beside the label (default). Use `stacked` for longer explanatory text. */
+  valueLayout?: 'inline' | 'stacked';
   trailing?: React.ReactNode;
+  /** When false, hides the default chevron on non-pressable rows. */
+  showChevron?: boolean;
   onPress?: () => void;
   last?: boolean;
 };
 
 const KEYS = {
-  cloudSync: 'pref.cloudSync',
   vibration: 'pref.vibration',
   appearance: 'pref.appearance',
   voicePhraseText: 'pref.voicePhraseText',
@@ -63,7 +66,6 @@ export default function Settings() {
   const [authBusy, setAuthBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [cloudSync, setCloudSync] = useState(true);
   const [vibration, setVibration] = useState(true);
   // Stored raw — display label is resolved via translation at render time so
   // it follows live language switches without re-running `load`.
@@ -88,7 +90,6 @@ export default function Settings() {
   const load = useCallback(async () => {
     const [p, all] = await Promise.all([getProfile(), getAllSettings()]);
     setProfile(p);
-    setCloudSync((all[KEYS.cloudSync] ?? '1') === '1');
     setVibration((all[KEYS.vibration] ?? '1') === '1');
     setAppearance(all[KEYS.appearance] ?? null);
     setPhrase(all[KEYS.voicePhraseText] ?? '');
@@ -103,10 +104,6 @@ export default function Settings() {
     await setSetting(key, value ? '1' : ('0' as Bool));
   };
 
-  const onToggleCloud = async (v: boolean) => {
-    setCloudSync(v);
-    await persistBool(KEYS.cloudSync, v);
-  };
   const onToggleVibration = async (v: boolean) => {
     setVibration(v);
     await persistBool(KEYS.vibration, v);
@@ -248,15 +245,9 @@ export default function Settings() {
             }
             iconBg={colors.accentSoft}
             label={t.settings.cloudSync}
-            value={cloudSync ? t.common.on : t.common.off}
-            trailing={
-              <Switch
-                value={cloudSync}
-                onValueChange={onToggleCloud}
-                trackColor={{ true: colors.accent, false: colors.border }}
-                thumbColor={colors.white}
-              />
-            }
+            value={loggedIn ? t.settings.cloudSyncActive : t.settings.cloudSyncSignInHint}
+            valueLayout="stacked"
+            showChevron={false}
           />
           <Row
             icon={<Ionicons name="lock-closed-outline" size={18} color={colors.success} />}
@@ -493,8 +484,31 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <Text style={styles.sectionTitle}>{children}</Text>;
 }
 
-function Row({ icon, iconBg, label, value, trailing, onPress, last }: RowProps) {
+function Row({
+  icon,
+  iconBg,
+  label,
+  value,
+  valueLayout = 'inline',
+  trailing,
+  showChevron = true,
+  onPress,
+  last,
+}: RowProps) {
   const Wrapper: typeof View | typeof Pressable = onPress ? Pressable : View;
+
+  if (valueLayout === 'stacked') {
+    return (
+      <Wrapper style={[styles.rowStacked, last && styles.rowLast]} onPress={onPress as never}>
+        <View style={styles.rowStackedTop}>
+          <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>{icon}</View>
+          <Text style={styles.rowLabelStacked}>{label}</Text>
+        </View>
+        {value ? <Text style={styles.rowDetail}>{value}</Text> : null}
+      </Wrapper>
+    );
+  }
+
   return (
     <Wrapper style={[styles.row, last && styles.rowLast]} onPress={onPress as never}>
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>{icon}</View>
@@ -504,7 +518,11 @@ function Row({ icon, iconBg, label, value, trailing, onPress, last }: RowProps) 
           {value}
         </Text>
       )}
-      {trailing ?? <AntDesign name="right" size={14} color={colors.textMuted} />}
+      {trailing !== undefined
+        ? trailing
+        : showChevron
+          ? <AntDesign name="right" size={14} color={colors.textMuted} />
+          : null}
     </Wrapper>
   );
 }
@@ -574,6 +592,29 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   rowLast: { borderBottomWidth: 0 },
+  rowStacked: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    gap: 8,
+  },
+  rowStackedTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  rowLabelStacked: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.textPrimary,
+    fontWeight: '500',
+  },
+  rowDetail: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    paddingLeft: 48,
+  },
   rowIcon: {
     width: 36,
     height: 36,

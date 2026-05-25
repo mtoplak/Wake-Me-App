@@ -26,7 +26,25 @@ export async function getDb(): Promise<SQLite.SQLiteDatabase> {
 async function openAndInit(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
   await db.execAsync(SCHEMA_SQL);
+  await migrateWakeStatsCompletedTypes(db);
   return db;
+}
+
+async function migrateWakeStatsCompletedTypes(db: SQLite.SQLiteDatabase): Promise<void> {
+  const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(wake_stats)');
+  if (cols.some(c => c.name === 'completed_challenge_types')) return;
+
+  await db.execAsync('ALTER TABLE wake_stats ADD COLUMN completed_challenge_types TEXT');
+
+  const rows = await db.getAllAsync<{ id: number; challenge_type: string | null }>(
+    'SELECT id, challenge_type FROM wake_stats WHERE challenge_type IS NOT NULL',
+  );
+  for (const row of rows) {
+    await db.runAsync('UPDATE wake_stats SET completed_challenge_types = ? WHERE id = ?', [
+      JSON.stringify([row.challenge_type]),
+      row.id,
+    ]);
+  }
 }
 
 /** Dev-only: wipe all tables and recreate schema. */
