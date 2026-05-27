@@ -11,6 +11,8 @@ import {
   Modal,
   TextInput,
   Keyboard,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { getVoicePhraseSuggestions } from '@/scenes/alarmRinging/voiceChallenge';
 import {
@@ -232,9 +234,9 @@ export default function Settings() {
               {loggedIn ? (user?.email ?? '—') : t.common.notSignedIn}
             </Text>
           </View>
-          <Pressable style={styles.editBtn}>
+{/*           <Pressable style={styles.editBtn}>
             <Feather name="edit-2" size={14} color={colors.accent} />
-          </Pressable>
+          </Pressable> */}
         </View>
 
         <SectionTitle>{t.settings.sections.account}</SectionTitle>
@@ -248,6 +250,14 @@ export default function Settings() {
             value={loggedIn ? t.settings.cloudSyncActive : t.settings.cloudSyncSignInHint}
             valueLayout="stacked"
             showChevron={false}
+            trailing={
+              <Switch
+                value={loggedIn}
+                disabled
+                trackColor={{ true: colors.accent, false: colors.border }}
+                thumbColor={colors.white}
+              />
+            }
           />
           <Row
             icon={<Ionicons name="lock-closed-outline" size={18} color={colors.success} />}
@@ -378,13 +388,16 @@ export default function Settings() {
         transparent
         animationType="fade"
         onRequestClose={() => setShowPhraseModal(false)}>
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => {
-            Keyboard.dismiss();
-            setShowPhraseModal(false);
-          }}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <Pressable
+            style={styles.modalBackdrop}
+            onPress={() => {
+              Keyboard.dismiss();
+              setShowPhraseModal(false);
+            }}>
+            <Pressable style={styles.modalCard} onPress={() => {}}>
             <Text style={styles.modalTitle}>{t.settings.voicePhraseModalTitle}</Text>
             <Text style={styles.modalSubtitle}>{t.settings.voicePhraseModalSubtitle}</Text>
             <TextInput
@@ -429,7 +442,8 @@ export default function Settings() {
               </Pressable>
             </View>
           </Pressable>
-        </Pressable>
+          </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
@@ -503,6 +517,7 @@ function Row({
         <View style={styles.rowStackedTop}>
           <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>{icon}</View>
           <Text style={styles.rowLabelStacked}>{label}</Text>
+          {trailing}
         </View>
         {value ? <Text style={styles.rowDetail}>{value}</Text> : null}
       </Wrapper>
@@ -596,7 +611,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    gap: 8,
+    gap: 2,
   },
   rowStackedTop: {
     flexDirection: 'row',
