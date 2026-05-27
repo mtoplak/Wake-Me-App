@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>Wake Me App Alarm Clock</string>
+    <string>DEV - Wake Me App</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -27,12 +27,11 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>wake-me-app</string>
+          <string>wakemeapp</string>
+          <string>com.mtoplak.wakemeapp</string>
         </array>
       </dict>
       <dict>
-        <key>CFBundleURLName</key>
-        <string>com.googleusercontent.apps.165362524264-rb9ccjvfreiv9745ilf49v74623tr7mm</string>
         <key>CFBundleURLSchemes</key>
         <array>
           <string>com.googleusercontent.apps.165362524264-rb9ccjvfreiv9745ilf49v74623tr7mm</string>
@@ -53,21 +52,19 @@
       <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to use the camera for the QR, color, and object wake-up challenges.</string>
+    <string>Allow Wake Me App to use the camera for QR, find-object and face wake-up challenges.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to use the microphone for the voice phrase wake-up challenge.</string>
+    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <key>NSMotionUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your device motion</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to use speech recognition to verify your wake-up phrase.</string>
+    <string>Allow Wake Me App to use speech recognition to verify your wake-up phrase.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
     <key>RCTNewArchEnabled</key>
     <true/>
-    <key>UIBackgroundModes</key>
-    <array>
-      <string>audio</string>
-    </array>
     <key>UIAppFonts</key>
     <array>
       <string>OpenSans-Bold.ttf</string>
@@ -76,6 +73,10 @@
       <string>OpenSans-Regular.ttf</string>
       <string>OpenSans-Semibold.ttf</string>
       <string>OpenSans-SemiboldItalic.ttf</string>
+    </array>
+    <key>UIBackgroundModes</key>
+    <array>
+      <string>audio</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>

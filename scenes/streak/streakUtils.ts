@@ -110,6 +110,8 @@ export function challengeLabel(c: ChallengeType | null, t: Translations): string
       return t.challengeLabel.steps;
     case 'voice':
       return t.challengeLabel.voice;
+    case 'face':
+      return t.challengeLabel.face;
     default:
       return t.challengeLabel.wakeUp;
   }
@@ -146,6 +148,8 @@ export function challengeIconName(type: ChallengeType): keyof typeof Ionicons.gl
       return 'footsteps-outline';
     case 'voice':
       return 'mic-outline';
+    case 'face':
+      return 'happy-outline';
     default:
       return 'alarm-outline';
   }

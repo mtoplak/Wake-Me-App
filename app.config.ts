@@ -85,7 +85,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'expo-camera',
         {
           cameraPermission:
-            'Allow Wake Me App to use the camera for QR and find-object wake-up challenges.',
+            'Allow Wake Me App to use the camera for QR, find-object and face wake-up challenges.',
           microphonePermission: false,
           recordAudioAndroid: false,
         },
@@ -94,7 +94,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'react-native-vision-camera',
         {
           cameraPermissionText:
-            'Allow Wake Me App to use the camera for the find-object wake-up challenge.',
+            'Allow Wake Me App to use the camera for the find-object and face wake-up challenges.',
           enableMicrophonePermission: false,
         },
       ],
@@ -109,6 +109,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           androidSpeechServicePackages: ['com.google.android.googlequicksearchbox'],
         },
       ],
+      './plugins/withStripIosPushEntitlement',
     ],
   };
   // console.log('[##] expo config', expoConfig);

@@ -31,7 +31,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 }
 expoAutolinking.useExpoModules()
 
-rootProject.name = 'Wake Me App Alarm Clock'
+rootProject.name = 'DEV - Wake Me App'
 
 expoAutolinking.useExpoVersionCatalog()
 

@@ -1,6 +1,13 @@
 import type { ChallengeType } from './types';
 
-export const CHALLENGE_DISPLAY_ORDER: ChallengeType[] = ['qr', 'object', 'color', 'steps', 'voice'];
+export const CHALLENGE_DISPLAY_ORDER: ChallengeType[] = [
+  'qr',
+  'object',
+  'color',
+  'steps',
+  'voice',
+  'face',
+];
 
 const VALID = new Set<ChallengeType>(CHALLENGE_DISPLAY_ORDER);
 
@@ -40,11 +47,14 @@ export function countChallengeBreakdown(
   return counts;
 }
 
-export function sortBreakdownCounts(counts: Map<ChallengeType, number>): { type: ChallengeType; count: number }[] {
+export function sortBreakdownCounts(
+  counts: Map<ChallengeType, number>,
+): { type: ChallengeType; count: number }[] {
   return [...counts.entries()]
     .sort(
       (a, b) =>
-        b[1] - a[1] || CHALLENGE_DISPLAY_ORDER.indexOf(a[0]) - CHALLENGE_DISPLAY_ORDER.indexOf(b[0]),
+        b[1] - a[1] ||
+        CHALLENGE_DISPLAY_ORDER.indexOf(a[0]) - CHALLENGE_DISPLAY_ORDER.indexOf(b[0]),
     )
     .map(([type, count]) => ({ type, count }));
 }

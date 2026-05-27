@@ -18,6 +18,7 @@ import { QrChallengeFlow } from './qrChallenge';
 import { VoiceChallengeFlow } from './voiceChallenge';
 import { ObjectChallengeFlow } from './objectChallenge';
 import { StepsChallengeFlow } from './stepsChallenge';
+import { FaceChallengeFlow } from './faceChallenge';
 import { formatAlarmTime, parseRouteAlarmId } from './alarmRingingUtils';
 import { shouldPlayAlarmAudio, type RingPhase, type RingSession } from './ringFlow';
 import { useAlarmRingSession } from './useAlarmRingSession';
@@ -85,6 +86,7 @@ export default function AlarmRinging() {
     handleObjectChallengeComplete,
     handleColorChallengeComplete,
     handleVoiceChallengeComplete,
+    handleFaceChallengeComplete,
   } = useAlarmRingSession({
     alarm,
     setPhase,
@@ -203,6 +205,10 @@ export default function AlarmRinging() {
         onComplete={handleVoiceChallengeComplete}
       />
     );
+  }
+
+  if (phase === 'faceChallenge') {
+    return <FaceChallengeFlow onComplete={handleFaceChallengeComplete} />;
   }
 
   if (phase === 'quote') {

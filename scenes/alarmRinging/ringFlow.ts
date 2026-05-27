@@ -1,6 +1,12 @@
 import type { ChallengeType } from '@/services/database';
 
-export const RING_FLOW_CHALLENGE_TYPES = new Set<ChallengeType>(['steps', 'object', 'color', 'voice']);
+export const RING_FLOW_CHALLENGE_TYPES = new Set<ChallengeType>([
+  'steps',
+  'object',
+  'color',
+  'voice',
+  'face',
+]);
 
 export type RingPhase =
   | 'ringing'
@@ -9,6 +15,7 @@ export type RingPhase =
   | 'objectChallenge'
   | 'colorChallenge'
   | 'voiceChallenge'
+  | 'faceChallenge'
   | 'quote';
 
 export type RingSession = {
@@ -20,6 +27,8 @@ export type RingSession = {
   colorSec?: number;
   voiceSec?: number;
   voiceSkipped?: boolean;
+  faceSec?: number;
+  faceSkipped?: boolean;
 };
 
 export function phaseForChallenge(type: ChallengeType): RingPhase | null {
@@ -32,12 +41,17 @@ export function phaseForChallenge(type: ChallengeType): RingPhase | null {
       return 'colorChallenge';
     case 'voice':
       return 'voiceChallenge';
+    case 'face':
+      return 'faceChallenge';
     default:
       return null;
   }
 }
 
-export function sessionHasRecordedActivity(challenges: ChallengeType[], session: RingSession): boolean {
+export function sessionHasRecordedActivity(
+  challenges: ChallengeType[],
+  session: RingSession,
+): boolean {
   if (challenges.includes('qr') && (session.qrSec ?? 0) > 0) return true;
   if (challenges.includes('steps') && (session.stepsSec ?? 0) > 0) return true;
   if (challenges.includes('object') && !session.objectSkipped && (session.objectSec ?? 0) > 0) {
@@ -45,6 +59,9 @@ export function sessionHasRecordedActivity(challenges: ChallengeType[], session:
   }
   if (challenges.includes('color') && (session.colorSec ?? 0) > 0) return true;
   if (challenges.includes('voice') && !session.voiceSkipped && (session.voiceSec ?? 0) > 0) {
+    return true;
+  }
+  if (challenges.includes('face') && !session.faceSkipped && (session.faceSec ?? 0) > 0) {
     return true;
   }
   return false;
@@ -57,6 +74,7 @@ export function totalChallengeDuration(challenges: ChallengeType[], session: Rin
   if (challenges.includes('object') && !session.objectSkipped) sum += session.objectSec ?? 0;
   sum += session.colorSec ?? 0;
   if (!session.voiceSkipped) sum += session.voiceSec ?? 0;
+  if (challenges.includes('face') && !session.faceSkipped) sum += session.faceSec ?? 0;
   return Math.max(1, sum);
 }
 
@@ -83,6 +101,9 @@ export function completedChallengeTypesInSession(
       case 'voice':
         if (!session.voiceSkipped && (session.voiceSec ?? 0) > 0) completed.push(c);
         break;
+      case 'face':
+        if (!session.faceSkipped && (session.faceSec ?? 0) > 0) completed.push(c);
+        break;
       default:
         break;
     }
@@ -91,7 +112,10 @@ export function completedChallengeTypesInSession(
 }
 
 /** Last completed challenge — shown as primary type in recent wake history. */
-export function primaryChallengeType(challenges: ChallengeType[], session: RingSession): ChallengeType {
+export function primaryChallengeType(
+  challenges: ChallengeType[],
+  session: RingSession,
+): ChallengeType {
   let last: ChallengeType | null = null;
   for (const c of challenges) {
     switch (c) {
@@ -109,6 +133,9 @@ export function primaryChallengeType(challenges: ChallengeType[], session: RingS
         break;
       case 'voice':
         if (!session.voiceSkipped && (session.voiceSec ?? 0) > 0) last = c;
+        break;
+      case 'face':
+        if (!session.faceSkipped && (session.faceSec ?? 0) > 0) last = c;
         break;
       default:
         break;
@@ -177,6 +204,7 @@ export function shouldPlayAlarmAudio(phase: RingPhase): boolean {
     phase === 'stepsChallenge' ||
     phase === 'objectChallenge' ||
     phase === 'colorChallenge' ||
-    phase === 'voiceChallenge'
+    phase === 'voiceChallenge' ||
+    phase === 'faceChallenge'
   );
 }

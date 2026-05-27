@@ -69,6 +69,11 @@ const en = {
     color: { title: 'Find a Color', subtitle: 'Point camera at a matching color', short: 'Color' },
     steps: { title: 'Walk Steps', subtitle: 'Reach a step goal to dismiss', short: 'Steps' },
     voice: { title: 'Voice Phrase', subtitle: 'Say the daily phrase out loud', short: 'Voice' },
+    face: {
+      title: 'Face Detection',
+      subtitle: 'Mimic challenge or grab a buddy',
+      short: 'Face',
+    },
   },
 
   challengeLabel: {
@@ -77,6 +82,7 @@ const en = {
     color: 'Find color',
     steps: 'Walk steps',
     voice: 'Voice phrase',
+    face: 'Face',
     wakeUp: 'Wake-up',
   },
 
@@ -216,6 +222,38 @@ const en = {
       phone: 'Phone',
       sunglasses: 'Sunglasses',
       shoe: 'Shoe',
+    },
+  },
+
+  faceChallenge: {
+    introTitle: 'Face check',
+    introBody:
+      'Hold the phone up so your face is in view. On-device vision watches the camera and the alarm stops once it sees what it needs.',
+    goalLabel: 'Goal',
+    openCamera: 'Open camera',
+    skipUnsupported: 'Continue without face scan',
+    expoGoUnsupportedTitle: 'Not available in Expo Go',
+    expoGoUnsupportedBody:
+      'Face detection needs a development build with the native ML module. Expo Go cannot load it.',
+    modes: {
+      twoFaces: {
+        title: 'Selfie with someone',
+        intro: 'Two faces in frame — grab a roommate, partner, or family member.',
+        scanHint: 'Fit both faces in the camera at the same time.',
+      },
+    },
+    sequence: {
+      intro: {
+        title: 'Mimic challenge',
+        intro: 'Four expressions, random order. Follow each prompt to dismiss the alarm.',
+      },
+      stepProgress: (current: number, total: number) => `Step ${current} of ${total}`,
+      actions: {
+        wink: { title: 'Wink', hint: 'Close one eye, keep the other open.' },
+        tongue: { title: 'Show tongue', hint: 'Open wide and stick your tongue out.' },
+        headTurn: { title: 'Turn your head', hint: 'Rotate left or right — clearly off-center.' },
+        smile: { title: 'Smile', hint: 'A big, clear smile.' },
+      },
     },
   },
 

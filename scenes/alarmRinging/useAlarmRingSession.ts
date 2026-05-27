@@ -8,6 +8,7 @@ import type { ObjectChallengeCompletePayload } from './objectChallenge';
 import type { QrChallengeCompletePayload } from './qrChallenge';
 import type { StepsChallengeCompletePayload } from './stepsChallenge';
 import type { VoiceChallengeCompletePayload } from './voiceChallenge';
+import type { FaceChallengeCompletePayload } from './faceChallenge';
 import {
   buildWakeStatPayload,
   nextPhaseAfterChallenge,
@@ -127,6 +128,17 @@ export function useAlarmRingSession({
     [advanceAfterChallenge, completeAlarmSession],
   );
 
+  const handleFaceChallengeComplete = useCallback(
+    async ({ durationSec, skipped }: FaceChallengeCompletePayload) => {
+      const patch: Partial<RingSession> = skipped
+        ? { faceSkipped: true }
+        : { faceSec: durationSec };
+      if (advanceAfterChallenge('face', patch)) return;
+      await completeAlarmSession();
+    },
+    [advanceAfterChallenge, completeAlarmSession],
+  );
+
   return {
     finishWithQuote,
     persistRingWake,
@@ -136,5 +148,6 @@ export function useAlarmRingSession({
     handleObjectChallengeComplete,
     handleColorChallengeComplete,
     handleVoiceChallengeComplete,
+    handleFaceChallengeComplete,
   };
 }

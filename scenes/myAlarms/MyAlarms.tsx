@@ -13,10 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
-import Reanimated, {
-  type SharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import Reanimated, { type SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import {
@@ -40,6 +37,7 @@ const challengeIcons: Record<ChallengeType, React.ReactNode> = {
   color: <Ionicons name="color-palette-outline" size={12} color={colors.accent} />,
   steps: <Ionicons name="walk-outline" size={12} color={colors.accent} />,
   voice: <Ionicons name="mic-outline" size={12} color={colors.accent} />,
+  face: <MaterialCommunityIcons name="face-recognition" size={12} color={colors.accent} />,
 };
 
 function formatDays(repeat: string[], t: Translations): string {
@@ -100,10 +98,7 @@ export default function MyAlarms() {
         setAlarms(prev => prev.filter(a => a.id !== id));
         return true;
       } catch (err) {
-        Alert.alert(
-          t.myAlarms.deleteFailed,
-          err instanceof Error ? err.message : t.common.unknown,
-        );
+        Alert.alert(t.myAlarms.deleteFailed, err instanceof Error ? err.message : t.common.unknown);
         return false;
       }
     },
@@ -239,42 +234,44 @@ function SwipeableAlarmCard({ alarm, t, onToggle, onDelete, onEdit }: SwipeableA
       )}>
       <Pressable onPress={() => onEdit(alarm.id)}>
         <View style={[styles.alarmCard, !alarm.enabled && styles.alarmCardOff]}>
-        <View style={styles.alarmTop}>
-          <View>
-            <View style={styles.timeWrap}>
-              <Text style={[styles.alarmTime, !alarm.enabled && styles.dimText]}>{time.time}</Text>
-              <Text style={[styles.alarmMeridiem, !alarm.enabled && styles.dimText]}>
-                {time.meridiem}
+          <View style={styles.alarmTop}>
+            <View>
+              <View style={styles.timeWrap}>
+                <Text style={[styles.alarmTime, !alarm.enabled && styles.dimText]}>
+                  {time.time}
+                </Text>
+                <Text style={[styles.alarmMeridiem, !alarm.enabled && styles.dimText]}>
+                  {time.meridiem}
+                </Text>
+              </View>
+              <Text style={[styles.alarmLabel, !alarm.enabled && styles.dimText]}>
+                {alarm.label || t.myAlarms.alarmFallback}
               </Text>
             </View>
-            <Text style={[styles.alarmLabel, !alarm.enabled && styles.dimText]}>
-              {alarm.label || t.myAlarms.alarmFallback}
-            </Text>
+            <View onStartShouldSetResponder={() => true}>
+              <Switch
+                value={alarm.enabled}
+                onValueChange={v => onToggle(alarm.id, v)}
+                trackColor={{ true: colors.accent, false: colors.border }}
+                thumbColor={colors.white}
+              />
+            </View>
           </View>
-          <View onStartShouldSetResponder={() => true}>
-            <Switch
-              value={alarm.enabled}
-              onValueChange={v => onToggle(alarm.id, v)}
-              trackColor={{ true: colors.accent, false: colors.border }}
-              thumbColor={colors.white}
-            />
-          </View>
-        </View>
 
-        <View style={styles.alarmFoot}>
-          <View style={styles.daysWrap}>
-            <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
-            <Text style={styles.daysText}>{formatDays(alarm.repeatDays, t)}</Text>
+          <View style={styles.alarmFoot}>
+            <View style={styles.daysWrap}>
+              <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
+              <Text style={styles.daysText}>{formatDays(alarm.repeatDays, t)}</Text>
+            </View>
+            <View style={styles.chipsWrap}>
+              {alarm.challenges.map(c => (
+                <View key={c} style={styles.chip}>
+                  {challengeIcons[c]}
+                  <Text style={styles.chipText}>{t.challenges[c].short}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <View style={styles.chipsWrap}>
-            {alarm.challenges.map(c => (
-              <View key={c} style={styles.chip}>
-                {challengeIcons[c]}
-                <Text style={styles.chipText}>{t.challenges[c].short}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
         </View>
       </Pressable>
     </ReanimatedSwipeable>

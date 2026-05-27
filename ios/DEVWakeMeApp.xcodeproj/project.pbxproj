@@ -7,47 +7,49 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		099DE95E7CC24195A90CF5F1 /* OpenSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C970EC51FC314D38AEBAA7BC /* OpenSans-Bold.ttf */; };
-		0F0B2906A77348BDAE666E47 /* OpenSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C0F3BD7AA84040DA941298EA /* OpenSans-Regular.ttf */; };
+		01CBC6F45CDF4E6CB538537D /* OpenSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2501190AAF644BD28B967482 /* OpenSans-Regular.ttf */; };
+		08D8806BB3077A5B9416201E /* libPods-DEVWakeMeApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E4408A4C2577F3B7E49A3D0 /* libPods-DEVWakeMeApp.a */; };
+		0F29A1BF122E468E9AFE6582 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CDFBAB78C98944F5B36BEDEF /* GoogleService-Info.plist */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1C000E0054B24492B975ABC6 /* OpenSans-SemiboldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6E2CA15D427B4996B221C113 /* OpenSans-SemiboldItalic.ttf */; };
-		1E651007442B480E9E837BF4 /* OpenSans-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A43E6175A00741F4814906E6 /* OpenSans-Italic.ttf */; };
-		35F7AE5B5840419BA5FFC11F /* OpenSans-Semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5672BA9B48BB482DA47F436D /* OpenSans-Semibold.ttf */; };
-		3864E5BFDA92CBC049C30D1C /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1531E85BC002DE58BA6621E /* ExpoModulesProvider.swift */; };
-		39FBCC9D2470CD69A75264B5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 29DAC76D0081431A1FAA8AA0 /* PrivacyInfo.xcprivacy */; };
+		1E71C7D787AA7A5FF342F36E /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A665AF6BA90BCDA0E8CE13B /* ExpoModulesProvider.swift */; };
+		3976A26C35EF4279A6084208 /* chimes.caf in Resources */ = {isa = PBXBuildFile; fileRef = 358CB4DFAA1F4C529EEA81CB /* chimes.caf */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		82CF29FFB3F84456A7A7E1DA /* birds.caf in Resources */ = {isa = PBXBuildFile; fileRef = 408B6E5A00BA47878A734FD0 /* birds.caf */; };
+		9BC696850AB64D139C1C85AB /* birds.caf in Resources */ = {isa = PBXBuildFile; fileRef = 802B969953884E3C83805D88 /* birds.caf */; };
+		AF13464A603B4EC190CD1B03 /* OpenSans-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2A58D96E36104E2D996143CC /* OpenSans-BoldItalic.ttf */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		CC499181B6D73FEBDD14082D /* libPods-WakeMeAppAlarmClock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 23585BE5CAF0BCB1C3499C43 /* libPods-WakeMeAppAlarmClock.a */; };
-		E3DF5120005140AE9496D2C2 /* OpenSans-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F67EA2BE01134E5A9289FDA3 /* OpenSans-BoldItalic.ttf */; };
+		CE3C2F058291190D83FE5387 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 16462DB3590B2406B8C4D878 /* PrivacyInfo.xcprivacy */; };
+		D602A233F5EE4739A47DA8BB /* OpenSans-Semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 87C81B1960334FA482A1EA92 /* OpenSans-Semibold.ttf */; };
+		E52B4E030691490B80ECC482 /* OpenSans-SemiboldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DDEF8B3BE6F540FDBCEE0C3B /* OpenSans-SemiboldItalic.ttf */; };
+		E76C3958712C49AA8DEBA363 /* OpenSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4CB64159975F45FD9F6510B1 /* OpenSans-Bold.ttf */; };
+		F052E2D4BB4F43D6988E786B /* OpenSans-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9EAEA238F2AE4041B21E9627 /* OpenSans-Italic.ttf */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F4B3686F650F442195088463 /* sunrise.caf in Resources */ = {isa = PBXBuildFile; fileRef = 39AC21001A0A44B88151E909 /* sunrise.caf */; };
-		F4F36E44B2D041EFAB34A28C /* chimes.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6F428A52A23F4F8A83FF24DF /* chimes.caf */; };
+		FAD1B17340D44E75B2357383 /* sunrise.caf in Resources */ = {isa = PBXBuildFile; fileRef = F69A1B2C4EC2414BA6AB5FEF /* sunrise.caf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* WakeMeAppAlarmClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WakeMeAppAlarmClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = WakeMeAppAlarmClock/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = WakeMeAppAlarmClock/Info.plist; sourceTree = "<group>"; };
-		23585BE5CAF0BCB1C3499C43 /* libPods-WakeMeAppAlarmClock.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WakeMeAppAlarmClock.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		29DAC76D0081431A1FAA8AA0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = WakeMeAppAlarmClock/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		39AC21001A0A44B88151E909 /* sunrise.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = sunrise.caf; path = WakeMeAppAlarmClock/sunrise.caf; sourceTree = "<group>"; };
-		408B6E5A00BA47878A734FD0 /* birds.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = birds.caf; path = WakeMeAppAlarmClock/birds.caf; sourceTree = "<group>"; };
-		5672BA9B48BB482DA47F436D /* OpenSans-Semibold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Semibold.ttf"; path = "../assets/fonts/OpenSans-Semibold.ttf"; sourceTree = "<group>"; };
-		6E2CA15D427B4996B221C113 /* OpenSans-SemiboldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-SemiboldItalic.ttf"; path = "../assets/fonts/OpenSans-SemiboldItalic.ttf"; sourceTree = "<group>"; };
-		6F428A52A23F4F8A83FF24DF /* chimes.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = chimes.caf; path = WakeMeAppAlarmClock/chimes.caf; sourceTree = "<group>"; };
-		84E4BFBB50CFC3504154E327 /* Pods-WakeMeAppAlarmClock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WakeMeAppAlarmClock.release.xcconfig"; path = "Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock.release.xcconfig"; sourceTree = "<group>"; };
-		A43E6175A00741F4814906E6 /* OpenSans-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Italic.ttf"; path = "../assets/fonts/OpenSans-Italic.ttf"; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = WakeMeAppAlarmClock/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B1531E85BC002DE58BA6621E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-WakeMeAppAlarmClock/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* DEVWakeMeApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DEVWakeMeApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = DEVWakeMeApp/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = DEVWakeMeApp/Info.plist; sourceTree = "<group>"; };
+		16462DB3590B2406B8C4D878 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = DEVWakeMeApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2501190AAF644BD28B967482 /* OpenSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Regular.ttf"; path = "../assets/fonts/OpenSans-Regular.ttf"; sourceTree = "<group>"; };
+		2A58D96E36104E2D996143CC /* OpenSans-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-BoldItalic.ttf"; path = "../assets/fonts/OpenSans-BoldItalic.ttf"; sourceTree = "<group>"; };
+		358CB4DFAA1F4C529EEA81CB /* chimes.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = chimes.caf; path = DEVWakeMeApp/chimes.caf; sourceTree = "<group>"; };
+		41FC591AEE8215C9B855A56D /* Pods-DEVWakeMeApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DEVWakeMeApp.release.xcconfig"; path = "Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp.release.xcconfig"; sourceTree = "<group>"; };
+		4CB64159975F45FD9F6510B1 /* OpenSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Bold.ttf"; path = "../assets/fonts/OpenSans-Bold.ttf"; sourceTree = "<group>"; };
+		4E4408A4C2577F3B7E49A3D0 /* libPods-DEVWakeMeApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DEVWakeMeApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A665AF6BA90BCDA0E8CE13B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-DEVWakeMeApp/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		7EC2A87BDD78FF844CB30FEE /* Pods-DEVWakeMeApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DEVWakeMeApp.debug.xcconfig"; path = "Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp.debug.xcconfig"; sourceTree = "<group>"; };
+		802B969953884E3C83805D88 /* birds.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = birds.caf; path = DEVWakeMeApp/birds.caf; sourceTree = "<group>"; };
+		87C81B1960334FA482A1EA92 /* OpenSans-Semibold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Semibold.ttf"; path = "../assets/fonts/OpenSans-Semibold.ttf"; sourceTree = "<group>"; };
+		9EAEA238F2AE4041B21E9627 /* OpenSans-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Italic.ttf"; path = "../assets/fonts/OpenSans-Italic.ttf"; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = DEVWakeMeApp/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		BC0468F3B9F6399F32874D08 /* Pods-WakeMeAppAlarmClock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WakeMeAppAlarmClock.debug.xcconfig"; path = "Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock.debug.xcconfig"; sourceTree = "<group>"; };
-		C0F3BD7AA84040DA941298EA /* OpenSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Regular.ttf"; path = "../assets/fonts/OpenSans-Regular.ttf"; sourceTree = "<group>"; };
-		C970EC51FC314D38AEBAA7BC /* OpenSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Bold.ttf"; path = "../assets/fonts/OpenSans-Bold.ttf"; sourceTree = "<group>"; };
+		CDFBAB78C98944F5B36BEDEF /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "DEVWakeMeApp/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		DDEF8B3BE6F540FDBCEE0C3B /* OpenSans-SemiboldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-SemiboldItalic.ttf"; path = "../assets/fonts/OpenSans-SemiboldItalic.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = WakeMeAppAlarmClock/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* WakeMeAppAlarmClock-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "WakeMeAppAlarmClock-Bridging-Header.h"; path = "WakeMeAppAlarmClock/WakeMeAppAlarmClock-Bridging-Header.h"; sourceTree = "<group>"; };
-		F67EA2BE01134E5A9289FDA3 /* OpenSans-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-BoldItalic.ttf"; path = "../assets/fonts/OpenSans-BoldItalic.ttf"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = DEVWakeMeApp/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* DEVWakeMeApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "DEVWakeMeApp-Bridging-Header.h"; path = "DEVWakeMeApp/DEVWakeMeApp-Bridging-Header.h"; sourceTree = "<group>"; };
+		F69A1B2C4EC2414BA6AB5FEF /* sunrise.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = sunrise.caf; path = DEVWakeMeApp/sunrise.caf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,54 +57,60 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC499181B6D73FEBDD14082D /* libPods-WakeMeAppAlarmClock.a in Frameworks */,
+				08D8806BB3077A5B9416201E /* libPods-DEVWakeMeApp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* WakeMeAppAlarmClock */ = {
+		13B07FAE1A68108700A75B9A /* DEVWakeMeApp */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* WakeMeAppAlarmClock-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* DEVWakeMeApp-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				39AC21001A0A44B88151E909 /* sunrise.caf */,
-				6F428A52A23F4F8A83FF24DF /* chimes.caf */,
-				408B6E5A00BA47878A734FD0 /* birds.caf */,
-				29DAC76D0081431A1FAA8AA0 /* PrivacyInfo.xcprivacy */,
+				CDFBAB78C98944F5B36BEDEF /* GoogleService-Info.plist */,
+				F69A1B2C4EC2414BA6AB5FEF /* sunrise.caf */,
+				358CB4DFAA1F4C529EEA81CB /* chimes.caf */,
+				802B969953884E3C83805D88 /* birds.caf */,
+				16462DB3590B2406B8C4D878 /* PrivacyInfo.xcprivacy */,
 			);
-			name = WakeMeAppAlarmClock;
+			name = DEVWakeMeApp;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				23585BE5CAF0BCB1C3499C43 /* libPods-WakeMeAppAlarmClock.a */,
+				4E4408A4C2577F3B7E49A3D0 /* libPods-DEVWakeMeApp.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		576C142B1F97B4E212B8A63E /* ExpoModulesProviders */ = {
+		3C134FA245E145CA962E9448 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				EC3456B5D3276EEE84D8AAE6 /* WakeMeAppAlarmClock */,
+				4CB64159975F45FD9F6510B1 /* OpenSans-Bold.ttf */,
+				2A58D96E36104E2D996143CC /* OpenSans-BoldItalic.ttf */,
+				9EAEA238F2AE4041B21E9627 /* OpenSans-Italic.ttf */,
+				2501190AAF644BD28B967482 /* OpenSans-Regular.ttf */,
+				87C81B1960334FA482A1EA92 /* OpenSans-Semibold.ttf */,
+				DDEF8B3BE6F540FDBCEE0C3B /* OpenSans-SemiboldItalic.ttf */,
 			);
-			name = ExpoModulesProviders;
+			name = Resources;
+			path = "";
 			sourceTree = "<group>";
 		};
-		76748D3C176E49614E938933 /* Pods */ = {
+		7DE5EC2659A2CCD6E84D104C /* DEVWakeMeApp */ = {
 			isa = PBXGroup;
 			children = (
-				BC0468F3B9F6399F32874D08 /* Pods-WakeMeAppAlarmClock.debug.xcconfig */,
-				84E4BFBB50CFC3504154E327 /* Pods-WakeMeAppAlarmClock.release.xcconfig */,
+				5A665AF6BA90BCDA0E8CE13B /* ExpoModulesProvider.swift */,
 			);
-			path = Pods;
+			name = DEVWakeMeApp;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -115,13 +123,13 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* WakeMeAppAlarmClock */,
+				13B07FAE1A68108700A75B9A /* DEVWakeMeApp */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				8CDBA911FCBE4C29B372FF46 /* Resources */,
-				76748D3C176E49614E938933 /* Pods */,
-				576C142B1F97B4E212B8A63E /* ExpoModulesProviders */,
+				3C134FA245E145CA962E9448 /* Resources */,
+				F7484FCCD437513A55489C61 /* Pods */,
+				BE9997D74169E921864B8E5D /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -131,22 +139,9 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* WakeMeAppAlarmClock.app */,
+				13B07F961A680F5B00A75B9A /* DEVWakeMeApp.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		8CDBA911FCBE4C29B372FF46 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				C970EC51FC314D38AEBAA7BC /* OpenSans-Bold.ttf */,
-				F67EA2BE01134E5A9289FDA3 /* OpenSans-BoldItalic.ttf */,
-				A43E6175A00741F4814906E6 /* OpenSans-Italic.ttf */,
-				C0F3BD7AA84040DA941298EA /* OpenSans-Regular.ttf */,
-				5672BA9B48BB482DA47F436D /* OpenSans-Semibold.ttf */,
-				6E2CA15D427B4996B221C113 /* OpenSans-SemiboldItalic.ttf */,
-			);
-			name = Resources;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -155,40 +150,50 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = WakeMeAppAlarmClock/Supporting;
+			path = DEVWakeMeApp/Supporting;
 			sourceTree = "<group>";
 		};
-		EC3456B5D3276EEE84D8AAE6 /* WakeMeAppAlarmClock */ = {
+		BE9997D74169E921864B8E5D /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				B1531E85BC002DE58BA6621E /* ExpoModulesProvider.swift */,
+				7DE5EC2659A2CCD6E84D104C /* DEVWakeMeApp */,
 			);
-			name = WakeMeAppAlarmClock;
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		F7484FCCD437513A55489C61 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				7EC2A87BDD78FF844CB30FEE /* Pods-DEVWakeMeApp.debug.xcconfig */,
+				41FC591AEE8215C9B855A56D /* Pods-DEVWakeMeApp.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* WakeMeAppAlarmClock */ = {
+		13B07F861A680F5B00A75B9A /* DEVWakeMeApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "WakeMeAppAlarmClock" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "DEVWakeMeApp" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				6A7A8B96B6AB1B9DCF87E577 /* [Expo] Configure project */,
+				6ECCBA1CAA4723D0C7386BB0 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				2E5137BB72E7917C152266B0 /* [CP] Embed Pods Frameworks */,
+				2AC308BCB252407AD9A06A52 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = WakeMeAppAlarmClock;
-			productName = WakeMeAppAlarmClock;
-			productReference = 13B07F961A680F5B00A75B9A /* WakeMeAppAlarmClock.app */;
+			name = DEVWakeMeApp;
+			productName = DEVWakeMeApp;
+			productReference = 13B07F961A680F5B00A75B9A /* DEVWakeMeApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -204,7 +209,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "WakeMeAppAlarmClock" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "DEVWakeMeApp" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -217,7 +222,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* WakeMeAppAlarmClock */,
+				13B07F861A680F5B00A75B9A /* DEVWakeMeApp */,
 			);
 		};
 /* End PBXProject section */
@@ -230,16 +235,17 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				099DE95E7CC24195A90CF5F1 /* OpenSans-Bold.ttf in Resources */,
-				E3DF5120005140AE9496D2C2 /* OpenSans-BoldItalic.ttf in Resources */,
-				1E651007442B480E9E837BF4 /* OpenSans-Italic.ttf in Resources */,
-				0F0B2906A77348BDAE666E47 /* OpenSans-Regular.ttf in Resources */,
-				35F7AE5B5840419BA5FFC11F /* OpenSans-Semibold.ttf in Resources */,
-				1C000E0054B24492B975ABC6 /* OpenSans-SemiboldItalic.ttf in Resources */,
-				F4B3686F650F442195088463 /* sunrise.caf in Resources */,
-				F4F36E44B2D041EFAB34A28C /* chimes.caf in Resources */,
-				82CF29FFB3F84456A7A7E1DA /* birds.caf in Resources */,
-				39FBCC9D2470CD69A75264B5 /* PrivacyInfo.xcprivacy in Resources */,
+				0F29A1BF122E468E9AFE6582 /* GoogleService-Info.plist in Resources */,
+				E76C3958712C49AA8DEBA363 /* OpenSans-Bold.ttf in Resources */,
+				AF13464A603B4EC190CD1B03 /* OpenSans-BoldItalic.ttf in Resources */,
+				F052E2D4BB4F43D6988E786B /* OpenSans-Italic.ttf in Resources */,
+				01CBC6F45CDF4E6CB538537D /* OpenSans-Regular.ttf in Resources */,
+				D602A233F5EE4739A47DA8BB /* OpenSans-Semibold.ttf in Resources */,
+				E52B4E030691490B80ECC482 /* OpenSans-SemiboldItalic.ttf in Resources */,
+				FAD1B17340D44E75B2357383 /* sunrise.caf in Resources */,
+				3976A26C35EF4279A6084208 /* chimes.caf in Resources */,
+				9BC696850AB64D139C1C85AB /* birds.caf in Resources */,
+				CE3C2F058291190D83FE5387 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,20 +284,20 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-WakeMeAppAlarmClock-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-DEVWakeMeApp-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		2E5137BB72E7917C152266B0 /* [CP] Embed Pods Frameworks */ = {
+		2AC308BCB252407AD9A06A52 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-frameworks.sh",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
@@ -304,10 +310,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		6A7A8B96B6AB1B9DCF87E577 /* [Expo] Configure project */ = {
+		6ECCBA1CAA4723D0C7386BB0 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -318,18 +324,18 @@
 			inputPaths = (
 				"$(SRCROOT)/.xcode.env",
 				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/WakeMeAppAlarmClock/WakeMeAppAlarmClock.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-WakeMeAppAlarmClock/expo-configure-project.sh",
+				"$(SRCROOT)/DEVWakeMeApp/DEVWakeMeApp.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-DEVWakeMeApp/expo-configure-project.sh",
 			);
 			name = "[Expo] Configure project";
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-WakeMeAppAlarmClock/ExpoModulesProvider.swift",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-DEVWakeMeApp/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-WakeMeAppAlarmClock/expo-configure-project.sh\"\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-DEVWakeMeApp/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -337,7 +343,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/AppAuth/AppAuthCore_Privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
@@ -353,6 +359,7 @@
 				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleToolboxForMac/GoogleToolboxForMac_Privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleToolboxForMac/GoogleToolboxForMac_Logger_Privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleUtilities/GoogleUtilities_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/MLKitFaceDetection/GoogleMVFaceDetectorResources.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/MLKitImageLabeling/MLKitImageLabelingResources.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/MLKitObjectDetectionCommon/MLKitObjectDetectionCommonResources.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/PromisesObjC/FBLPromises_Privacy.bundle",
@@ -381,6 +388,7 @@
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleToolboxForMac_Privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleToolboxForMac_Logger_Privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleUtilities_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleMVFaceDetectorResources.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/MLKitImageLabelingResources.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/MLKitObjectDetectionCommonResources.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FBLPromises_Privacy.bundle",
@@ -394,7 +402,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WakeMeAppAlarmClock/Pods-WakeMeAppAlarmClock-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -405,7 +413,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				3864E5BFDA92CBC049C30D1C /* ExpoModulesProvider.swift in Sources */,
+				1E71C7D787AA7A5FF342F36E /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -414,20 +422,19 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BC0468F3B9F6399F32874D08 /* Pods-WakeMeAppAlarmClock.debug.xcconfig */;
+			baseConfigurationReference = 7EC2A87BDD78FF844CB30FEE /* Pods-DEVWakeMeApp.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = WakeMeAppAlarmClock/WakeMeAppAlarmClock.entitlements;
+				CODE_SIGN_ENTITLEMENTS = DEVWakeMeApp/DEVWakeMeApp.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 9F74X88286;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = WakeMeAppAlarmClock/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				INFOPLIST_FILE = DEVWakeMeApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -440,8 +447,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.mtoplak.wakemeapp;
-				PRODUCT_NAME = WakeMeAppAlarmClock;
-				SWIFT_OBJC_BRIDGING_HEADER = "WakeMeAppAlarmClock/WakeMeAppAlarmClock-Bridging-Header.h";
+				PRODUCT_NAME = DEVWakeMeApp;
+				SWIFT_OBJC_BRIDGING_HEADER = "DEVWakeMeApp/DEVWakeMeApp-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -451,15 +458,14 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 84E4BFBB50CFC3504154E327 /* Pods-WakeMeAppAlarmClock.release.xcconfig */;
+			baseConfigurationReference = 41FC591AEE8215C9B855A56D /* Pods-DEVWakeMeApp.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = WakeMeAppAlarmClock/WakeMeAppAlarmClock.entitlements;
+				CODE_SIGN_ENTITLEMENTS = DEVWakeMeApp/DEVWakeMeApp.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 9F74X88286;
-				INFOPLIST_FILE = WakeMeAppAlarmClock/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				INFOPLIST_FILE = DEVWakeMeApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -472,8 +478,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.mtoplak.wakemeapp;
-				PRODUCT_NAME = WakeMeAppAlarmClock;
-				SWIFT_OBJC_BRIDGING_HEADER = "WakeMeAppAlarmClock/WakeMeAppAlarmClock-Bridging-Header.h";
+				PRODUCT_NAME = DEVWakeMeApp;
+				SWIFT_OBJC_BRIDGING_HEADER = "DEVWakeMeApp/DEVWakeMeApp-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -527,19 +533,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"${PODS_ROOT}/ReactCommon",
-					"${PODS_ROOT}/ReactCommon/react/nativemodule/core",
-					"${PODS_ROOT}/React-runtimeexecutor",
-					"${PODS_ROOT}/React-runtimeexecutor/platform/ios",
-					"${PODS_ROOT}/ReactCommon-Samples",
-					"${PODS_ROOT}/ReactCommon-Samples/platform/ios",
-					"${PODS_ROOT}/React-Fabric/react/renderer/components/view/platform/cxx",
-					"${PODS_ROOT}/React-NativeModulesApple",
-					"${PODS_ROOT}/React-graphics",
-					"${PODS_ROOT}/React-graphics/react/renderer/graphics/platform/ios",
-				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
@@ -596,19 +589,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"${PODS_ROOT}/ReactCommon",
-					"${PODS_ROOT}/ReactCommon/react/nativemodule/core",
-					"${PODS_ROOT}/React-runtimeexecutor",
-					"${PODS_ROOT}/React-runtimeexecutor/platform/ios",
-					"${PODS_ROOT}/ReactCommon-Samples",
-					"${PODS_ROOT}/ReactCommon-Samples/platform/ios",
-					"${PODS_ROOT}/React-Fabric/react/renderer/components/view/platform/cxx",
-					"${PODS_ROOT}/React-NativeModulesApple",
-					"${PODS_ROOT}/React-graphics",
-					"${PODS_ROOT}/React-graphics/react/renderer/graphics/platform/ios",
-				);
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
@@ -627,7 +607,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "WakeMeAppAlarmClock" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "DEVWakeMeApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -636,7 +616,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "WakeMeAppAlarmClock" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "DEVWakeMeApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

@@ -1,4 +1,4 @@
-export type ChallengeType = 'qr' | 'object' | 'color' | 'steps' | 'voice';
+export type ChallengeType = 'qr' | 'object' | 'color' | 'steps' | 'voice' | 'face';
 
 export interface AlarmChallengeRecord {
   id: number;

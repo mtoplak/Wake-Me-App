@@ -34,7 +34,7 @@ const MINUTES = Array.from({ length: 60 }, (_, i) => i);
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 
-type ChallengeKey = 'qr' | 'object' | 'color' | 'steps' | 'voice';
+type ChallengeKey = 'qr' | 'object' | 'color' | 'steps' | 'voice' | 'face';
 
 const MAX_CHALLENGES = 2;
 
@@ -44,8 +44,9 @@ const CHALLENGE_ICONS: Record<ChallengeKey, React.ReactNode> = {
   color: <Ionicons name="color-palette-outline" size={22} color={colors.accent} />,
   steps: <Ionicons name="walk-outline" size={22} color={colors.accent} />,
   voice: <Ionicons name="mic-outline" size={22} color={colors.accent} />,
+  face: <MaterialCommunityIcons name="face-recognition" size={22} color={colors.accent} />,
 };
-const CHALLENGE_KEYS: ChallengeKey[] = ['qr', 'object', 'color', 'steps', 'voice'];
+const CHALLENGE_KEYS: ChallengeKey[] = ['qr', 'object', 'color', 'steps', 'voice', 'face'];
 
 const SOUND_OPTIONS = Object.keys(alarmSounds);
 
@@ -318,7 +319,9 @@ export default function CreateAlarm() {
           })}
         </View>
 
-        <SectionTitle>{t.createAlarm.wakeChallenge(challenges.length, MAX_CHALLENGES)}</SectionTitle>
+        <SectionTitle>
+          {t.createAlarm.wakeChallenge(challenges.length, MAX_CHALLENGES)}
+        </SectionTitle>
         <View style={styles.challengeList}>
           {CHALLENGE_KEYS.map(key => {
             const active = challenges.includes(key);
@@ -379,9 +382,7 @@ export default function CreateAlarm() {
         </View>
 
         <Pressable style={styles.primaryBtn} onPress={onSave} disabled={saving}>
-          <Text style={styles.primaryBtnText}>
-            {saving ? t.common.saving : primarySaveLabel}
-          </Text>
+          <Text style={styles.primaryBtnText}>{saving ? t.common.saving : primarySaveLabel}</Text>
         </Pressable>
       </ScrollView>
 

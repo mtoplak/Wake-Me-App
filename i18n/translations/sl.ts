@@ -91,6 +91,11 @@ const sl: typeof en = {
       subtitle: 'Glasno izgovori dnevno frazo',
       short: 'Glas',
     },
+    face: {
+      title: 'Prepoznavanje obraza',
+      subtitle: 'Izziv mimike pokaži obraz prijatelja',
+      short: 'Obraz',
+    },
   },
 
   challengeLabel: {
@@ -99,6 +104,7 @@ const sl: typeof en = {
     color: 'Najdi barvo',
     steps: 'Hodi',
     voice: 'Glasovna fraza',
+    face: 'Obraz',
     wakeUp: 'Zbujanje',
   },
 
@@ -238,6 +244,38 @@ const sl: typeof en = {
       phone: 'Telefon',
       sunglasses: 'Sončna očala',
       shoe: 'Čevelj',
+    },
+  },
+
+  faceChallenge: {
+    introTitle: 'Prepoznavanje obraza',
+    introBody:
+      'Drži telefon tako, da je tvoj obraz v kadru. Naprava lokalno preverja kamero in alarm se ustavi, ko zazna kar potrebuje.',
+    goalLabel: 'Cilj',
+    openCamera: 'Odpri kamero',
+    skipUnsupported: 'Nadaljuj brez prepoznavanja',
+    expoGoUnsupportedTitle: 'Ni na voljo v Expo Go',
+    expoGoUnsupportedBody:
+      'Prepoznavanje obraza zahteva razvijalsko gradnjo z native ML modulom. Expo Go ga ne naloži.',
+    modes: {
+      twoFaces: {
+        title: 'Selfie s sostanovalcem',
+        intro: 'Dva obraza v kadru — pokliči cimra, partnerja ali družino.',
+        scanHint: 'Naj sta oba obraza hkrati v kadru kamere.',
+      },
+    },
+    sequence: {
+      intro: {
+        title: 'Izziv mimike',
+        intro: 'Štiri izrazi v naključnem vrstnem redu. Sledi navodilom za izklop alarma.',
+      },
+      stepProgress: (current: number, total: number) => `Korak ${current} od ${total}`,
+      actions: {
+        wink: { title: 'Pomežikni', hint: 'Zapri eno oko, drugo naj ostane odprto.' },
+        tongue: { title: 'Pokaži jezik', hint: 'Široko odpri usta in pokaži jezik.' },
+        headTurn: { title: 'Obrni glavo', hint: 'Zasukaj levo ali desno — jasno na stran.' },
+        smile: { title: 'Nasmehni se', hint: 'Velik, jasen nasmeh.' },
+      },
     },
   },
 
