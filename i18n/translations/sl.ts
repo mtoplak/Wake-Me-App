@@ -157,9 +157,9 @@ const sl: typeof en = {
 
   voiceChallenge: {
     devTitle: 'Glasovni izziv (dev)',
-    introTitle: 'Preverjanje z odmevom',
+    introTitle: 'Glasovno preverjanje',
     introBody:
-      'Dvakrat zapored izgovoriš isto naključno frazo. Dovoli mikrofon, nato pritisni Poslušaj in govori jasno.',
+      'Dvakrat zapored izgovoriš isto izbrano frazo. Dovoli mikrofon, nato pritisni Poslušaj in govori jasno.',
     continue: 'Nadaljuj',
     permissionDenied:
       'Mikrofon ali prepoznavanje govora je za to aplikacijo izklopljen. Vklopi ju v sistemskih nastavitvah.',

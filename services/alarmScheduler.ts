@@ -3,14 +3,17 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import type * as NotificationsType from 'expo-notifications';
 import { getDb } from './database/db';
 import type { Alarm } from './database/types';
+import { refreshKeepalive } from './alarmKeepalive';
 
 const ALARM_CATEGORY = 'wake-me-alarm';
 
 // iOS caps individual notification sounds at 30 s and won't loop them. To
 // approximate a continuous ring we schedule a burst of N notifications spaced
-// 30 s apart. AlarmRinging cancels the remaining ones the moment the user
+// just under the .caf length apart so the next one fires as the previous sound
+// ends. The bundled .caf files are ~28 s; using 28 s here leaves a sub-frame
+// gap on device. AlarmRinging cancels remaining bursts the moment the user
 // reaches the screen — the foreground audio takes over from there.
-const NOTIFICATION_INTERVAL_S = 30;
+const NOTIFICATION_INTERVAL_S = 28;
 const RING_DURATION_S = 180; // 3 minutes
 const N_BURST_NOTIFICATIONS = Math.ceil(RING_DURATION_S / NOTIFICATION_INTERVAL_S);
 
@@ -169,6 +172,7 @@ export async function cancelAlarm(alarmId: number): Promise<void> {
       await Notifications.cancelScheduledNotificationAsync(id);
     } catch {}
   }
+  await refreshKeepalive();
 }
 
 export async function scheduleAlarm(alarm: Alarm): Promise<void> {
@@ -194,8 +198,15 @@ export async function scheduleAlarm(alarm: Alarm): Promise<void> {
       title: alarm.label || 'Wake up',
       body: 'Tap to start your wake-up challenge.',
       sound: Platform.OS === 'ios' ? soundFiles.ios : soundFiles.android,
-      data: { alarmId: alarm.id, category: ALARM_CATEGORY, burstIndex: i },
-      ...(Platform.OS === 'ios' ? { threadIdentifier: threadId } : {}),
+      data: {
+        alarmId: alarm.id,
+        alarmSound: alarm.sound,
+        category: ALARM_CATEGORY,
+        burstIndex: i,
+      },
+      ...(Platform.OS === 'ios'
+        ? { threadIdentifier: threadId, interruptionLevel: 'timeSensitive' as const }
+        : {}),
       ...(Platform.OS === 'android' ? { channelId } : {}),
     };
     const id = await Notifications.scheduleNotificationAsync({
@@ -210,6 +221,7 @@ export async function scheduleAlarm(alarm: Alarm): Promise<void> {
   }
 
   await storeNotificationIds(alarm.id, scheduledIds);
+  await refreshKeepalive();
 }
 
 // Called from AlarmRinging the moment the user reaches the screen. Cancels any
@@ -231,6 +243,10 @@ export async function acknowledgeAlarm(alarmId: number, alarm?: Alarm): Promise<
   if (alarm && alarm.enabled && alarm.repeatDays.length > 0) {
     // Re-arm for the next matching weekday (compute strictly after now).
     await scheduleAlarm(alarm);
+  } else {
+    // Non-repeating alarm just fired — reassess whether keepalive should
+    // continue (other alarms may still be armed).
+    await refreshKeepalive();
   }
 }
 
@@ -240,6 +256,7 @@ export async function rescheduleAllAlarms(alarms: Alarm[]): Promise<void> {
   for (const alarm of alarms) {
     await scheduleAlarm(alarm);
   }
+  await refreshKeepalive();
 }
 
 // True when running inside Expo Go — useful for showing UI hints since

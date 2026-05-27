@@ -4,6 +4,7 @@ import { useRouter, useSegments } from 'expo-router';
 import { listAlarms } from '@/services/database';
 import { Alarm } from '@/services/database/types';
 import { getNotificationsModule, setAlarmActiveForeground } from '@/services/alarmScheduler';
+import { startKeepaliveAlarm } from '@/services/alarmKeepalive';
 
 const POLL_INTERVAL_MS = 3_000;
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -78,12 +79,23 @@ export function useAlarmWatcher() {
     if (!Notifications) return;
 
     // Fires when the user taps a notification — open the ringing screen.
+    // Guarded against duplicate pushes: with the keepalive alive in background
+    // the `Received` listener has often already pushed AlarmRinging by the
+    // time the user taps, and a second push would stack a hidden instance
+    // that resurfaces (and resets to the ringing phase via useFocusEffect)
+    // the moment the visible one dismisses.
     const tapSub = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data as { alarmId?: unknown } | undefined;
       const raw = data?.alarmId;
       const alarmId = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
       if (Number.isFinite(alarmId)) {
-        router.push(`/(main)/alarmRinging?alarmId=${alarmId}`);
+        // Mark as fired so the 3 s polling tick respects its 60 s cooldown
+        // and doesn't re-navigate when the dismiss screen exits inside the
+        // same minute.
+        lastFired.current.set(alarmId, Date.now());
+        if (!onAlarmRinging.current) {
+          router.push(`/(main)/alarmRinging?alarmId=${alarmId}`);
+        }
       }
     });
 
@@ -91,12 +103,25 @@ export function useAlarmWatcher() {
     // suppression flag *immediately* so the next notification in the 30s burst
     // is silenced, and proactively navigate to the ringing screen so the in-app
     // looped audio takes over instead of waiting for the next watcher tick.
+    // While the app is backgrounded, also swap the silent keepalive loop to
+    // the real alarm sound so audio is continuous from second 0 — without
+    // waiting for the user to tap the notification.
     const receiveSub = Notifications.addNotificationReceivedListener(notification => {
-      const data = notification.request.content.data as { alarmId?: unknown } | undefined;
+      const data = notification.request.content.data as
+        | { alarmId?: unknown; alarmSound?: unknown }
+        | undefined;
       const raw = data?.alarmId;
       const alarmId = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
       if (!Number.isFinite(alarmId)) return;
+      // Mark as fired so the 3 s polling tick respects its 60 s cooldown
+      // and doesn't re-navigate when the dismiss screen exits inside the
+      // same minute.
+      lastFired.current.set(alarmId, Date.now());
       setAlarmActiveForeground(true);
+      const soundName = typeof data?.alarmSound === 'string' ? data.alarmSound : '';
+      if (soundName) {
+        startKeepaliveAlarm(soundName).catch(() => {});
+      }
       if (!onAlarmRinging.current) {
         router.push(`/(main)/alarmRinging?alarmId=${alarmId}`);
       }

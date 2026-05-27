@@ -27,7 +27,8 @@
       "bundleIdentifier": "com.mtoplak.wakemeapp",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSCameraUsageDescription": "Wake Me uses the camera so you can scan a QR code to dismiss your alarm."
+        "NSCameraUsageDescription": "Wake Me uses the camera so you can scan a QR code to dismiss your alarm.",
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {

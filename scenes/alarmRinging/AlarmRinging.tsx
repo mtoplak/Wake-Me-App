@@ -5,6 +5,12 @@ import { useAudioPlayer, setAudioModeAsync, AudioSource } from 'expo-audio';
 import { listAlarms, Alarm, getSetting } from '@/services/database';
 import { fetchRandomQuote, FetchedQuote } from '@/services/quoteApi';
 import { acknowledgeAlarm, setAlarmActiveForeground } from '@/services/alarmScheduler';
+import {
+  stopKeepalive,
+  refreshKeepalive,
+  suspendKeepalive,
+  resumeKeepalive,
+} from '@/services/alarmKeepalive';
 import { useTranslation } from '@/i18n';
 import { getAlarmSource } from './sounds';
 import { ColorChallengeFlow } from './colorChallenge';
@@ -40,9 +46,7 @@ export default function AlarmRinging() {
       setVoicePhrase(savedPhrase);
       const routeId = parseRouteAlarmId(params.alarmId);
       const found =
-        routeId != null
-          ? list.find(a => a.id === routeId)
-          : (list.find(a => a.enabled) ?? list[0]);
+        routeId != null ? list.find(a => a.id === routeId) : (list.find(a => a.enabled) ?? list[0]);
       if (found) {
         setAlarm(found);
         acknowledgeAlarm(found.id, found).catch(() => {});
@@ -101,12 +105,23 @@ export default function AlarmRinging() {
   const player = useAudioPlayer(audioSource ?? null);
 
   useEffect(() => {
-    setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false }).catch(() => {});
+    setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true }).catch(() => {});
   }, []);
 
   useEffect(() => {
     setAlarmActiveForeground(true);
-    return () => setAlarmActiveForeground(false);
+    // Stop the silent background keepalive — this screen's own audio player
+    // owns the audio session now. Suspend so the scheduler's re-arm path
+    // (e.g. repeating alarm reschedule from acknowledgeAlarm) doesn't spawn a
+    // redundant silent loop alongside the ring audio. On unmount, resume and
+    // refresh to re-arm the silent loop if any other alarms remain.
+    suspendKeepalive();
+    stopKeepalive().catch(() => {});
+    return () => {
+      setAlarmActiveForeground(false);
+      resumeKeepalive();
+      refreshKeepalive().catch(() => {});
+    };
   }, []);
 
   useEffect(() => {
@@ -185,9 +200,7 @@ export default function AlarmRinging() {
   }
 
   if (phase === 'quote') {
-    return (
-      <AlarmRingQuoteView quote={quote} t={t} onContinue={() => router.back()} />
-    );
+    return <AlarmRingQuoteView quote={quote} t={t} onContinue={() => router.back()} />;
   }
 
   return (
