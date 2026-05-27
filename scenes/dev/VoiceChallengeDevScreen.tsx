@@ -12,7 +12,7 @@ import { VoiceChallengeFlow } from '@/scenes/alarmRinging/voiceChallenge/VoiceCh
  */
 export default function VoiceChallengeDevScreen() {
   const router = useRouter();
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -24,7 +24,7 @@ export default function VoiceChallengeDevScreen() {
         <View style={styles.headerSpacer} />
       </View>
       <View style={styles.flow}>
-        <VoiceChallengeFlow language={language} onComplete={() => router.back()} />
+        <VoiceChallengeFlow onComplete={() => router.back()} />
       </View>
     </SafeAreaView>
   );

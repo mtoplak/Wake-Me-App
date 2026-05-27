@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
-import type { Language } from '@/i18n';
 import { useTranslation } from '@/i18n';
 import { transcriptMatchesPhrase } from './matchTranscript';
-import { speechLocaleForAppLanguage } from './speechLocale';
+import { speechLocale } from './speechLocale';
 
 type Props = {
-  language: Language;
   phrase: string;
   listening: boolean;
   onLiveTranscript: (text: string) => void;
@@ -17,7 +15,6 @@ type Props = {
 };
 
 export default function VoiceChallengeNativeSession({
-  language,
   phrase,
   listening,
   onLiveTranscript,
@@ -28,6 +25,11 @@ export default function VoiceChallengeNativeSession({
   const { t } = useTranslation();
   const phraseRef = useRef(phrase);
   phraseRef.current = phrase;
+  // iOS emits multiple interim 'result' events in rapid succession; once one
+  // crosses the match threshold, suppress further matches in this listening
+  // session so a single utterance doesn't double-trigger onPhraseMatched and
+  // skip straight from pass 1 to success.
+  const matchedRef = useRef(false);
 
   const stopRecognitionSafe = useCallback(() => {
     try {
@@ -56,13 +58,14 @@ export default function VoiceChallengeNativeSession({
       stopRecognitionSafe();
       return;
     }
+    matchedRef.current = false;
     onLiveTranscript('');
     // Don't pre-abort: on iOS abort() and start() dispatch as separate async
     // tasks and the abort can land after the new session is up, immediately
     // killing it and surfacing as "no-speech".
     try {
       ExpoSpeechRecognitionModule.start({
-        lang: speechLocaleForAppLanguage(language),
+        lang: speechLocale(),
         interimResults: true,
         // Continuous keeps the iOS 3s no-speech timer from firing on sleepy
         // users; we stop the session ourselves the moment the phrase matches.
@@ -72,7 +75,7 @@ export default function VoiceChallengeNativeSession({
     } catch {
       /* surfaced via the 'error' event */
     }
-  }, [listening, language, phrase, onLiveTranscript, stopRecognitionSafe]);
+  }, [listening, phrase, onLiveTranscript, stopRecognitionSafe]);
 
   useSpeechRecognitionEvent('result', ev => {
     const text = ev.results[0]?.transcript ?? '';
@@ -81,6 +84,8 @@ export default function VoiceChallengeNativeSession({
     // significant word in the phrase to appear, so partial prefixes won't
     // false-positive.
     if (!transcriptMatchesPhrase(text, phraseRef.current)) return;
+    if (matchedRef.current) return;
+    matchedRef.current = true;
 
     stopRecognitionSafe();
     onListeningChange(false);

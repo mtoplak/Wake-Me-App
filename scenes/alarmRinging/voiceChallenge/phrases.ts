@@ -1,9 +1,8 @@
-import type { Language } from '@/i18n';
-
 /**
- * Curated wake phrases (no user free-text). Picked at random when the voice
- * challenge runs. Keep lines short enough for on-device ASR, long enough to
- * avoid trivial passes.
+ * Curated wake phrases. The voice challenge ships English-only because the
+ * on-device speech recognizer doesn't reliably support `sl-SI` (and on many
+ * locales it's not available at all). Slovenian app users still get English
+ * phrases for the challenge.
  */
 const VOICE_PHRASES_EN: readonly string[] = [
   'Rise and shine today',
@@ -16,28 +15,11 @@ const VOICE_PHRASES_EN: readonly string[] = [
   'Ready for what comes next',
 ];
 
-const VOICE_PHRASES_SL: readonly string[] = [
-  'Danes sem buden in pripravljen',
-  'Dobro jutro nov dan',
-  'Čas je da vstaneš',
-  'Jutro prinese nove priložnosti',
-  'Sem pripravljen na dan',
-  'Oči so odprte zdaj',
-  'Nov dan nov začetek',
-  'Danes naredim prvi korak',
-];
-
-const BY_LANG: Record<Language, readonly string[]> = {
-  EN: VOICE_PHRASES_EN,
-  SL: VOICE_PHRASES_SL,
-};
-
-export function pickRandomVoicePhrase(language: Language): string {
-  const list = BY_LANG[language] ?? BY_LANG.EN;
-  const i = Math.floor(Math.random() * list.length);
-  return list[i] ?? list[0];
+export function pickRandomVoicePhrase(): string {
+  const i = Math.floor(Math.random() * VOICE_PHRASES_EN.length);
+  return VOICE_PHRASES_EN[i] ?? VOICE_PHRASES_EN[0];
 }
 
-export function getVoicePhraseSuggestions(language: Language): readonly string[] {
-  return BY_LANG[language] ?? BY_LANG.EN;
+export function getVoicePhraseSuggestions(): readonly string[] {
+  return VOICE_PHRASES_EN;
 }

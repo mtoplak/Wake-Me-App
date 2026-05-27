@@ -135,7 +135,7 @@ const en = {
 
   voiceChallenge: {
     devTitle: 'Voice challenge (dev)',
-    introTitle: 'Echo voice check',
+    introTitle: 'Voice phrase check',
     introBody:
       'You will say the same random phrase twice in a row. Grant the microphone when asked, then tap listen and speak clearly.',
     continue: 'Continue',

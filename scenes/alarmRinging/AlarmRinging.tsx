@@ -27,7 +27,7 @@ import { AlarmRingQuoteView } from './AlarmRingQuoteView';
 
 export default function AlarmRinging() {
   const router = useRouter();
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ alarmId?: string }>();
   const [alarm, setAlarm] = useState<Alarm | null>(null);
   const [phase, setPhase] = useState<RingPhase>('ringing');
@@ -105,7 +105,14 @@ export default function AlarmRinging() {
   const player = useAudioPlayer(audioSource ?? null);
 
   useEffect(() => {
-    setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true }).catch(() => {});
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      // Take exclusive audio focus so background music (Spotify, podcasts) is
+      // paused while the alarm rings — without this the default mixes and
+      // other apps' audio competes/ducks ours.
+      interruptionMode: 'doNotMix',
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -192,7 +199,6 @@ export default function AlarmRinging() {
     return (
       <VoiceChallengeFlow
         variant="alarm"
-        language={language}
         phraseOverride={voicePhrase}
         onComplete={handleVoiceChallengeComplete}
       />

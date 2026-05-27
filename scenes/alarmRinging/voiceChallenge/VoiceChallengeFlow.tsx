@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import type { Language } from '@/i18n';
 import { useTranslation } from '@/i18n';
 import { colors } from '@/theme';
 import { pickRandomVoicePhrase } from './phrases';
@@ -28,7 +27,6 @@ export type VoiceChallengeCompletePayload = {
 };
 
 type Props = {
-  language: Language;
   /** `alarm`: track duration for wake stats; unsupported clients may skip with `skipped`. */
   variant?: 'dev' | 'alarm';
   /** Optional user-configured phrase. Falls back to a curated random pick if empty. */
@@ -36,17 +34,12 @@ type Props = {
   onComplete: (payload?: VoiceChallengeCompletePayload) => void;
 };
 
-export function VoiceChallengeFlow({
-  language,
-  variant = 'dev',
-  phraseOverride,
-  onComplete,
-}: Props) {
+export function VoiceChallengeFlow({ variant = 'dev', phraseOverride, onComplete }: Props) {
   const { t } = useTranslation();
   const vt = t.voiceChallenge;
   const [phrase] = useState(() => {
     const trimmed = phraseOverride?.trim();
-    return trimmed && trimmed.length > 0 ? trimmed : pickRandomVoicePhrase(language);
+    return trimmed && trimmed.length > 0 ? trimmed : pickRandomVoicePhrase();
   });
 
   const [step, setStep] = useState<UiStep>('intro');
@@ -204,7 +197,6 @@ export function VoiceChallengeFlow({
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
       <Suspense fallback={null}>
         <VoiceChallengeNativeSession
-          language={language}
           phrase={phrase}
           listening={listening}
           onLiveTranscript={handleLiveTranscript}

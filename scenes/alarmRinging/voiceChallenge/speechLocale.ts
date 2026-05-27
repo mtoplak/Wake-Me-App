@@ -1,6 +1,8 @@
-import type { Language } from '@/i18n';
-
-/** BCP-47 tag passed to `expo-speech-recognition` `start({ lang })`. */
-export function speechLocaleForAppLanguage(language: Language): string {
-  return language === 'SL' ? 'sl-SI' : 'en-US';
+/**
+ * BCP-47 tag passed to `expo-speech-recognition` `start({ lang })`. The voice
+ * challenge is English-only because `sl-SI` isn't a supported recognizer
+ * locale on many devices; see `phrases.ts`.
+ */
+export function speechLocale(): string {
+  return 'en-US';
 }

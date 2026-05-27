@@ -80,7 +80,7 @@ export default function Settings() {
   const [showStepGoalModal, setShowStepGoalModal] = useState(false);
   const [stepGoalDraft, setStepGoalDraft] = useState('');
   const [stepGoalError, setStepGoalError] = useState(false);
-  const phraseSuggestions = getVoicePhraseSuggestions(language);
+  const phraseSuggestions = getVoicePhraseSuggestions();
 
   // Note: do NOT dispatch `setLanguage` here, and do NOT depend on translated
   // strings like `t.settings.appearanceLight`. Both create a feedback loop
