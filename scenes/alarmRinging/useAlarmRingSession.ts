@@ -1,6 +1,6 @@
 import { useCallback, type MutableRefObject } from 'react';
 import type { Alarm } from '@/services/database';
-import { recordWake } from '@/services/database';
+import { getTodaysQuote, recordWake } from '@/services/database';
 import type { FetchedQuote } from '@/services/quoteApi';
 import { fetchRandomQuote } from '@/services/quoteApi';
 import type { ColorChallengeCompletePayload } from './colorChallenge';
@@ -35,8 +35,18 @@ export function useAlarmRingSession({
   ringSessionRef,
 }: Options) {
   const finishWithQuote = useCallback(async () => {
-    const q = await (quotePromiseRef.current ?? fetchRandomQuote());
-    setQuote(q);
+    const fetched = await (quotePromiseRef.current ?? fetchRandomQuote());
+    if (fetched) {
+      setQuote(fetched);
+      setPhase('quote');
+      return;
+    }
+    // Random fetch returned null (ZenQuotes free tier is 5 req/30s; transient
+    // 5xx also lands here). Fall back through the same cache → bundled-default
+    // chain the Quotes tab uses, so the alarm screen never lands on the i18n
+    // stub when there's something better available.
+    const fallback = await getTodaysQuote();
+    setQuote(fallback ? { text: fallback.text, author: fallback.author } : null);
     setPhase('quote');
   }, [quotePromiseRef, setPhase, setQuote]);
 
