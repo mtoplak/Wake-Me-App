@@ -7,49 +7,49 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		01CBC6F45CDF4E6CB538537D /* OpenSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2501190AAF644BD28B967482 /* OpenSans-Regular.ttf */; };
-		08D8806BB3077A5B9416201E /* libPods-DEVWakeMeApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E4408A4C2577F3B7E49A3D0 /* libPods-DEVWakeMeApp.a */; };
-		0F29A1BF122E468E9AFE6582 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CDFBAB78C98944F5B36BEDEF /* GoogleService-Info.plist */; };
+		01E1476DAD7C3FE9FCFD87C3 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B55E9F60FEA4FDCFB14B27A /* ExpoModulesProvider.swift */; };
+		01E6CFBA27904AFCA916DE76 /* OpenSans-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 74B2CBF4228D47CEBF7022E0 /* OpenSans-BoldItalic.ttf */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1E71C7D787AA7A5FF342F36E /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A665AF6BA90BCDA0E8CE13B /* ExpoModulesProvider.swift */; };
-		3976A26C35EF4279A6084208 /* chimes.caf in Resources */ = {isa = PBXBuildFile; fileRef = 358CB4DFAA1F4C529EEA81CB /* chimes.caf */; };
+		27A8D2DF5F71468D92D22EE7 /* OpenSans-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C388C43EA22849339A90966F /* OpenSans-Italic.ttf */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		9BC696850AB64D139C1C85AB /* birds.caf in Resources */ = {isa = PBXBuildFile; fileRef = 802B969953884E3C83805D88 /* birds.caf */; };
-		AF13464A603B4EC190CD1B03 /* OpenSans-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2A58D96E36104E2D996143CC /* OpenSans-BoldItalic.ttf */; };
+		46FF302E28C049EFACB9D29E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F15C6636986F4263BD849850 /* GoogleService-Info.plist */; };
+		5D14A36CB5174970A814066D /* sunrise.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2923686B662B423D980A7468 /* sunrise.caf */; };
+		6A1FEB6C4F50422A94D96049 /* OpenSans-SemiboldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BB01CE0E64DA4C0AA075972D /* OpenSans-SemiboldItalic.ttf */; };
+		74C31D1A82394EF8A1336C1E /* chimes.caf in Resources */ = {isa = PBXBuildFile; fileRef = D5D6B0E408A84D8A894C7DBE /* chimes.caf */; };
+		7C28B822BADE44FB86DCAAE9 /* OpenSans-Semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 32A85869946A44FBB025A97B /* OpenSans-Semibold.ttf */; };
+		8C4ABB5EF584425EAE169717 /* birds.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4900792FDAD948F59FED4F50 /* birds.caf */; };
+		91DA78B5AE4ABCA762ABC2FA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 518649464983DD06E3F37EF9 /* PrivacyInfo.xcprivacy */; };
+		A6547A51CB51496CA4EF8A93 /* OpenSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 838C14433FF94F81BBE59CEB /* OpenSans-Bold.ttf */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		CE3C2F058291190D83FE5387 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 16462DB3590B2406B8C4D878 /* PrivacyInfo.xcprivacy */; };
-		D602A233F5EE4739A47DA8BB /* OpenSans-Semibold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 87C81B1960334FA482A1EA92 /* OpenSans-Semibold.ttf */; };
-		E52B4E030691490B80ECC482 /* OpenSans-SemiboldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DDEF8B3BE6F540FDBCEE0C3B /* OpenSans-SemiboldItalic.ttf */; };
-		E76C3958712C49AA8DEBA363 /* OpenSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4CB64159975F45FD9F6510B1 /* OpenSans-Bold.ttf */; };
-		F052E2D4BB4F43D6988E786B /* OpenSans-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9EAEA238F2AE4041B21E9627 /* OpenSans-Italic.ttf */; };
+		DE0DF181E9B048AE8F781714 /* OpenSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 71081EF09E964A2CAA2B1B21 /* OpenSans-Regular.ttf */; };
+		EFAAAD93B48B6633AEB5BF24 /* libPods-DEVWakeMeApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 091489593426509359A98D09 /* libPods-DEVWakeMeApp.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		FAD1B17340D44E75B2357383 /* sunrise.caf in Resources */ = {isa = PBXBuildFile; fileRef = F69A1B2C4EC2414BA6AB5FEF /* sunrise.caf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		07D4E785E5C7F51961280C10 /* Pods-DEVWakeMeApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DEVWakeMeApp.debug.xcconfig"; path = "Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp.debug.xcconfig"; sourceTree = "<group>"; };
+		091489593426509359A98D09 /* libPods-DEVWakeMeApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DEVWakeMeApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* DEVWakeMeApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DEVWakeMeApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = DEVWakeMeApp/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = DEVWakeMeApp/Info.plist; sourceTree = "<group>"; };
-		16462DB3590B2406B8C4D878 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = DEVWakeMeApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		2501190AAF644BD28B967482 /* OpenSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Regular.ttf"; path = "../assets/fonts/OpenSans-Regular.ttf"; sourceTree = "<group>"; };
-		2A58D96E36104E2D996143CC /* OpenSans-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-BoldItalic.ttf"; path = "../assets/fonts/OpenSans-BoldItalic.ttf"; sourceTree = "<group>"; };
-		358CB4DFAA1F4C529EEA81CB /* chimes.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = chimes.caf; path = DEVWakeMeApp/chimes.caf; sourceTree = "<group>"; };
-		41FC591AEE8215C9B855A56D /* Pods-DEVWakeMeApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DEVWakeMeApp.release.xcconfig"; path = "Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp.release.xcconfig"; sourceTree = "<group>"; };
-		4CB64159975F45FD9F6510B1 /* OpenSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Bold.ttf"; path = "../assets/fonts/OpenSans-Bold.ttf"; sourceTree = "<group>"; };
-		4E4408A4C2577F3B7E49A3D0 /* libPods-DEVWakeMeApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DEVWakeMeApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		5A665AF6BA90BCDA0E8CE13B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-DEVWakeMeApp/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		7EC2A87BDD78FF844CB30FEE /* Pods-DEVWakeMeApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DEVWakeMeApp.debug.xcconfig"; path = "Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp.debug.xcconfig"; sourceTree = "<group>"; };
-		802B969953884E3C83805D88 /* birds.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = birds.caf; path = DEVWakeMeApp/birds.caf; sourceTree = "<group>"; };
-		87C81B1960334FA482A1EA92 /* OpenSans-Semibold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Semibold.ttf"; path = "../assets/fonts/OpenSans-Semibold.ttf"; sourceTree = "<group>"; };
-		9EAEA238F2AE4041B21E9627 /* OpenSans-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Italic.ttf"; path = "../assets/fonts/OpenSans-Italic.ttf"; sourceTree = "<group>"; };
+		2923686B662B423D980A7468 /* sunrise.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = sunrise.caf; path = DEVWakeMeApp/sunrise.caf; sourceTree = "<group>"; };
+		2B55E9F60FEA4FDCFB14B27A /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-DEVWakeMeApp/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		32A85869946A44FBB025A97B /* OpenSans-Semibold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Semibold.ttf"; path = "../assets/fonts/OpenSans-Semibold.ttf"; sourceTree = "<group>"; };
+		4900792FDAD948F59FED4F50 /* birds.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = birds.caf; path = DEVWakeMeApp/birds.caf; sourceTree = "<group>"; };
+		518649464983DD06E3F37EF9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = DEVWakeMeApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		71081EF09E964A2CAA2B1B21 /* OpenSans-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Regular.ttf"; path = "../assets/fonts/OpenSans-Regular.ttf"; sourceTree = "<group>"; };
+		74B2CBF4228D47CEBF7022E0 /* OpenSans-BoldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-BoldItalic.ttf"; path = "../assets/fonts/OpenSans-BoldItalic.ttf"; sourceTree = "<group>"; };
+		838C14433FF94F81BBE59CEB /* OpenSans-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Bold.ttf"; path = "../assets/fonts/OpenSans-Bold.ttf"; sourceTree = "<group>"; };
+		97C0A29D15EABD9B7F3DA7D6 /* Pods-DEVWakeMeApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DEVWakeMeApp.release.xcconfig"; path = "Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = DEVWakeMeApp/SplashScreen.storyboard; sourceTree = "<group>"; };
+		BB01CE0E64DA4C0AA075972D /* OpenSans-SemiboldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-SemiboldItalic.ttf"; path = "../assets/fonts/OpenSans-SemiboldItalic.ttf"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CDFBAB78C98944F5B36BEDEF /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "DEVWakeMeApp/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		DDEF8B3BE6F540FDBCEE0C3B /* OpenSans-SemiboldItalic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-SemiboldItalic.ttf"; path = "../assets/fonts/OpenSans-SemiboldItalic.ttf"; sourceTree = "<group>"; };
+		C388C43EA22849339A90966F /* OpenSans-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenSans-Italic.ttf"; path = "../assets/fonts/OpenSans-Italic.ttf"; sourceTree = "<group>"; };
+		D5D6B0E408A84D8A894C7DBE /* chimes.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = chimes.caf; path = DEVWakeMeApp/chimes.caf; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = DEVWakeMeApp/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* DEVWakeMeApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "DEVWakeMeApp-Bridging-Header.h"; path = "DEVWakeMeApp/DEVWakeMeApp-Bridging-Header.h"; sourceTree = "<group>"; };
-		F69A1B2C4EC2414BA6AB5FEF /* sunrise.caf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = sunrise.caf; path = DEVWakeMeApp/sunrise.caf; sourceTree = "<group>"; };
+		F15C6636986F4263BD849850 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "DEVWakeMeApp/GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,13 +57,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				08D8806BB3077A5B9416201E /* libPods-DEVWakeMeApp.a in Frameworks */,
+				EFAAAD93B48B6633AEB5BF24 /* libPods-DEVWakeMeApp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		05FF9CD60AECABF7C1E55E24 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				8CCBA559783B7A80F9701ABB /* DEVWakeMeApp */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* DEVWakeMeApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -73,11 +81,11 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				CDFBAB78C98944F5B36BEDEF /* GoogleService-Info.plist */,
-				F69A1B2C4EC2414BA6AB5FEF /* sunrise.caf */,
-				358CB4DFAA1F4C529EEA81CB /* chimes.caf */,
-				802B969953884E3C83805D88 /* birds.caf */,
-				16462DB3590B2406B8C4D878 /* PrivacyInfo.xcprivacy */,
+				F15C6636986F4263BD849850 /* GoogleService-Info.plist */,
+				2923686B662B423D980A7468 /* sunrise.caf */,
+				D5D6B0E408A84D8A894C7DBE /* chimes.caf */,
+				4900792FDAD948F59FED4F50 /* birds.caf */,
+				518649464983DD06E3F37EF9 /* PrivacyInfo.xcprivacy */,
 			);
 			name = DEVWakeMeApp;
 			sourceTree = "<group>";
@@ -86,31 +94,19 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				4E4408A4C2577F3B7E49A3D0 /* libPods-DEVWakeMeApp.a */,
+				091489593426509359A98D09 /* libPods-DEVWakeMeApp.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		3C134FA245E145CA962E9448 /* Resources */ = {
+		551A12467CB863F70D4982E2 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				4CB64159975F45FD9F6510B1 /* OpenSans-Bold.ttf */,
-				2A58D96E36104E2D996143CC /* OpenSans-BoldItalic.ttf */,
-				9EAEA238F2AE4041B21E9627 /* OpenSans-Italic.ttf */,
-				2501190AAF644BD28B967482 /* OpenSans-Regular.ttf */,
-				87C81B1960334FA482A1EA92 /* OpenSans-Semibold.ttf */,
-				DDEF8B3BE6F540FDBCEE0C3B /* OpenSans-SemiboldItalic.ttf */,
+				07D4E785E5C7F51961280C10 /* Pods-DEVWakeMeApp.debug.xcconfig */,
+				97C0A29D15EABD9B7F3DA7D6 /* Pods-DEVWakeMeApp.release.xcconfig */,
 			);
-			name = Resources;
-			path = "";
-			sourceTree = "<group>";
-		};
-		7DE5EC2659A2CCD6E84D104C /* DEVWakeMeApp */ = {
-			isa = PBXGroup;
-			children = (
-				5A665AF6BA90BCDA0E8CE13B /* ExpoModulesProvider.swift */,
-			);
-			name = DEVWakeMeApp;
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -127,9 +123,9 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				3C134FA245E145CA962E9448 /* Resources */,
-				F7484FCCD437513A55489C61 /* Pods */,
-				BE9997D74169E921864B8E5D /* ExpoModulesProviders */,
+				F1486ADAD48C4B95B9B201F5 /* Resources */,
+				551A12467CB863F70D4982E2 /* Pods */,
+				05FF9CD60AECABF7C1E55E24 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -144,6 +140,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		8CCBA559783B7A80F9701ABB /* DEVWakeMeApp */ = {
+			isa = PBXGroup;
+			children = (
+				2B55E9F60FEA4FDCFB14B27A /* ExpoModulesProvider.swift */,
+			);
+			name = DEVWakeMeApp;
+			sourceTree = "<group>";
+		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -153,22 +157,18 @@
 			path = DEVWakeMeApp/Supporting;
 			sourceTree = "<group>";
 		};
-		BE9997D74169E921864B8E5D /* ExpoModulesProviders */ = {
+		F1486ADAD48C4B95B9B201F5 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				7DE5EC2659A2CCD6E84D104C /* DEVWakeMeApp */,
+				838C14433FF94F81BBE59CEB /* OpenSans-Bold.ttf */,
+				74B2CBF4228D47CEBF7022E0 /* OpenSans-BoldItalic.ttf */,
+				C388C43EA22849339A90966F /* OpenSans-Italic.ttf */,
+				71081EF09E964A2CAA2B1B21 /* OpenSans-Regular.ttf */,
+				32A85869946A44FBB025A97B /* OpenSans-Semibold.ttf */,
+				BB01CE0E64DA4C0AA075972D /* OpenSans-SemiboldItalic.ttf */,
 			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
-		F7484FCCD437513A55489C61 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				7EC2A87BDD78FF844CB30FEE /* Pods-DEVWakeMeApp.debug.xcconfig */,
-				41FC591AEE8215C9B855A56D /* Pods-DEVWakeMeApp.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
+			name = Resources;
+			path = "";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -179,13 +179,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "DEVWakeMeApp" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				6ECCBA1CAA4723D0C7386BB0 /* [Expo] Configure project */,
+				E71089760DBAA586926BF8B4 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				2AC308BCB252407AD9A06A52 /* [CP] Embed Pods Frameworks */,
+				B6895B53D7A72FAD5307C220 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -206,6 +206,8 @@
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1250;
+						DevelopmentTeam = "9F74X88286";
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -235,17 +237,17 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				0F29A1BF122E468E9AFE6582 /* GoogleService-Info.plist in Resources */,
-				E76C3958712C49AA8DEBA363 /* OpenSans-Bold.ttf in Resources */,
-				AF13464A603B4EC190CD1B03 /* OpenSans-BoldItalic.ttf in Resources */,
-				F052E2D4BB4F43D6988E786B /* OpenSans-Italic.ttf in Resources */,
-				01CBC6F45CDF4E6CB538537D /* OpenSans-Regular.ttf in Resources */,
-				D602A233F5EE4739A47DA8BB /* OpenSans-Semibold.ttf in Resources */,
-				E52B4E030691490B80ECC482 /* OpenSans-SemiboldItalic.ttf in Resources */,
-				FAD1B17340D44E75B2357383 /* sunrise.caf in Resources */,
-				3976A26C35EF4279A6084208 /* chimes.caf in Resources */,
-				9BC696850AB64D139C1C85AB /* birds.caf in Resources */,
-				CE3C2F058291190D83FE5387 /* PrivacyInfo.xcprivacy in Resources */,
+				46FF302E28C049EFACB9D29E /* GoogleService-Info.plist in Resources */,
+				A6547A51CB51496CA4EF8A93 /* OpenSans-Bold.ttf in Resources */,
+				01E6CFBA27904AFCA916DE76 /* OpenSans-BoldItalic.ttf in Resources */,
+				27A8D2DF5F71468D92D22EE7 /* OpenSans-Italic.ttf in Resources */,
+				DE0DF181E9B048AE8F781714 /* OpenSans-Regular.ttf in Resources */,
+				7C28B822BADE44FB86DCAAE9 /* OpenSans-Semibold.ttf in Resources */,
+				6A1FEB6C4F50422A94D96049 /* OpenSans-SemiboldItalic.ttf in Resources */,
+				5D14A36CB5174970A814066D /* sunrise.caf in Resources */,
+				74C31D1A82394EF8A1336C1E /* chimes.caf in Resources */,
+				8C4ABB5EF584425EAE169717 /* birds.caf in Resources */,
+				91DA78B5AE4ABCA762ABC2FA /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,52 +292,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		2AC308BCB252407AD9A06A52 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		6ECCBA1CAA4723D0C7386BB0 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/DEVWakeMeApp/DEVWakeMeApp.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-DEVWakeMeApp/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-DEVWakeMeApp/ExpoModulesProvider.swift",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-DEVWakeMeApp/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -405,6 +361,52 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		B6895B53D7A72FAD5307C220 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DEVWakeMeApp/Pods-DEVWakeMeApp-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E71089760DBAA586926BF8B4 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/DEVWakeMeApp/DEVWakeMeApp.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-DEVWakeMeApp/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-DEVWakeMeApp/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-DEVWakeMeApp/expo-configure-project.sh\"\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -413,7 +415,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				1E71C7D787AA7A5FF342F36E /* ExpoModulesProvider.swift in Sources */,
+				01E1476DAD7C3FE9FCFD87C3 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -422,7 +424,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7EC2A87BDD78FF844CB30FEE /* Pods-DEVWakeMeApp.debug.xcconfig */;
+			baseConfigurationReference = 07D4E785E5C7F51961280C10 /* Pods-DEVWakeMeApp.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -453,12 +455,15 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				DEVELOPMENT_TEAM = "9F74X88286";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Debug;
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 41FC591AEE8215C9B855A56D /* Pods-DEVWakeMeApp.release.xcconfig */;
+			baseConfigurationReference = 97C0A29D15EABD9B7F3DA7D6 /* Pods-DEVWakeMeApp.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -483,6 +488,9 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				DEVELOPMENT_TEAM = "9F74X88286";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 			};
 			name = Release;
 		};

@@ -8,7 +8,7 @@
   <b>A smart alarm clock that won't let you snooze your way through the morning.</b>
 </p>
 
-Wake Me App is a mobile alarm clock that requires you to complete an interactive challenge before the alarm will turn off. Instead of tapping "snooze" half-asleep, you have to scan a QR code, find an object with your camera, hunt down a specific color, or take a set number of steps — actions designed to actually wake you up. Once you succeed, the app rewards you with a motivational quote of the day.
+Wake Me App is a mobile alarm clock that requires you to complete an interactive challenge before the alarm will turn off. Instead of tapping "snooze" half-asleep, you have to scan a QR code, find an object with your camera, hunt down a specific color, take a set number of steps, say a phrase out loud, or mimic a sequence of facial expressions — actions designed to actually wake you up. Once you succeed, the app rewards you with a motivational quote of the day.
 
 ## 🌅 About the App
 
@@ -22,18 +22,19 @@ The primary users are **students and working adults** who struggle with their mo
 
 ### How it works
 
-When you set an alarm, you also pick one or more challenges that must be completed to dismiss it: scanning a QR code (e.g. one stuck to your bathroom mirror), finding an everyday object with the camera (using on-device image classification), pointing the camera at a specific color, or taking a required number of steps. The alarm keeps ringing until the challenge is solved. After a successful wake-up, the app fetches and displays a motivational quote.
+When you set an alarm, you also pick one or more challenges that must be completed to dismiss it: scanning a QR code (e.g. one stuck to your bathroom mirror), finding an everyday object with the camera (using on-device image classification), pointing the camera at a specific color, taking a required number of steps, saying the daily phrase out loud, or completing the face challenge — either mimicking a randomised sequence of expressions (wink, tongue out, head turn, smile) or fitting two faces into the frame at once. The alarm keeps ringing until the challenge is solved. After a successful wake-up, the app fetches and displays a motivational quote.
 
-The app is built with **React Native + Expo** so it runs on both Android and iOS from a single codebase. Alarms, settings, and wake-up history are stored locally in **SQLite**; registered users can sync across devices via a **MongoDB Atlas** cloud backend. Image classification for the "find an object" challenge runs **on-device with TensorFlow Lite** (MobileNet via `@tensorflow/tfjs-react-native`), and the optional voice challenge uses **Expo Speech Recognition**. The UI is fully localized in **Slovenian and English** via `react-i18next`.
+The app is built with **React Native + Expo** so it runs on both Android and iOS from a single codebase. Alarms, settings, and wake-up history are stored locally in **SQLite**; registered users can sync across devices via a **MongoDB Atlas** cloud backend. Image classification for the "find an object" challenge runs **on-device with TensorFlow Lite** (MobileNet via `@tensorflow/tfjs-react-native`), the optional voice challenge uses **Expo Speech Recognition**, and the face challenge uses **react-native-vision-camera + ML Kit face detection** running entirely on-device. The UI is fully localized in **Slovenian and English** via `react-i18next`.
 
 ## ✨ Key Features
 
-1. **Alarm management with wake-up challenges** — color search, QR scanning, object recognition, and step counting
+1. **Alarm management with wake-up challenges** — color search, QR scanning, object recognition, step counting, voice phrase, and face mimic
 2. **Motivational quote of the day** fetched from the ZenQuotes REST API, with local caching for offline use
 3. **Local SQLite database** for alarms, settings, and wake-up statistics
 4. **Cloud sync via MongoDB Atlas** for registered users, with offline queue and last-write-wins conflict resolution
 5. **On-device image classification** with TensorFlow Lite (MobileNet) for the "find an object" challenge
 6. **Voice challenge** powered by Expo Speech Recognition, plus full **Slovenian / English** localization
+7. **Face challenge** with on-device ML Kit face detection — mimic a random sequence of expressions or get two faces in frame
 
 <details>
   <summary><b>Feature 1 — Alarms & wake-up challenges</b></summary>
@@ -80,6 +81,17 @@ The app is built with **React Native + Expo** so it runs on both Android and iOS
 
 - **Implementation:** Expo Speech Recognition lets the user dismiss the alarm by speaking a configured phrase (e.g. *"Today is going to be great!"*). The whole UI, notifications, and challenge copy are translated via `react-i18next`, and the language is user-selectable in settings.
 - **Known limitation:** on some devices, speech recognition requires an internet connection.
+
+</details>
+
+<details>
+  <summary><b>Feature 7 — Face challenge (mimic & two-faces)</b></summary>
+
+- **Implementation:** `react-native-vision-camera` with `react-native-vision-camera-face-detector` runs Google ML Kit face detection on-device via a worklet frame processor (~5 Hz). When the alarm fires, one of two modes is picked at random:
+  - **Mimic challenge** — the user must perform all four expressions (wink, tongue out, head turn, smile) in a randomised order. Two consecutive matching frames (~400 ms of stable signal) are required per step to filter ML Kit's one-frame flickers. Thresholds are tuned to be permissive enough for a half-asleep face but strict enough to require an unambiguous expression.
+  - **Selfie with someone** — the camera must see two faces in the frame at the same time (great for partners / roommates / family).
+- **Notes:** Tongue-out is detected via a rotation-invariant mouth-open ratio (perpendicular distance from the bottom-lip landmark to the mouth-corner line, normalised by mouth width) because vision-camera frames arrive in the sensor's native landscape orientation, so naïve y-axis comparisons miss jaw drop in portrait.
+- **Known limitations:** requires a development build (not Expo Go) because the native ML module isn't bundled with Expo Go; detection quality drops in very low light.
 
 </details>
 

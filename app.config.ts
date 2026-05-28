@@ -32,6 +32,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // add more env variables here...
     },
     plugins: [
+      // Must come BEFORE expo-notifications: mods run newest-registered first,
+      // so registering this first means it runs last and can strip the
+      // aps-environment entitlement that expo-notifications added.
+      './plugins/withStripIosPushEntitlement',
       'expo-router',
       'expo-asset',
       'expo-audio',
@@ -109,7 +113,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           androidSpeechServicePackages: ['com.google.android.googlequicksearchbox'],
         },
       ],
-      './plugins/withStripIosPushEntitlement',
     ],
   };
   // console.log('[##] expo config', expoConfig);
