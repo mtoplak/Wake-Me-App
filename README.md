@@ -8,7 +8,7 @@
   <b>A smart alarm clock that won't let you snooze your way through the morning.</b>
 </p>
 
-Wake Me App is a mobile alarm clock that requires you to complete an interactive challenge before the alarm will turn off. Instead of tapping "snooze" half-asleep, you have to scan a QR code, find an object with your camera, hunt down a specific color, take a set number of steps, say a phrase out loud, or mimic a sequence of facial expressions — actions designed to actually wake you up. Once you succeed, the app rewards you with a motivational quote of the day.
+Wake Me App is a mobile alarm clock that requires you to complete an interactive challenge before the alarm will turn off. Instead of tapping "snooze" half-asleep, you have to scan a QR code, find an object with your camera, reproduce a memorised color, take a set number of steps, say a phrase out loud, or mimic a sequence of facial expressions — actions designed to actually wake you up. Once you succeed, the app rewards you with a motivational quote of the day.
 
 ## 🌅 About the App
 
@@ -22,64 +22,77 @@ The primary users are **students and working adults** who struggle with their mo
 
 ### How it works
 
-When you set an alarm, you also pick one or more challenges that must be completed to dismiss it: scanning a QR code (e.g. one stuck to your bathroom mirror), finding an everyday object with the camera (using on-device image classification), pointing the camera at a specific color, taking a required number of steps, saying the daily phrase out loud, or completing the face challenge — either mimicking a randomised sequence of expressions (wink, tongue out, head turn, smile) or fitting two faces into the frame at once. The alarm keeps ringing until the challenge is solved. After a successful wake-up, the app fetches and displays a motivational quote.
+When you set an alarm, you also pick one or more challenges that must be completed to dismiss it: scanning a QR code (e.g. one stuck to your bathroom mirror), finding an everyday object with the camera (using on-device image classification), memorising a randomly generated color and reproducing it with HSV sliders, taking a required number of steps, saying the daily phrase out loud, or completing the face challenge — either mimicking a randomised sequence of expressions (wink, tongue out, head turn, smile) or fitting two faces into the frame at once. The alarm keeps ringing until the challenge is solved. After a successful wake-up, the app fetches and displays a motivational quote.
 
-The app is built with **React Native + Expo** so it runs on both Android and iOS from a single codebase. Alarms, settings, and wake-up history are stored locally in **SQLite**; registered users can sync across devices via a **MongoDB Atlas** cloud backend. Image classification for the "find an object" challenge runs **on-device with TensorFlow Lite** (MobileNet via `@tensorflow/tfjs-react-native`), the optional voice challenge uses **Expo Speech Recognition**, and the face challenge uses **react-native-vision-camera + ML Kit face detection** running entirely on-device. The UI is fully localized in **Slovenian and English** via `react-i18next`.
+The app is built with **React Native + Expo** so it runs on both Android and iOS from a single codebase. Alarms, settings, and wake-up history are stored locally in **SQLite** (`expo-sqlite`); registered users can sync across devices via **Firebase (Firestore + Auth)**. Image classification for the "find an object" challenge runs **on-device with TensorFlow Lite** (a bundled MobileNet model via `react-native-fast-tflite` + `vision-camera-resize-plugin`, with **Google ML Kit Image Labeling** as a snapshot fallback). The optional voice challenge uses **`expo-speech-recognition`**, and the face challenge uses **`react-native-vision-camera` + ML Kit face detection** running entirely on-device. The UI is fully localized in **Slovenian and English** via a small Redux-backed translation layer.
 
 ## ✨ Key Features
 
-1. **Alarm management with wake-up challenges** — color search, QR scanning, object recognition, step counting, voice phrase, and face mimic
+1. **Alarm management with wake-up challenges** — color memorise/match, QR scanning, object recognition, step counting, voice phrase, and face mimic
 2. **Motivational quote of the day** fetched from the ZenQuotes REST API, with local caching for offline use
-3. **Local SQLite database** for alarms, settings, and wake-up statistics
-4. **Cloud sync via MongoDB Atlas** for registered users, with offline queue and last-write-wins conflict resolution
-5. **On-device image classification** with TensorFlow Lite (MobileNet) for the "find an object" challenge
-6. **Voice challenge** powered by Expo Speech Recognition, plus full **Slovenian / English** localization
+3. **Local SQLite database** (`expo-sqlite`) for alarms, settings, and wake-up statistics
+4. **Cloud sync via Firebase Firestore** (with Firebase Auth + Google Sign-In) for registered users, with a reconnect-triggered push of unsynced rows
+5. **On-device image classification** with TensorFlow Lite (`react-native-fast-tflite` + bundled MobileNet) for the "find an object" challenge, plus ML Kit Image Labeling as a snapshot fallback
+6. **Voice challenge** powered by `expo-speech-recognition`, plus full **Slovenian / English** localization
 7. **Face challenge** with on-device ML Kit face detection — mimic a random sequence of expressions or get two faces in frame
 
 <details>
   <summary><b>Feature 1 — Alarms & wake-up challenges</b></summary>
 
-- **Implementation:** Expo Notifications schedules alarms and fires local notifications. Each alarm carries its own challenge config (type, difficulty). The color challenge generates random target colors; the QR challenge uses Expo Camera; the steps challenge uses Expo Sensors (pedometer). Alarm state is managed via React Context + AsyncStorage.
-- **Data sources:** locally stored alarms (SQLite), user challenge preferences, sensor input (camera, pedometer).
-- **Known limitations:** iOS limits local notifications; the pedometer requires motion-sensor permission; alarms may not fire reliably in Do Not Disturb mode.
+- **Implementation:** `expo-notifications` schedules local notifications for each alarm occurrence and an Android high-importance channel raises them as full-screen alerts. Each alarm carries its own challenge config (type, difficulty, params), persisted in the `alarm_challenges` SQLite table. The color challenge picks a random HSV target the user must memorise and then reproduce with sliders; the QR challenge uses `expo-camera` (`CameraView` with barcode scanning); the steps challenge uses `expo-sensors` (`Pedometer`). Alarm CRUD and history live in SQLite (`expo-sqlite`); Redux Toolkit holds light app-level UI state (language, theme).
+- **Data sources:** local SQLite (alarms, challenges, settings, wake-up stats), user challenge preferences, sensor input (camera, pedometer, microphone).
+- **Known limitations:** iOS local-notification scheduling is rate-limited and won't fire while the device is in Do Not Disturb; the pedometer requires motion-sensor permission; alarms scheduled in Expo Go can't use the native notifications path (works in dev/release builds).
 
 </details>
 
 <details>
   <summary><b>Feature 2 — Motivational quotes (ZenQuotes API)</b></summary>
 
-- **Implementation:** `fetch` against `https://zenquotes.io/api/today`. Quotes are shown after a successful wake-up. A Repository pattern decides whether to serve a fresh quote from the network or a cached one from SQLite, so the screen still works offline. Timeout and no-connection errors surface a friendly message.
+- **Implementation:** `fetch` against `https://zenquotes.io/api/today`, with `https://zenquotes.io/api/random` as a fallback when `today` returns nothing (ZenQuotes' free tier is 5 req / 30 s per IP). Quotes are shown after a successful wake-up and cached in the `cached_quotes` SQLite table keyed by date, so the screen still works offline. No API key is required.
 
 </details>
 
 <details>
   <summary><b>Feature 3 — Local SQLite database</b></summary>
 
-- **Implementation:** Expo SQLite for an on-device relational store.
-- **Schema (E-R):** `User(id, name, email, language)`, `Alarm(id, user_id, time, repeat_days, active, sound)`, `AlarmChallenge(id, alarm_id, challenge_type, difficulty, params)`, `WakeUpStat(id, alarm_id, date, wake_time, success, challenge_duration)`, `CachedQuote(id, text, author, date)`. Tables join via ID foreign keys.
+- **Implementation:** `expo-sqlite` with `journal_mode = WAL` and `foreign_keys = ON`.
+- **Schema:**
+  - `users(id, name, email, language)`
+  - `alarms(id, user_id, hour, minute, label, repeat_days, enabled, sound, vibration, created_at)`
+  - `alarm_challenges(id, alarm_id, challenge_type, difficulty, params)`
+  - `alarm_notifications(id, alarm_id, notification_id)` — maps scheduled `expo-notifications` IDs back to their alarm
+  - `wake_stats(id, alarm_id, date, wake_time, success, challenge_duration, challenge_type, completed_challenge_types)`
+  - `cached_quotes(id, text, author, date UNIQUE)`
+  - `settings(key, value)` — a simple K/V store for user preferences
+- Tables join via ID foreign keys with `ON DELETE CASCADE` on the alarm children. Indexes on `alarm_challenges.alarm_id`, `alarm_notifications.alarm_id`, and `wake_stats.date`.
 
 </details>
 
 <details>
-  <summary><b>Feature 4 — Cloud sync (MongoDB Atlas)</b></summary>
+  <summary><b>Feature 4 — Cloud sync (Firebase Firestore + Auth)</b></summary>
 
-- **Implementation:** MongoDB Atlas, accessed via the MongoDB Data API or a small Express.js backend. JWT-based auth. On sign-in, alarms and settings sync between device and cloud. Offline edits queue locally and replay when connectivity returns.
-- **Known limitation:** simultaneous edits across devices are resolved with a **last-write-wins** strategy.
+- **Implementation:** Firebase JS SDK — **Firebase Auth** with Google Sign-In (via `@react-native-google-signin/google-signin` for the Google token, then `signInWithCredential` against Firebase) and **Cloud Firestore** for the synced documents. On native, Firestore is initialised with `experimentalForceLongPolling: true` because the default WebChannel transport stalls on React Native, and Firebase Auth uses an `AsyncStorage` persistence so the session survives app restarts.
+- **Sync model:** per-mutation writers (`syncAlarmUp`, `syncSettingUp`, `syncProfileUp`, `syncWakeStatUp`) push changes as they happen. On sign-in and on network reconnect (NetInfo + AppState), `mergeLocalAlarmsToCloud` and `mergeLocalWakeStatsToCloud` push any unsynced rows; `pullCloudToLocal` mirrors back with sync writers suppressed so the pull doesn't echo as a push.
+- **Known limitation:** the React Native Firestore transport requires long-polling (slightly higher latency than WebChannel).
 
 </details>
 
 <details>
   <summary><b>Feature 5 — On-device image classification</b></summary>
 
-- **Implementation:** TensorFlow Lite (MobileNet) running locally via `@tensorflow/tfjs-react-native`. When configuring the alarm, the user picks a target object (e.g. toothbrush, coffee mug). On wake-up, the user must point the camera at that object — the model classifies the image and confirms a match.
-- **Known limitation:** classification accuracy depends on lighting and camera quality.
+- **Implementation:** Two paths in `objectDetection.ts`:
+  1. **Live path (preferred):** `react-native-vision-camera` frame processor + `vision-camera-resize-plugin` + `react-native-fast-tflite`, running a bundled MobileNet `.tflite` model (`assets/ml/mobilenet.tflite`, 1001-class ImageNet) on-device at ~30 FPS, GPU-accelerated. The model is pre-loaded from the intro screen so the camera mounts with the interpreter already warm.
+  2. **Snapshot fallback:** Google ML Kit Image Labeling (`@react-native-ml-kit/image-labeling`) called on a still photo URI when the bundled `.tflite` is missing or the interpreter fails to load on a device.
+- **Top-K decoding:** raw MobileNet logits are normalised relative to the top class (`p / max`) — robust to MobileNet variants where raw scores are unitless and sum-normalisation underflows on flat distributions.
+- **Known limitations:** neither path works in Expo Go or on web; classification accuracy depends on lighting and camera quality.
 
 </details>
 
 <details>
   <summary><b>Feature 6 — Voice challenge & i18n</b></summary>
 
-- **Implementation:** Expo Speech Recognition lets the user dismiss the alarm by speaking a configured phrase (e.g. *"Today is going to be great!"*). The whole UI, notifications, and challenge copy are translated via `react-i18next`, and the language is user-selectable in settings.
+- **Implementation:** `expo-speech-recognition` lets the user dismiss the alarm by speaking a configured phrase (e.g. *"Today is going to be great!"*). The session starts with a BCP-47 locale tag matched to the current UI language.
+- **i18n:** the whole UI, notifications, and challenge copy live in plain TypeScript dictionaries at [i18n/translations/en.ts](i18n/translations/en.ts) and [i18n/translations/sl.ts](i18n/translations/sl.ts), surfaced by a small `useTranslation()` hook that reads the current language from Redux — no `i18next` or other library. The language is user-selectable in settings.
 - **Known limitation:** on some devices, speech recognition requires an internet connection.
 
 </details>
@@ -103,7 +116,7 @@ The app is built on top of an Expo + React Native boilerplate. The sections belo
 
 ## 🎯 Pre-configured Features
 
-- 📱 **Expo SDK 54** with React 19.1 and React Native 0.81.4
+- 📱 **Expo SDK 54** with React 19.1 and React Native 0.81.5
 - 🏗️ **New Architecture** enabled by default for optimal performance
 - 🧭 **Expo Router v6** with flat config for file-based routing
 - 🎨 **Light/Dark theme** support with automatic detection
