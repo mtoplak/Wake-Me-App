@@ -1,21 +1,30 @@
 import { getDb } from './db';
 import { fetchTodaysQuote } from '../quoteApi';
 import { CachedQuote } from './types';
+import { getDefaultArchive, getDefaultTodayQuote } from './defaultQuotes';
 
 export async function listQuotes(limit = 30): Promise<CachedQuote[]> {
   const db = await getDb();
-  return db.getAllAsync<CachedQuote>(
+  const rows = await db.getAllAsync<CachedQuote>(
     'SELECT * FROM cached_quotes ORDER BY date DESC LIMIT ?',
     [limit],
   );
+  if (rows.length >= limit) return rows;
+
+  // Fill remaining slots with bundled fallbacks for dates the cache doesn't
+  // already cover — real cached entries always win for their date.
+  const haveDates = new Set(rows.map(r => r.date));
+  const bundled = getDefaultArchive(limit).filter(q => !haveDates.has(q.date));
+  const merged = [...rows, ...bundled].slice(0, limit);
+  merged.sort((a, b) => (a.date < b.date ? 1 : -1));
+  return merged;
 }
 
 export async function getQuoteForDate(date: string): Promise<CachedQuote | null> {
   const db = await getDb();
-  const row = await db.getFirstAsync<CachedQuote>(
-    'SELECT * FROM cached_quotes WHERE date = ?',
-    [date],
-  );
+  const row = await db.getFirstAsync<CachedQuote>('SELECT * FROM cached_quotes WHERE date = ?', [
+    date,
+  ]);
   return row ?? null;
 }
 
@@ -32,11 +41,10 @@ export async function getTodaysQuote(): Promise<CachedQuote | null> {
   }
 
   const db = await getDb();
-  return (
-    (await db.getFirstAsync<CachedQuote>(
-      'SELECT * FROM cached_quotes ORDER BY date DESC LIMIT 1',
-    )) ?? null
+  const latest = await db.getFirstAsync<CachedQuote>(
+    'SELECT * FROM cached_quotes ORDER BY date DESC LIMIT 1',
   );
+  return latest ?? getDefaultTodayQuote();
 }
 
 export async function upsertQuote(quote: Omit<CachedQuote, 'id'>): Promise<void> {
